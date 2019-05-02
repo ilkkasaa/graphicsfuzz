@@ -1,0 +1,6 @@
+
+syntax = "proto3";
+
+message ArtifactReference {
+  string name = 1;
+}

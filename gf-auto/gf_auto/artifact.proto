@@ -1,0 +1,62 @@
+
+syntax = "proto3";
+
+//import "google/protobuf/descriptor.proto";
+//
+//
+//extend google.protobuf.FieldOptions {
+//  Artifact.Data artifact_type = 1036;
+//}
+
+
+// Artifact metadata.
+message ArtifactMetadata {
+
+  // The artifact type.
+  // ArtifactType type = 1;
+
+  // The artifact's type-specific data.
+  Data data = 2;
+
+  // A list of artifact paths from which this artifact is derived. Typically, this is similar to
+  // following the input artifacts in the recipe transitively, but some artifacts may not have a
+  // recipe because they were created manually so it is still useful to have this field.
+  repeated string derived_from = 3;
+
+  message Data {
+    oneof data {
+      ArtifactMetadataGlslShaderJob glsl_shader_job = 1;
+      ArtifactMetadataGlslReduction glsl_shader_job_reduction = 2;
+      ArtifactMetadataSpirvShaderJob spirv_shader_job = 3;
+    }
+  }
+}
+
+//enum ArtifactType {
+//  NONE = 0;
+//  GLSL_SHADER_JOB = 1;
+//  GLSL_SHADER_JOB_REDUCTION = 2;
+//  SPIRV_SHADER_JOB = 3;
+//}
+
+message ArtifactMetadataGlslShaderJob {
+  string shader_job_file = 1;
+  string reference_glsl_shader_job_artifact = 2;
+}
+
+message ArtifactMetadataGlslReduction {
+  string final_shader = 1;
+}
+
+message ArtifactMetadataSpirvShaderJob {
+  string shader_job_file = 1;
+  string glsl_shader_job_source_artifact = 2;
+
+  // Indicates that the SPIR-V has been "optimized", but the recipe provides the full story.
+  bool optimized = 3;
+}
+
+message ArtifactMetadataAmberJob {
+  string amber_file = 1;
+}
+

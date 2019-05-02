@@ -1,0 +1,33 @@
+
+syntax = "proto3";
+
+import "common.proto";
+import "artifact.proto";
+
+
+// It would be good if the recipe inputs were typed, because then we could (one day) dynamically
+// discover which recipes can be applied to which artifacts.
+
+message Recipe {
+
+  oneof recipe {
+    RecipeCommand command = 1;
+    RecipeGlslShaderJobToSpirvShaderJob glsl_shader_job_to_spirv_shader_job = 2;
+    RecipeSpirvShaderJobOpt spirv_shader_job_opt = 3;
+  }
+}
+
+message RecipeCommand {
+  repeated string command = 1;
+}
+
+message RecipeGlslShaderJobToSpirvShaderJob {
+  string glsl_shader_job_artifact = 1; // [(artifact_type).glsl_shader_job = {}]
+  string glslang_validator_artifact = 2;
+}
+
+message RecipeSpirvShaderJobOpt {
+  string spirv_shader_job_artifact = 1;
+  repeated string spirv_opt_args = 2;
+  string spirv_opt_artifact = 3;
+}
