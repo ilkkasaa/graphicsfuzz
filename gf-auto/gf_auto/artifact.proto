@@ -23,11 +23,20 @@ message ArtifactMetadata {
   // recipe because they were created manually so it is still useful to have this field.
   repeated string derived_from = 3;
 
+  // A description of the artifact.
+  string description = 4;
+
+  // A short description of the artifact. This will appear in the deqp test name, if exported to
+  // deqp.
+  string short_description = 5;
+
   message Data {
     oneof data {
       ArtifactMetadataGlslShaderJob glsl_shader_job = 1;
       ArtifactMetadataGlslReduction glsl_shader_job_reduction = 2;
       ArtifactMetadataSpirvShaderJob spirv_shader_job = 3;
+      ArtifactMetadataSpirvAsmShaderJob spirv_asm_shader_job = 4;
+      ArtifactMetadataAmberScript amber_script = 5;
     }
   }
 }
@@ -42,21 +51,41 @@ message ArtifactMetadata {
 message ArtifactMetadataGlslShaderJob {
   string shader_job_file = 1;
   string reference_glsl_shader_job_artifact = 2;
+  bool red_pixel_at_top_left = 3;
+  // TODO: Consider having nested message for ImageOutput (reference info, red pixel info, etc.) and
+  //  BufferOutput.
 }
 
 message ArtifactMetadataGlslReduction {
   string final_shader = 1;
 }
 
-message ArtifactMetadataSpirvShaderJob {
+// Common metadata about a spirv shader job, be it binary spirv or spirv assembly.
+message MetadataSpirvJob {
   string shader_job_file = 1;
   string glsl_shader_job_source_artifact = 2;
 
-  // Indicates that the SPIR-V has been "optimized", but the recipe provides the full story.
-  bool optimized = 3;
+  // Indicates the spirv-opt args that were used when processing this shader. The recipe gives the
+  // the full story.
+  repeated string spirv_opt_args = 3;
+
+  // Is the top-left pixel guaranteed to be a red pixel?
+  bool red_pixel_at_top_left = 4;
+
+  // Flag to indicate that the SPIR-V was generated but then manually modified.
+  bool manually_modified = 5;
 }
 
-message ArtifactMetadataAmberJob {
-  string amber_file = 1;
+message ArtifactMetadataSpirvShaderJob {
+  MetadataSpirvJob spirv_job = 1;
 }
 
+message ArtifactMetadataSpirvAsmShaderJob {
+  MetadataSpirvJob spirv_job = 1;
+}
+
+message ArtifactMetadataAmberScript {
+  string amber_script_file = 1;
+  bool self_contained_test = 2;
+  bool add_google_copyright_header = 3;
+}

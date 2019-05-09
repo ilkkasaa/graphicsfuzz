@@ -2,8 +2,8 @@
 
 import pathlib
 from typing import Optional, List
-from shader_job_util import glsl_shader_job_get_shader_file_paths, \
-    spirv_shader_job_get_shader_file_paths
+
+from shader_job_util import shader_job_get_related_files, spirv_suffix
 from util import tool_on_path, copy_file, file_mkdirs_parent
 from subprocess_util import run
 
@@ -50,8 +50,9 @@ def run_spirv_opt_on_spirv_shader_job(
     if not spirv_opt_file_path:
         spirv_opt_file_path = spirv_opt_on_path()
 
-    shader_files = spirv_shader_job_get_shader_file_paths(
-        input_spirv_shader_job_json_file_path
+    shader_files = shader_job_get_related_files(
+        input_spirv_shader_job_json_file_path,
+        language_suffix=spirv_suffix,
     )
 
     copy_file(

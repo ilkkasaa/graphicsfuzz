@@ -2,7 +2,8 @@
 
 import pathlib
 from typing import Optional, List
-from shader_job_util import glsl_shader_job_get_shader_file_paths
+
+from shader_job_util import shader_job_get_related_files
 from util import tool_on_path, copy_file, file_mkdirs_parent
 from subprocess_util import run
 
@@ -44,7 +45,9 @@ def run_glslang_glsl_to_spirv_job(
     if not glslang_validator_file_path:
         glslang_validator_file_path = glslang_validator_on_path()
 
-    glsl_shader_files = glsl_shader_job_get_shader_file_paths(glsl_shader_job_json_file_path)
+    glsl_shader_files = shader_job_get_related_files(
+        glsl_shader_job_json_file_path
+    )
 
     copy_file(glsl_shader_job_json_file_path, spirv_shader_job_json_file_path)
 

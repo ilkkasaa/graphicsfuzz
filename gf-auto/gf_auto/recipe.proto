@@ -13,7 +13,10 @@ message Recipe {
   oneof recipe {
     RecipeCommand command = 1;
     RecipeGlslShaderJobToSpirvShaderJob glsl_shader_job_to_spirv_shader_job = 2;
-    RecipeSpirvShaderJobOpt spirv_shader_job_opt = 3;
+    RecipeSpirvShaderJobToSpirvShaderJobOpt spirv_shader_job_to_spirv_shader_job_opt = 3;
+    RecipeGlslShaderJobAddRedPixels glsl_shader_job_add_red_pixels = 4;
+    RecipeSpirvAsmShaderJobToAmberScript spirv_asm_shader_job_to_amber_script = 5;
+    RecipeSpirvShaderJobToSpirvAsmShaderJob spirv_shader_job_to_spirv_asm_shader_job = 6;
   }
 }
 
@@ -26,8 +29,36 @@ message RecipeGlslShaderJobToSpirvShaderJob {
   string glslang_validator_artifact = 2;
 }
 
-message RecipeSpirvShaderJobOpt {
+message RecipeSpirvShaderJobToSpirvShaderJobOpt {
   string spirv_shader_job_artifact = 1;
   repeated string spirv_opt_args = 2;
   string spirv_opt_artifact = 3;
 }
+
+message RecipeGlslShaderJobAddRedPixels {
+
+  string glsl_shader_job_artifact = 1; // [(artifact_type).glsl_shader_job = {}]
+
+  // We will eventually use GraphicsFuzz to make the change, so we need this artifact in theory.
+  string graphics_fuzz_artifact = 2; // [(artifact_type).graphics_fuzz_binary_artifact = {}]
+}
+
+message RecipeSpirvShaderJobToSpirvAsmShaderJob {
+  string spirv_shader_job_artifact = 1;
+  string spirv_dis_artifact = 2;
+}
+
+message RecipeSpirvAsmShaderJobToAmberScript {
+  string spirv_asm_shader_job_artifact = 1; // [(artifact_type).spirv_shader_job = {}]
+
+  // Whether we should add e.g. probe commands so that the test is self-contained. This is only
+  // possible if we have enough information, such as if we know the test renders red pixels at the
+  // top left corner.
+  bool make_self_contained_test = 2;
+
+  // The name of the amber script file. If empty, the name will be the same as the input shader job
+  // json file name, without the .json extension, plus the .amber_script extension.
+  string amber_script_output_file = 3;
+
+}
+
