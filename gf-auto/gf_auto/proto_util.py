@@ -10,5 +10,6 @@ def message_to_json(message: Message, including_default_value_fields: bool = Fal
     return json_format.MessageToJson(
         message,
         including_default_value_fields=including_default_value_fields,
-        preserving_proto_field_name=True
+        preserving_proto_field_name=True,
+        sort_keys=True,
     )

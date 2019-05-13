@@ -1,11 +1,11 @@
-
-
+from contextlib import contextmanager
 import io
 import pathlib
 import shutil
+import os
+from typing import Optional
 
 # Note: Could use the built-in |file.open| and |file.write_text|, etc.
-from typing import Optional
 
 
 def file_open_binary(file: pathlib.Path, mode: str):
@@ -68,3 +68,19 @@ def copy_file(
 def remove_end(str_in: str, str_end: str):
     assert str_in.endswith(str_end), 'Expected {} to end with {}'.format(str_in, str_end)
     return str_in[:-len(str_end)]
+
+
+def norm_path(path: pathlib.Path):
+    return pathlib.Path(os.path.normpath(str(path)))
+
+
+@contextmanager
+def pushd(path: pathlib.Path):
+    curr_dir = pathlib.Path().resolve()
+    os.chdir(str(path))
+    try:
+        yield
+    finally:
+        os.chdir(str(curr_dir))
+
+

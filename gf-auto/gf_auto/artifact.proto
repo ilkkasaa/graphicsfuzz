@@ -81,7 +81,6 @@ message ArtifactMetadataSpirvAsmShaderJob {
 message ArtifactMetadataAmberScript {
   string amber_script_file = 1;
   bool self_contained_test = 2;
-  bool add_google_copyright_header = 3;
 }
 
 message ArtifactMetadataTextFile {

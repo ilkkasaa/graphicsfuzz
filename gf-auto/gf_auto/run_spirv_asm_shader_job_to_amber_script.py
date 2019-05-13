@@ -89,7 +89,7 @@ def get_amber_script_contents_from_image_shaders_contents(
     add_generated_comment: bool = False,
     add_graphics_fuzz_comment: bool = False,
     comment_text: Optional[str] = None,
-    default_fence_timeout: bool = False,
+    use_default_fence_timeout: bool = False,
 ) -> str:
     """
     Generates Amberscript representation of an image test
@@ -106,6 +106,7 @@ def get_amber_script_contents_from_image_shaders_contents(
     if add_graphics_fuzz_comment:
         result += '# A test for a bug found by GraphicsFuzz.\n\n'
 
+    log(comment_text)
     if comment_text:
         result += get_text_as_comment(comment_text) + '\n\n'
 
@@ -125,7 +126,7 @@ def get_amber_script_contents_from_image_shaders_contents(
     result += '[require]\n'
     result += 'fbsize 256 256\n\n'
 
-    if not default_fence_timeout:
+    if not use_default_fence_timeout:
         result += '[require]\n'
         result += 'fence_timeout ' + str(AMBER_FENCE_TIMEOUT_MS) + '\n\n'
 
@@ -170,7 +171,7 @@ def run_spirv_asm_shader_job_to_amber_script(
     add_generated_comment: bool = False,
     add_graphics_fuzz_comment: bool = False,
     comment_text_file_path: Optional[pathlib.Path] = None,
-    default_fence_timeout: bool = False,
+    use_default_fence_timeout: bool = False,
 ) -> None:
     if is_compute_job(input_asm_spirv_job_json_path):
         raise NotImplementedError('Converting compute shaders to AmberScript not yet implemented')
@@ -219,7 +220,7 @@ def run_spirv_asm_shader_job_to_amber_script(
             add_graphics_fuzz_comment,
             util.file_read_text(
                 comment_text_file_path) if comment_text_file_path is not None else None,
-            default_fence_timeout,
+            use_default_fence_timeout,
         )
 
         util.file_write_text(output_amber_script_file_path, result)

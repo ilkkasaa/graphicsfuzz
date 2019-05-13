@@ -21,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='recipe.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\x0crecipe.proto\x1a\x0c\x63ommon.proto\x1a\x0e\x61rtifact.proto\"\xe9\x03\n\x06Recipe\x12!\n\x07\x63ommand\x18\x01 \x01(\x0b\x32\x0e.RecipeCommandH\x00\x12S\n#glsl_shader_job_to_spirv_shader_job\x18\x02 \x01(\x0b\x32$.RecipeGlslShaderJobToSpirvShaderJobH\x00\x12\\\n(spirv_shader_job_to_spirv_shader_job_opt\x18\x03 \x01(\x0b\x32(.RecipeSpirvShaderJobToSpirvShaderJobOptH\x00\x12J\n\x1eglsl_shader_job_add_red_pixels\x18\x04 \x01(\x0b\x32 .RecipeGlslShaderJobAddRedPixelsH\x00\x12U\n$spirv_asm_shader_job_to_amber_script\x18\x05 \x01(\x0b\x32%.RecipeSpirvAsmShaderJobToAmberScriptH\x00\x12\\\n(spirv_shader_job_to_spirv_asm_shader_job\x18\x06 \x01(\x0b\x32(.RecipeSpirvShaderJobToSpirvAsmShaderJobH\x00\x42\x08\n\x06recipe\" \n\rRecipeCommand\x12\x0f\n\x07\x63ommand\x18\x01 \x03(\t\"k\n#RecipeGlslShaderJobToSpirvShaderJob\x12 \n\x18glsl_shader_job_artifact\x18\x01 \x01(\t\x12\"\n\x1aglslang_validator_artifact\x18\x02 \x01(\t\"\x80\x01\n\'RecipeSpirvShaderJobToSpirvShaderJobOpt\x12!\n\x19spirv_shader_job_artifact\x18\x01 \x01(\t\x12\x16\n\x0espirv_opt_args\x18\x02 \x03(\t\x12\x1a\n\x12spirv_opt_artifact\x18\x03 \x01(\t\"c\n\x1fRecipeGlslShaderJobAddRedPixels\x12 \n\x18glsl_shader_job_artifact\x18\x01 \x01(\t\x12\x1e\n\x16graphics_fuzz_artifact\x18\x02 \x01(\t\"h\n\'RecipeSpirvShaderJobToSpirvAsmShaderJob\x12!\n\x19spirv_shader_job_artifact\x18\x01 \x01(\t\x12\x1a\n\x12spirv_dis_artifact\x18\x02 \x01(\t\"\xdd\x02\n$RecipeSpirvAsmShaderJobToAmberScript\x12%\n\x1dspirv_asm_shader_job_artifact\x18\x01 \x01(\t\x12 \n\x18make_self_contained_test\x18\x02 \x01(\x08\x12 \n\x18\x61mber_script_output_file\x18\x03 \x01(\t\x12&\n\x1e\x63opyright_header_text_artifact\x18\x04 \x01(\t\x12\x1d\n\x15\x61\x64\x64_generated_comment\x18\x05 \x01(\x08\x12!\n\x19\x61\x64\x64_graphics_fuzz_comment\x18\x06 \x01(\x08\x12\x1d\n\x15\x63omment_text_artifact\x18\x07 \x01(\t\x12\"\n\x1a\x61\x64\x64_glsl_source_as_comment\x18\x08 \x01(\x08\x12\x1d\n\x15\x64\x65\x66\x61ult_fence_timeout\x18\t \x01(\x08\x62\x06proto3')
+  serialized_pb=_b('\n\x0crecipe.proto\x1a\x0c\x63ommon.proto\x1a\x0e\x61rtifact.proto\"\xe9\x03\n\x06Recipe\x12!\n\x07\x63ommand\x18\x01 \x01(\x0b\x32\x0e.RecipeCommandH\x00\x12S\n#glsl_shader_job_to_spirv_shader_job\x18\x02 \x01(\x0b\x32$.RecipeGlslShaderJobToSpirvShaderJobH\x00\x12\\\n(spirv_shader_job_to_spirv_shader_job_opt\x18\x03 \x01(\x0b\x32(.RecipeSpirvShaderJobToSpirvShaderJobOptH\x00\x12J\n\x1eglsl_shader_job_add_red_pixels\x18\x04 \x01(\x0b\x32 .RecipeGlslShaderJobAddRedPixelsH\x00\x12U\n$spirv_asm_shader_job_to_amber_script\x18\x05 \x01(\x0b\x32%.RecipeSpirvAsmShaderJobToAmberScriptH\x00\x12\\\n(spirv_shader_job_to_spirv_asm_shader_job\x18\x06 \x01(\x0b\x32(.RecipeSpirvShaderJobToSpirvAsmShaderJobH\x00\x42\x08\n\x06recipe\" \n\rRecipeCommand\x12\x0f\n\x07\x63ommand\x18\x01 \x03(\t\"k\n#RecipeGlslShaderJobToSpirvShaderJob\x12 \n\x18glsl_shader_job_artifact\x18\x01 \x01(\t\x12\"\n\x1aglslang_validator_artifact\x18\x02 \x01(\t\"\x80\x01\n\'RecipeSpirvShaderJobToSpirvShaderJobOpt\x12!\n\x19spirv_shader_job_artifact\x18\x01 \x01(\t\x12\x16\n\x0espirv_opt_args\x18\x02 \x03(\t\x12\x1a\n\x12spirv_opt_artifact\x18\x03 \x01(\t\"c\n\x1fRecipeGlslShaderJobAddRedPixels\x12 \n\x18glsl_shader_job_artifact\x18\x01 \x01(\t\x12\x1e\n\x16graphics_fuzz_artifact\x18\x02 \x01(\t\"h\n\'RecipeSpirvShaderJobToSpirvAsmShaderJob\x12!\n\x19spirv_shader_job_artifact\x18\x01 \x01(\t\x12\x1a\n\x12spirv_dis_artifact\x18\x02 \x01(\t\"\xe1\x02\n$RecipeSpirvAsmShaderJobToAmberScript\x12%\n\x1dspirv_asm_shader_job_artifact\x18\x01 \x01(\t\x12 \n\x18make_self_contained_test\x18\x02 \x01(\x08\x12 \n\x18\x61mber_script_output_file\x18\x03 \x01(\t\x12&\n\x1e\x63opyright_header_text_artifact\x18\x04 \x01(\t\x12\x1d\n\x15\x61\x64\x64_generated_comment\x18\x05 \x01(\x08\x12!\n\x19\x61\x64\x64_graphics_fuzz_comment\x18\x06 \x01(\x08\x12\x1d\n\x15\x63omment_text_artifact\x18\x07 \x01(\t\x12\"\n\x1a\x61\x64\x64_glsl_source_as_comment\x18\x08 \x01(\x08\x12!\n\x19use_default_fence_timeout\x18\t \x01(\x08\x62\x06proto3')
   ,
   dependencies=[common__pb2.DESCRIPTOR,artifact__pb2.DESCRIPTOR,])
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -352,7 +352,7 @@ _RECIPESPIRVASMSHADERJOBTOAMBERSCRIPT = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='default_fence_timeout', full_name='RecipeSpirvAsmShaderJobToAmberScript.default_fence_timeout', index=8,
+      name='use_default_fence_timeout', full_name='RecipeSpirvAsmShaderJobToAmberScript.use_default_fence_timeout', index=8,
       number=9, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
@@ -371,7 +371,7 @@ _RECIPESPIRVASMSHADERJOBTOAMBERSCRIPT = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=1020,
-  serialized_end=1369,
+  serialized_end=1373,
 )
 
 _RECIPE.fields_by_name['command'].message_type = _RECIPECOMMAND
