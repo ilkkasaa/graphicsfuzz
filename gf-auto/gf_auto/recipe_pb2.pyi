@@ -148,17 +148,29 @@ class RecipeSpirvAsmShaderJobToAmberScript(google___protobuf___message___Message
     spirv_asm_shader_job_artifact = ... # type: typing___Text
     make_self_contained_test = ... # type: bool
     amber_script_output_file = ... # type: typing___Text
+    copyright_header_text_artifact = ... # type: typing___Text
+    add_generated_comment = ... # type: bool
+    add_graphics_fuzz_comment = ... # type: bool
+    comment_text_artifact = ... # type: typing___Text
+    add_glsl_source_as_comment = ... # type: bool
+    default_fence_timeout = ... # type: bool
 
     def __init__(self,
         spirv_asm_shader_job_artifact : typing___Optional[typing___Text] = None,
         make_self_contained_test : typing___Optional[bool] = None,
         amber_script_output_file : typing___Optional[typing___Text] = None,
+        copyright_header_text_artifact : typing___Optional[typing___Text] = None,
+        add_generated_comment : typing___Optional[bool] = None,
+        add_graphics_fuzz_comment : typing___Optional[bool] = None,
+        comment_text_artifact : typing___Optional[typing___Text] = None,
+        add_glsl_source_as_comment : typing___Optional[bool] = None,
+        default_fence_timeout : typing___Optional[bool] = None,
         ) -> None: ...
     @classmethod
     def FromString(cls, s: bytes) -> RecipeSpirvAsmShaderJobToAmberScript: ...
     def MergeFrom(self, other_msg: google___protobuf___message___Message) -> None: ...
     def CopyFrom(self, other_msg: google___protobuf___message___Message) -> None: ...
     if sys.version_info >= (3,):
-        def ClearField(self, field_name: typing_extensions___Literal[u"amber_script_output_file",u"make_self_contained_test",u"spirv_asm_shader_job_artifact"]) -> None: ...
+        def ClearField(self, field_name: typing_extensions___Literal[u"add_generated_comment",u"add_glsl_source_as_comment",u"add_graphics_fuzz_comment",u"amber_script_output_file",u"comment_text_artifact",u"copyright_header_text_artifact",u"default_fence_timeout",u"make_self_contained_test",u"spirv_asm_shader_job_artifact"]) -> None: ...
     else:
-        def ClearField(self, field_name: typing_extensions___Literal[b"amber_script_output_file",b"make_self_contained_test",b"spirv_asm_shader_job_artifact"]) -> None: ...
+        def ClearField(self, field_name: typing_extensions___Literal[b"add_generated_comment",b"add_glsl_source_as_comment",b"add_graphics_fuzz_comment",b"amber_script_output_file",b"comment_text_artifact",b"copyright_header_text_artifact",b"default_fence_timeout",b"make_self_contained_test",b"spirv_asm_shader_job_artifact"]) -> None: ...

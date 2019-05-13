@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='artifact.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\x0e\x61rtifact.proto\"\x96\x03\n\x10\x41rtifactMetadata\x12$\n\x04\x64\x61ta\x18\x02 \x01(\x0b\x32\x16.ArtifactMetadata.Data\x12\x14\n\x0c\x64\x65rived_from\x18\x03 \x03(\t\x1a\xc5\x02\n\x04\x44\x61ta\x12\x39\n\x0fglsl_shader_job\x18\x01 \x01(\x0b\x32\x1e.ArtifactMetadataGlslShaderJobH\x00\x12\x43\n\x19glsl_shader_job_reduction\x18\x02 \x01(\x0b\x32\x1e.ArtifactMetadataGlslReductionH\x00\x12;\n\x10spirv_shader_job\x18\x03 \x01(\x0b\x32\x1f.ArtifactMetadataSpirvShaderJobH\x00\x12\x42\n\x14spirv_asm_shader_job\x18\x04 \x01(\x0b\x32\".ArtifactMetadataSpirvAsmShaderJobH\x00\x12\x34\n\x0c\x61mber_script\x18\x05 \x01(\x0b\x32\x1c.ArtifactMetadataAmberScriptH\x00\x42\x06\n\x04\x64\x61ta\"\x83\x01\n\x1d\x41rtifactMetadataGlslShaderJob\x12\x17\n\x0fshader_job_file\x18\x01 \x01(\t\x12*\n\"reference_glsl_shader_job_artifact\x18\x02 \x01(\t\x12\x1d\n\x15red_pixel_at_top_left\x18\x03 \x01(\x08\"5\n\x1d\x41rtifactMetadataGlslReduction\x12\x14\n\x0c\x66inal_shader\x18\x01 \x01(\t\"\x86\x01\n\x10MetadataSpirvJob\x12\x17\n\x0fshader_job_file\x18\x01 \x01(\t\x12\'\n\x1fglsl_shader_job_source_artifact\x18\x02 \x01(\t\x12\x11\n\toptimized\x18\x03 \x01(\x08\x12\x1d\n\x15red_pixel_at_top_left\x18\x04 \x01(\x08\"F\n\x1e\x41rtifactMetadataSpirvShaderJob\x12$\n\tspirv_job\x18\x01 \x01(\x0b\x32\x11.MetadataSpirvJob\"I\n!ArtifactMetadataSpirvAsmShaderJob\x12$\n\tspirv_job\x18\x01 \x01(\x0b\x32\x11.MetadataSpirvJob\"U\n\x1b\x41rtifactMetadataAmberScript\x12\x19\n\x11\x61mber_script_file\x18\x01 \x01(\t\x12\x1b\n\x13self_contained_test\x18\x02 \x01(\x08\x62\x06proto3')
+  serialized_pb=_b('\n\x0e\x61rtifact.proto\"\xc6\x03\n\x10\x41rtifactMetadata\x12$\n\x04\x64\x61ta\x18\x02 \x01(\x0b\x32\x16.ArtifactMetadata.Data\x12\x14\n\x0c\x64\x65rived_from\x18\x03 \x03(\t\x1a\xf5\x02\n\x04\x44\x61ta\x12\x39\n\x0fglsl_shader_job\x18\x01 \x01(\x0b\x32\x1e.ArtifactMetadataGlslShaderJobH\x00\x12\x43\n\x19glsl_shader_job_reduction\x18\x02 \x01(\x0b\x32\x1e.ArtifactMetadataGlslReductionH\x00\x12;\n\x10spirv_shader_job\x18\x03 \x01(\x0b\x32\x1f.ArtifactMetadataSpirvShaderJobH\x00\x12\x42\n\x14spirv_asm_shader_job\x18\x04 \x01(\x0b\x32\".ArtifactMetadataSpirvAsmShaderJobH\x00\x12\x34\n\x0c\x61mber_script\x18\x05 \x01(\x0b\x32\x1c.ArtifactMetadataAmberScriptH\x00\x12.\n\ttext_file\x18\x06 \x01(\x0b\x32\x19.ArtifactMetadataTextFileH\x00\x42\x06\n\x04\x64\x61ta\"\x83\x01\n\x1d\x41rtifactMetadataGlslShaderJob\x12\x17\n\x0fshader_job_file\x18\x01 \x01(\t\x12*\n\"reference_glsl_shader_job_artifact\x18\x02 \x01(\t\x12\x1d\n\x15red_pixel_at_top_left\x18\x03 \x01(\x08\"5\n\x1d\x41rtifactMetadataGlslReduction\x12\x14\n\x0c\x66inal_shader\x18\x01 \x01(\t\"\xa6\x01\n\x10MetadataSpirvJob\x12\x17\n\x0fshader_job_file\x18\x01 \x01(\t\x12\'\n\x1fglsl_shader_job_source_artifact\x18\x02 \x01(\t\x12\x16\n\x0espirv_opt_args\x18\x03 \x03(\t\x12\x1d\n\x15red_pixel_at_top_left\x18\x04 \x01(\x08\x12\x19\n\x11manually_modified\x18\x05 \x01(\x08\"F\n\x1e\x41rtifactMetadataSpirvShaderJob\x12$\n\tspirv_job\x18\x01 \x01(\x0b\x32\x11.MetadataSpirvJob\"I\n!ArtifactMetadataSpirvAsmShaderJob\x12$\n\tspirv_job\x18\x01 \x01(\x0b\x32\x11.MetadataSpirvJob\"z\n\x1b\x41rtifactMetadataAmberScript\x12\x19\n\x11\x61mber_script_file\x18\x01 \x01(\t\x12\x1b\n\x13self_contained_test\x18\x02 \x01(\x08\x12#\n\x1b\x61\x64\x64_google_copyright_header\x18\x03 \x01(\x08\"-\n\x18\x41rtifactMetadataTextFile\x12\x11\n\ttext_file\x18\x01 \x01(\tb\x06proto3')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -68,6 +68,13 @@ _ARTIFACTMETADATA_DATA = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='text_file', full_name='ArtifactMetadata.Data.text_file', index=5,
+      number=6, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -84,7 +91,7 @@ _ARTIFACTMETADATA_DATA = _descriptor.Descriptor(
       index=0, containing_type=None, fields=[]),
   ],
   serialized_start=100,
-  serialized_end=425,
+  serialized_end=473,
 )
 
 _ARTIFACTMETADATA = _descriptor.Descriptor(
@@ -121,7 +128,7 @@ _ARTIFACTMETADATA = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=19,
-  serialized_end=425,
+  serialized_end=473,
 )
 
 
@@ -165,8 +172,8 @@ _ARTIFACTMETADATAGLSLSHADERJOB = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=428,
-  serialized_end=559,
+  serialized_start=476,
+  serialized_end=607,
 )
 
 
@@ -196,8 +203,8 @@ _ARTIFACTMETADATAGLSLREDUCTION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=561,
-  serialized_end=614,
+  serialized_start=609,
+  serialized_end=662,
 )
 
 
@@ -223,15 +230,22 @@ _METADATASPIRVJOB = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='optimized', full_name='MetadataSpirvJob.optimized', index=2,
-      number=3, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
+      name='spirv_opt_args', full_name='MetadataSpirvJob.spirv_opt_args', index=2,
+      number=3, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
       name='red_pixel_at_top_left', full_name='MetadataSpirvJob.red_pixel_at_top_left', index=3,
       number=4, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='manually_modified', full_name='MetadataSpirvJob.manually_modified', index=4,
+      number=5, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -248,8 +262,8 @@ _METADATASPIRVJOB = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=617,
-  serialized_end=751,
+  serialized_start=665,
+  serialized_end=831,
 )
 
 
@@ -279,8 +293,8 @@ _ARTIFACTMETADATASPIRVSHADERJOB = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=753,
-  serialized_end=823,
+  serialized_start=833,
+  serialized_end=903,
 )
 
 
@@ -310,8 +324,8 @@ _ARTIFACTMETADATASPIRVASMSHADERJOB = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=825,
-  serialized_end=898,
+  serialized_start=905,
+  serialized_end=978,
 )
 
 
@@ -336,6 +350,13 @@ _ARTIFACTMETADATAAMBERSCRIPT = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='add_google_copyright_header', full_name='ArtifactMetadataAmberScript.add_google_copyright_header', index=2,
+      number=3, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -348,8 +369,39 @@ _ARTIFACTMETADATAAMBERSCRIPT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=900,
-  serialized_end=985,
+  serialized_start=980,
+  serialized_end=1102,
+)
+
+
+_ARTIFACTMETADATATEXTFILE = _descriptor.Descriptor(
+  name='ArtifactMetadataTextFile',
+  full_name='ArtifactMetadataTextFile',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='text_file', full_name='ArtifactMetadataTextFile.text_file', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1104,
+  serialized_end=1149,
 )
 
 _ARTIFACTMETADATA_DATA.fields_by_name['glsl_shader_job'].message_type = _ARTIFACTMETADATAGLSLSHADERJOB
@@ -357,6 +409,7 @@ _ARTIFACTMETADATA_DATA.fields_by_name['glsl_shader_job_reduction'].message_type 
 _ARTIFACTMETADATA_DATA.fields_by_name['spirv_shader_job'].message_type = _ARTIFACTMETADATASPIRVSHADERJOB
 _ARTIFACTMETADATA_DATA.fields_by_name['spirv_asm_shader_job'].message_type = _ARTIFACTMETADATASPIRVASMSHADERJOB
 _ARTIFACTMETADATA_DATA.fields_by_name['amber_script'].message_type = _ARTIFACTMETADATAAMBERSCRIPT
+_ARTIFACTMETADATA_DATA.fields_by_name['text_file'].message_type = _ARTIFACTMETADATATEXTFILE
 _ARTIFACTMETADATA_DATA.containing_type = _ARTIFACTMETADATA
 _ARTIFACTMETADATA_DATA.oneofs_by_name['data'].fields.append(
   _ARTIFACTMETADATA_DATA.fields_by_name['glsl_shader_job'])
@@ -373,6 +426,9 @@ _ARTIFACTMETADATA_DATA.fields_by_name['spirv_asm_shader_job'].containing_oneof =
 _ARTIFACTMETADATA_DATA.oneofs_by_name['data'].fields.append(
   _ARTIFACTMETADATA_DATA.fields_by_name['amber_script'])
 _ARTIFACTMETADATA_DATA.fields_by_name['amber_script'].containing_oneof = _ARTIFACTMETADATA_DATA.oneofs_by_name['data']
+_ARTIFACTMETADATA_DATA.oneofs_by_name['data'].fields.append(
+  _ARTIFACTMETADATA_DATA.fields_by_name['text_file'])
+_ARTIFACTMETADATA_DATA.fields_by_name['text_file'].containing_oneof = _ARTIFACTMETADATA_DATA.oneofs_by_name['data']
 _ARTIFACTMETADATA.fields_by_name['data'].message_type = _ARTIFACTMETADATA_DATA
 _ARTIFACTMETADATASPIRVSHADERJOB.fields_by_name['spirv_job'].message_type = _METADATASPIRVJOB
 _ARTIFACTMETADATASPIRVASMSHADERJOB.fields_by_name['spirv_job'].message_type = _METADATASPIRVJOB
@@ -383,6 +439,7 @@ DESCRIPTOR.message_types_by_name['MetadataSpirvJob'] = _METADATASPIRVJOB
 DESCRIPTOR.message_types_by_name['ArtifactMetadataSpirvShaderJob'] = _ARTIFACTMETADATASPIRVSHADERJOB
 DESCRIPTOR.message_types_by_name['ArtifactMetadataSpirvAsmShaderJob'] = _ARTIFACTMETADATASPIRVASMSHADERJOB
 DESCRIPTOR.message_types_by_name['ArtifactMetadataAmberScript'] = _ARTIFACTMETADATAAMBERSCRIPT
+DESCRIPTOR.message_types_by_name['ArtifactMetadataTextFile'] = _ARTIFACTMETADATATEXTFILE
 
 ArtifactMetadata = _reflection.GeneratedProtocolMessageType('ArtifactMetadata', (_message.Message,), dict(
 
@@ -440,6 +497,13 @@ ArtifactMetadataAmberScript = _reflection.GeneratedProtocolMessageType('Artifact
   # @@protoc_insertion_point(class_scope:ArtifactMetadataAmberScript)
   ))
 _sym_db.RegisterMessage(ArtifactMetadataAmberScript)
+
+ArtifactMetadataTextFile = _reflection.GeneratedProtocolMessageType('ArtifactMetadataTextFile', (_message.Message,), dict(
+  DESCRIPTOR = _ARTIFACTMETADATATEXTFILE,
+  __module__ = 'artifact_pb2'
+  # @@protoc_insertion_point(class_scope:ArtifactMetadataTextFile)
+  ))
+_sym_db.RegisterMessage(ArtifactMetadataTextFile)
 
 
 # @@protoc_insertion_point(module_scope)

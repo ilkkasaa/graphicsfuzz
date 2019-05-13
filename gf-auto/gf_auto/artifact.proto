@@ -23,13 +23,6 @@ message ArtifactMetadata {
   // recipe because they were created manually so it is still useful to have this field.
   repeated string derived_from = 3;
 
-  // A description of the artifact.
-  string description = 4;
-
-  // A short description of the artifact. This will appear in the deqp test name, if exported to
-  // deqp.
-  string short_description = 5;
-
   message Data {
     oneof data {
       ArtifactMetadataGlslShaderJob glsl_shader_job = 1;
@@ -37,6 +30,7 @@ message ArtifactMetadata {
       ArtifactMetadataSpirvShaderJob spirv_shader_job = 3;
       ArtifactMetadataSpirvAsmShaderJob spirv_asm_shader_job = 4;
       ArtifactMetadataAmberScript amber_script = 5;
+      ArtifactMetadataTextFile text_file = 6;
     }
   }
 }
@@ -88,4 +82,8 @@ message ArtifactMetadataAmberScript {
   string amber_script_file = 1;
   bool self_contained_test = 2;
   bool add_google_copyright_header = 3;
+}
+
+message ArtifactMetadataTextFile {
+  string text_file = 1;
 }

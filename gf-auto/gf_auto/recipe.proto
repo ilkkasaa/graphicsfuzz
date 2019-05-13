@@ -60,5 +60,23 @@ message RecipeSpirvAsmShaderJobToAmberScript {
   // json file name, without the .json extension, plus the .amber_script extension.
   string amber_script_output_file = 3;
 
-}
+  // If present, add a copyright header comment using the text in the given artifact.
+  string copyright_header_text_artifact = 4; // [(artifact_type).text_file = {}]
 
+  // Add a "Generated" comment so it is clear the file was generated.
+  bool add_generated_comment = 5;
+
+  // Add "A test for a bug found by GraphicsFuzz" comment.
+  bool add_graphics_fuzz_comment = 6;
+
+  // If present, add text as a comment.
+  string comment_text_artifact = 7; // [(artifact_type).text_file = {}]
+
+  // Add the GLSL source as a comment.
+  bool add_glsl_source_as_comment = 8;
+
+  // If true, use Amber's default fence timeout value; otherwise, a large timeout value will be
+  // used to allow large, fuzzed, variant shaders to run.
+  bool default_fence_timeout = 9;
+
+}

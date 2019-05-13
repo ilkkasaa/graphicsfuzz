@@ -12,8 +12,10 @@ from shader_job_util import shader_job_get_related_files, frag_ext, asm_spirv_su
 AMBER_FENCE_TIMEOUT_MS = 60000
 
 
-def get_shader_as_comment(shader_contents: str) -> str:
-    lines = shader_contents.split('\n')
+def get_text_as_comment(text: str) -> str:
+    lines = text.split('\n')
+    while len(lines[-1]) == 0:
+        lines.pop()
     lines = [('# ' + line).rstrip() for line in lines]
     return '\n'.join(lines)
 
@@ -83,39 +85,55 @@ def get_amber_script_contents_from_image_shaders_contents(
     vert_glsl_contents: Optional[str] = None,
     frag_glsl_contents: Optional[str] = None,
     add_red_pixel_probe: bool = False,
+    copyright_header_text: Optional[str] = None,
+    add_generated_comment: bool = False,
+    add_graphics_fuzz_comment: bool = False,
+    comment_text: Optional[str] = None,
+    default_fence_timeout: bool = False,
 ) -> str:
     """
     Generates Amberscript representation of an image test
     """
 
-    result = '# Generated\n\n'
+    result = ''
 
-    result += '# A test for a bug found by GraphicsFuzz.\n\n'
+    if copyright_header_text:
+        result += get_text_as_comment(copyright_header_text) + '\n\n'
+
+    if add_generated_comment:
+        result = '# Generated.\n\n'
+
+    if add_graphics_fuzz_comment:
+        result += '# A test for a bug found by GraphicsFuzz.\n\n'
+
+    if comment_text:
+        result += get_text_as_comment(comment_text) + '\n\n'
 
     if vert_glsl_contents or frag_glsl_contents:
         result += '# Derived from the following GLSL.\n\n'
 
     if vert_glsl_contents:
         result += '# Vertex shader GLSL:\n'
-        result += get_shader_as_comment(vert_glsl_contents)
+        result += get_text_as_comment(vert_glsl_contents)
         result += '\n\n'
 
     if frag_glsl_contents:
         result += '# Fragment shader GLSL:\n'
-        result += get_shader_as_comment(frag_glsl_contents)
+        result += get_text_as_comment(frag_glsl_contents)
         result += '\n\n'
 
     result += '[require]\n'
     result += 'fbsize 256 256\n\n'
 
-    result += '[require]\n'
-    result += 'fence_timeout ' + str(AMBER_FENCE_TIMEOUT_MS) + '\n\n'
+    if not default_fence_timeout:
+        result += '[require]\n'
+        result += 'fence_timeout ' + str(AMBER_FENCE_TIMEOUT_MS) + '\n\n'
 
     if vert_asm_contents:
         result += '[vertex shader spirv]\n'
         result += vert_asm_contents
     else:
-        result += '[vertex shader passthrough]\n'
+        result += '[vertex shader passthrough]'
     result += '\n\n'
 
     result += '[fragment shader spirv]\n'
@@ -148,6 +166,11 @@ def run_spirv_asm_shader_job_to_amber_script(
     output_amber_script_file_path: pathlib.Path,
     add_red_pixel_probe: bool = False,
     input_glsl_source_json_path: pathlib.Path = None,
+    copyright_header_file_path: Optional[pathlib.Path] = None,
+    add_generated_comment: bool = False,
+    add_graphics_fuzz_comment: bool = False,
+    comment_text_file_path: Optional[pathlib.Path] = None,
+    default_fence_timeout: bool = False,
 ) -> None:
     if is_compute_job(input_asm_spirv_job_json_path):
         raise NotImplementedError('Converting compute shaders to AmberScript not yet implemented')
@@ -190,6 +213,13 @@ def run_spirv_asm_shader_job_to_amber_script(
             glsl_vert_contents,
             glsl_frag_contents,
             add_red_pixel_probe,
+            util.file_read_text(
+                copyright_header_file_path) if copyright_header_file_path is not None else None,
+            add_generated_comment,
+            add_graphics_fuzz_comment,
+            util.file_read_text(
+                comment_text_file_path) if comment_text_file_path is not None else None,
+            default_fence_timeout,
         )
 
         util.file_write_text(output_amber_script_file_path, result)

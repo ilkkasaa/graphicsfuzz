@@ -5,6 +5,7 @@ import pathlib
 import shutil
 
 # Note: Could use the built-in |file.open| and |file.write_text|, etc.
+from typing import Optional
 
 
 def file_open_binary(file: pathlib.Path, mode: str):
