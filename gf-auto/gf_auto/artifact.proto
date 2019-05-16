@@ -23,6 +23,9 @@ message ArtifactMetadata {
   // recipe because they were created manually so it is still useful to have this field.
   repeated string derived_from = 3;
 
+
+  string comment = 4;
+
   message Data {
     oneof data {
       ArtifactMetadataGlslShaderJob glsl_shader_job = 1;

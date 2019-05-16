@@ -58,6 +58,22 @@ def artifact_path_get_root() -> pathlib.Path:
     raise FileNotFoundError('Could not find root file {}'.format(artifact_root_file_name))
 
 
+def path_to_artifact_path(path: pathlib.Path) -> str:
+    from_root = path.relative_to(artifact_path_get_root()).as_posix()
+    return '//' + from_root
+
+
+def artifact_path_absolute(artifact_path: str) -> str:
+    """
+    Artifact paths should almost always begin with '//', but for convenience it can be useful to
+    use relative paths, especially when calling functions from an IPython shell.
+    :param artifact_path: An artifact path.
+    :return: absolute |artifact_path| starting with '//'.
+    """
+    path = norm_path(pathlib.Path(artifact_path)).absolute()
+    return path_to_artifact_path(path)
+
+
 def artifact_path_to_path(artifact_path: str) -> pathlib.Path:
     """
     Returns |artifact_path| converted to an OS specific path.
@@ -92,6 +108,8 @@ def artifact_get_recipe_log_file_path(artifact_path: str = '') -> pathlib.Path:
 
 
 def artifact_write_recipe(recipe: Optional[Recipe] = Recipe(), artifact_path: str = ''):
+    artifact_path = artifact_path_absolute(artifact_path)
+
     json_text = proto_util.message_to_json(recipe, including_default_value_fields=True)
     json_file_path = artifact_get_recipe_file_path(artifact_path)
     util.file_write_text(json_file_path, json_text)
@@ -110,6 +128,8 @@ def artifact_write_metadata(
     artifact_metadata: ArtifactMetadata = ArtifactMetadata(),
     artifact_path: str = '',
 ):
+    artifact_path = artifact_path_absolute(artifact_path)
+
     json_text = proto_util.message_to_json(artifact_metadata, including_default_value_fields=True)
     json_file_path = artifact_get_metadata_file_path(artifact_path)
     util.file_write_text(json_file_path, json_text)
@@ -131,6 +151,9 @@ def artifact_execute_recipe_if_needed(artifact_path: str = ''):
 
 
 def artifact_execute_recipe(artifact_path: str = '', only_if_artifact_json_missing: bool = False):
+
+    artifact_path = artifact_path_absolute(artifact_path)
+
     if only_if_artifact_json_missing and artifact_get_metadata_file_path(artifact_path).exists():
         return
 
