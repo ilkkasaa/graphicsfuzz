@@ -2,8 +2,6 @@ import json
 import pathlib
 from typing import Optional, List
 
-from gf_logging import log
-
 import util
 from shader_job_util import shader_job_get_related_files, frag_ext, asm_spirv_suffix, comp_ext, \
     all_ext, vert_ext, shader_job_get_shader_contents_or_none, glsl_suffix
@@ -106,7 +104,6 @@ def get_amber_script_contents_from_image_shaders_contents(
     if add_graphics_fuzz_comment:
         result += '# A test for a bug found by GraphicsFuzz.\n\n'
 
-    log(comment_text)
     if comment_text:
         result += get_text_as_comment(comment_text) + '\n\n'
 
