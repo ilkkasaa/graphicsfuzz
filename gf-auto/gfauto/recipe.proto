@@ -1,8 +1,7 @@
 
 syntax = "proto3";
 
-import "common.proto";
-import "artifact.proto";
+package gfauto;
 
 
 // It would be good if the recipe inputs were typed, because then we could (one day) dynamically

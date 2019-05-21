@@ -18,4 +18,4 @@ set -x
 set -e
 set -u
 
-protoc artifact.proto recipe.proto common.proto --python_out=. --plugin=protoc-gen-mypy=../../third_party/mypy-protobuf/python/protoc-gen-mypy --mypy_out=.
+protoc gfauto/artifact.proto gfauto/recipe.proto --python_out=. --plugin=protoc-gen-mypy=/data/git/mypy-protobuf/python/protoc-gen-mypy --mypy_out=. --proto_path=.

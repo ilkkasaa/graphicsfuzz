@@ -1,8 +1,9 @@
 
 
 import subprocess
-from gf_logging import log
 from typing import List, Union
+
+from .gflogging import log
 
 
 def convert_stdout_stderr(

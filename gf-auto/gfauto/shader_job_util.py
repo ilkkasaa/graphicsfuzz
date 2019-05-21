@@ -2,8 +2,8 @@
 
 import pathlib
 from typing import Iterable
-import util
 
+from . import util
 
 frag_ext = '.frag'
 vert_ext = '.vert'

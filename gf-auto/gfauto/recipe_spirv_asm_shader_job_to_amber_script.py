@@ -1,11 +1,26 @@
 import json
 import pathlib
-from typing import Optional, List
+from typing import Optional
 
-import util
-from shader_job_util import shader_job_get_related_files, frag_ext, asm_spirv_suffix, comp_ext, \
-    all_ext, vert_ext, shader_job_get_shader_contents_or_none, glsl_suffix
-
+from .artifact_pb2 import ArtifactMetadata
+from .artifacts import (
+    artifact_execute_recipe_if_needed,
+    Artifact,
+    artifact_get_inner_file_path,
+    artifact_write_metadata,
+    maybe_get_text_artifact_file_path,
+    artifact_read_metadata,
+)
+from .recipe_pb2 import RecipeSpirvAsmShaderJobToAmberScript
+from . import util
+from .shader_job_util import (
+    shader_job_get_related_files,
+    frag_ext,
+    asm_spirv_suffix,
+    comp_ext,
+    vert_ext,
+    shader_job_get_shader_contents_or_none,
+)
 
 AMBER_FENCE_TIMEOUT_MS = 60000
 
@@ -221,3 +236,80 @@ def run_spirv_asm_shader_job_to_amber_script(
         )
 
         util.file_write_text(output_amber_script_file_path, result)
+
+
+def recipe_spirv_asm_shader_job_to_amber_script(
+    recipe: RecipeSpirvAsmShaderJobToAmberScript,
+    output_artifact_path: str,
+):
+    artifact_execute_recipe_if_needed(recipe.spirv_asm_shader_job_artifact)
+
+    # Wrap input artifact for convenience.
+    input_artifact = Artifact(recipe.spirv_asm_shader_job_artifact)
+
+    input_json_path = artifact_get_inner_file_path(
+        input_artifact.metadata.data.spirv_asm_shader_job.spirv_job.shader_job_file,
+        input_artifact.path)
+
+    input_glsl_json_path = None
+    input_glsl_artifact_path = \
+        input_artifact.metadata.data.spirv_asm_shader_job.spirv_job.glsl_shader_job_source_artifact
+    if len(input_glsl_artifact_path) > 0 and recipe.add_glsl_source_as_comment:
+        input_glsl_artifact = artifact_read_metadata(input_glsl_artifact_path)
+        input_glsl_json_path = artifact_get_inner_file_path(
+            input_glsl_artifact.data.glsl_shader_job.shader_job_file,
+            input_glsl_artifact_path,
+        )
+
+    input_comment_text_file_path = maybe_get_text_artifact_file_path(
+        recipe.comment_text_artifact,
+    )
+
+    input_copyright_header_file_path = maybe_get_text_artifact_file_path(
+        recipe.copyright_header_text_artifact,
+    )
+
+    add_red_pixel_probe = False
+    if recipe.make_self_contained_test:
+        if not input_artifact.metadata.data.spirv_asm_shader_job.spirv_job.red_pixel_at_top_left:
+            raise NotImplementedError(
+                'Cannot create self-contained AmberScript test unless the input SPIR-V shader job '
+                'has "red_pixel_at_top_left: true"'
+            )
+        add_red_pixel_probe = True
+
+    output_amber_script_file_name = recipe.amber_script_output_file
+    if len(output_amber_script_file_name) == 0:
+        output_amber_script_file_name = (
+            util.remove_end(input_json_path.name, '.json') + '.amber_script'
+        )
+
+    output_amber_script_file_path = artifact_get_inner_file_path(
+        output_amber_script_file_name,
+        output_artifact_path,
+    )
+
+    output_metadata = ArtifactMetadata()
+    output_metadata.data.amber_script.amber_script_file = output_amber_script_file_name
+    if add_red_pixel_probe:
+        output_metadata.data.amber_script.self_contained_test = True
+    output_metadata.derived_from.append(input_artifact.path)
+
+    glsl_source_artifact = \
+        input_artifact.metadata.data.spirv_asm_shader_job.spirv_job.glsl_shader_job_source_artifact
+    if len(glsl_source_artifact) > 0:
+        output_metadata.derived_from.append(glsl_source_artifact)
+
+    run_spirv_asm_shader_job_to_amber_script(
+        input_json_path,
+        output_amber_script_file_path,
+        add_red_pixel_probe,
+        input_glsl_json_path,
+        input_copyright_header_file_path,
+        recipe.add_generated_comment,
+        recipe.add_graphics_fuzz_comment,
+        input_comment_text_file_path,
+        recipe.use_default_fence_timeout,
+    )
+
+    artifact_write_metadata(output_metadata, output_artifact_path)
