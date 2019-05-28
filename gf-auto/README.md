@@ -10,39 +10,29 @@ GraphicsFuzz auto (this project) provides scripts for running these tools with m
 
 ## Development setup
 
-We currently target Python 3.6.
-We assume `python3` will execute this version and that you also have `pip` installed for this version of Python (which might be the `pip3` package in your system's package manager).
+Execute `./dev_shell.sh.template` (or, copy to `dev_shell.sh` and modify as needed).
 
-```sh
-# Change to the project root.
-cd gf-auto
+For iPython, you may want to disable Jedi autocomplete to get better autocomplete:
 
-# Install pipenv using pip.
-python3 -m pip install pipenv --user
+```python
+ipython
 
-# The following (optional) line causes the virtual environment to be placed at
-# `gf-auto/.venv`. You may wish to add this environment variable permanently,
-# such as by adding to your .bashrc file.
-export PIPENV_VENV_IN_PROJECT=1
+%config IPCompleter.use_jedi=False
 
-# Install project dependencies, including development dependencies, into a
-# virtual environment using pipenv.
-python3 -m pipenv install --dev
+from gfauto.artifacts import *
 
-# Enter the virtual environment.
-python3 -m pipenv shell
+a = ArtifactMetadata()
+a.data.glsl_[TAB]
+a.data.glsl_shader_job.SetInParent()
+a
 
-# `python` should now point to the correct version of Python.
-python --version
+Out[5]:
+data {
+  glsl_shader_job {
+  }
+}
 
-# Output:
-# Python 3.X.X
-# (gf-auto)
-
-# Exit the shell to execute other pipenv commands, if needed.
-exit
-python3 -m pipenv
+artifact_write_metadata(a, '//my_shader')
 
 ```
-
 
