@@ -313,6 +313,7 @@ def artifact_create_amber_script_from_glsl_shader_job_artifact(
     spirv_opt_args: Optional[Iterable[str]] = None,
     copyright_header_artifact_path: Optional[str] = None,
     comment: Optional[str] = None,
+    make_self_contained: bool = False,
 ):
     next_input = input_artifact_path
 
@@ -320,6 +321,7 @@ def artifact_create_amber_script_from_glsl_shader_job_artifact(
     if (
         next_metadata.data.HasField('glsl_shader_job')
         and not next_metadata.data.glsl_shader_job.red_pixel_at_top_left
+        and make_self_contained
     ):
         next_input = artifact_write_recipe(
             Recipe(
@@ -403,6 +405,8 @@ def artifact_create_amber_script_from_glsl_shader_job_artifact(
     ), out_artifact_prefix_path + '/glsl_spirv_o_asm_amber')
 
     artifact_execute_recipe_if_needed(next_input)
+
+    return next_input
 
 
 from .recipe_glsl_shader_job_add_red_pixels import recipe_glsl_shader_job_add_red_pixels  # noqa
