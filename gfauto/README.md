@@ -12,27 +12,42 @@ GraphicsFuzz auto (this project) provides scripts for running these tools with m
 
 Execute `./dev_shell.sh.template` (or, copy to `dev_shell.sh` and modify as needed).
 
-For iPython, you may want to disable Jedi autocomplete to get better autocomplete:
+### PyCharm
+
+Use PyCharm to open the top-level `gfauto` directory.
+It should pick up the `.venv` (virtual environment) automatically
+for the code
+and also when you open a `Terminal` or `Python Console` tab.
+
+Install and configure plugins:
+
+* Protobuf Support
+* File Watchers (may already be installed)
+  * Add a file watcher:
+    * File type: Python
+    * Program: `$PyInterpreterDirectory$/black`
+    * Arguments: `$FilePath$`
+
+
+## Using iPython
+
+Using an iPython shell is useful for modifying artifacts interactively.
+
 
 ```python
+# Start iPython, if not running already.
 ipython
 
+# Disabling jedi can help with autocompletion of protobuf objects.
 %config IPCompleter.use_jedi=False
 
 from gfauto.artifacts import *
 
-a = ArtifactMetadata()
-a.data.glsl_[TAB]
-a.data.glsl_shader_job.SetInParent()
-a
+# This is executed as a shell command.
+cd /data/artifacts
 
-Out[5]:
-data {
-  glsl_shader_job {
-  }
-}
+a = ArtifactMetadata()
+a.data.glsl_shader_job.shader_job_file = "shader.json"
 
 artifact_write_metadata(a, '//my_glsl_shader_job')
-
 ```
-

@@ -1,4 +1,14 @@
-/.venv/
-/.idea/
-/*.egg-info/
+
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/workspace.xml
+
+.venv/
+*.egg-info/
 __pycache__/
+
+
+.pytest_cache/
+.vscode/
+

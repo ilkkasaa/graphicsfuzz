@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from contextlib import contextmanager
 import io
+import os
 import pathlib
 import shutil
-import os
-from typing import Optional
+from contextlib import contextmanager
+
 
 # Note: Could use the built-in |file.open| and |file.write_text|, etc.
 

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import io
-from typing import Optional, List, Union
+from typing import List, Union
 
 log_to_stdout = True
 log_to_stream = []  # type: List[Union[io.TextIOBase, io.StringIO]]

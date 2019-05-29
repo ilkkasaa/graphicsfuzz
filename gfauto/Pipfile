@@ -33,6 +33,12 @@ mypy-protobuf = "*"
 # Provides protoc.
 grpcio-tools = "*"
 
+# Linter
+flake8 = "*"
+flake8-black = "*"
+flake8-isort = "*"
+
+
 
 [packages]
 
