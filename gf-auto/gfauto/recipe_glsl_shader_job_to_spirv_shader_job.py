@@ -1,15 +1,9 @@
-
-
 import pathlib
 from typing import Optional, List
 
 from .shader_job_util import shader_job_get_related_files
 from .subprocess_util import run
-from .util import (
-    tool_on_path,
-    file_mkdirs_parent,
-    copy_file,
-)
+from .util import tool_on_path, file_mkdirs_parent, copy_file
 from .artifact_pb2 import ArtifactMetadata
 from .artifacts import (
     artifact_execute_recipe_if_needed,
@@ -21,7 +15,7 @@ from .recipe_pb2 import RecipeGlslShaderJobToSpirvShaderJob
 
 
 def glslang_validator_on_path() -> pathlib.Path:
-    return tool_on_path('glslangValidator')
+    return tool_on_path("glslangValidator")
 
 
 def run_glslang_glsl_shader_to_spirv_shader(
@@ -33,17 +27,19 @@ def run_glslang_glsl_shader_to_spirv_shader(
     if not glslang_validator_file_path:
         glslang_validator_file_path = glslang_validator_on_path()
 
-    output_spirv_file_path = output_dir_path / (glsl_shader_path.name + '.spv')
+    output_spirv_file_path = output_dir_path / (glsl_shader_path.name + ".spv")
 
     file_mkdirs_parent(output_spirv_file_path)
 
-    run([
-        str(glslang_validator_file_path),
-        '-V',
-        '-o',
-        str(output_spirv_file_path),
-        str(glsl_shader_path),
-    ])
+    run(
+        [
+            str(glslang_validator_file_path),
+            "-V",
+            "-o",
+            str(output_spirv_file_path),
+            str(glsl_shader_path),
+        ]
+    )
 
     return output_spirv_file_path
 
@@ -57,9 +53,7 @@ def run_glslang_glsl_to_spirv_job(
     if not glslang_validator_file_path:
         glslang_validator_file_path = glslang_validator_on_path()
 
-    glsl_shader_files = shader_job_get_related_files(
-        glsl_shader_job_json_file_path
-    )
+    glsl_shader_files = shader_job_get_related_files(glsl_shader_job_json_file_path)
 
     copy_file(glsl_shader_job_json_file_path, spirv_shader_job_json_file_path)
 
@@ -77,8 +71,7 @@ def run_glslang_glsl_to_spirv_job(
 
 
 def recipe_glsl_shader_job_to_spirv_shader_job(
-    recipe: RecipeGlslShaderJobToSpirvShaderJob,
-    output_artifact_path: str,
+    recipe: RecipeGlslShaderJobToSpirvShaderJob, output_artifact_path: str
 ):
     artifact_execute_recipe_if_needed(recipe.glsl_shader_job_artifact)
     if len(recipe.glslang_validator_artifact) > 0:
@@ -95,17 +88,20 @@ def recipe_glsl_shader_job_to_spirv_shader_job(
     )
 
     if len(recipe.glslang_validator_artifact) > 0:
-        raise NotImplementedError('Not yet implemented the use of glslang_validator_artifact')
+        raise NotImplementedError(
+            "Not yet implemented the use of glslang_validator_artifact"
+        )
 
-    glslang_validator_file_path = tool_on_path('glslangValidator')
+    glslang_validator_file_path = tool_on_path("glslangValidator")
 
     output_metadata = ArtifactMetadata()
     output_metadata.CopyFrom(input_glsl_artifact.metadata)
     output_metadata.data.spirv_shader_job.spirv_job.shader_job_file = (
         input_glsl_artifact.metadata.data.glsl_shader_job.shader_job_file
     )
-    output_metadata.data.spirv_shader_job.spirv_job.red_pixel_at_top_left = \
+    output_metadata.data.spirv_shader_job.spirv_job.red_pixel_at_top_left = (
         input_glsl_artifact.metadata.data.glsl_shader_job.red_pixel_at_top_left
+    )
     # Derived from.
     # TODO: This could be automated.
     output_metadata.derived_from.extend(input_glsl_artifact.metadata.derived_from)

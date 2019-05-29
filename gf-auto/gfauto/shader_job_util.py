@@ -1,24 +1,22 @@
-
-
 import pathlib
 from typing import Iterable
 
 from . import util
 
-frag_ext = '.frag'
-vert_ext = '.vert'
-comp_ext = '.comp'
+frag_ext = ".frag"
+vert_ext = ".vert"
+comp_ext = ".comp"
 
 all_ext = (frag_ext, vert_ext, comp_ext)
 
-glsl_suffix = ''
-spirv_suffix = '.spv'
-asm_spirv_suffix = '.asm'
+glsl_suffix = ""
+spirv_suffix = ".spv"
+asm_spirv_suffix = ".asm"
 
 
-glsl_shader_job_related_file_extensions = ['.frag', '.vert', '.comp']
-spirv_shader_job_related_file_extensions = ['.frag.spv', '.vert.spv', '.comp.spv']
-asm_spirv_shader_job_related_file_extensions = ['.frag.asm', '.vert.asm', '.comp.asm']
+glsl_shader_job_related_file_extensions = [".frag", ".vert", ".comp"]
+spirv_shader_job_related_file_extensions = [".frag.spv", ".vert.spv", ".comp.spv"]
+asm_spirv_shader_job_related_file_extensions = [".frag.asm", ".vert.asm", ".comp.asm"]
 
 
 def shader_job_get_shader_contents_or_none(
@@ -34,6 +32,7 @@ def shader_job_get_shader_contents_or_none(
 
 
 # Get related files.
+
 
 def shader_job_get_related_files(
     shader_job_file_path: pathlib.Path,
@@ -68,18 +67,20 @@ def shader_job_copy(
     util.copy_file(shader_job_file_path, output_shader_job_file_path)
 
     # [source/variant.frag, source/variant.vert, ...]
-    other_files = shader_job_get_related_files(shader_job_file_path, extensions, language_suffix)
+    other_files = shader_job_get_related_files(
+        shader_job_file_path, extensions, language_suffix
+    )
 
     # [variant.frag, variant.vert, ...]
     dest_other_files = [f.name for f in other_files]
 
     # [dest/variant.frag, dest/variant.vert, ...]
-    dest_other_files = [output_shader_job_file_path.with_name(f) for f in dest_other_files]
+    dest_other_files = [
+        output_shader_job_file_path.with_name(f) for f in dest_other_files
+    ]
 
     for (source, dest) in zip(other_files, dest_other_files):
         util.copy_file(source, dest)
         output_files.append(dest)
 
     return output_files
-
-

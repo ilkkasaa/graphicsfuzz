@@ -1,4 +1,3 @@
-
 # Copyright 2019 The GraphicsFuzz Project Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,12 +29,8 @@ setup(
     license="Apache License 2.0",
     packages=["gfauto"],
     python_requires=">=3.6",
-    install_requires=[
-        "protobuf",
-    ],
-    package_data={
-        "gfauto": ["*.proto", "*.pyi"],
-    },
+    install_requires=["protobuf"],
+    package_data={"gfauto": ["*.proto", "*.pyi"]},
     classifiers=[
         "Environment :: Console",
         "Intended Audience :: Developers",
@@ -46,7 +41,5 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3 :: Only",
     ],
-    entry_points={
-        "console_scripts": [],
-    },
+    entry_points={"console_scripts": []},
 )

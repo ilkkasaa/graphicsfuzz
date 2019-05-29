@@ -1,13 +1,8 @@
-
-
 import pathlib
 from typing import Optional, List
 
 from .subprocess_util import run
-from .shader_job_util import (
-    shader_job_get_related_files,
-    spirv_suffix,
-)
+from .shader_job_util import shader_job_get_related_files, spirv_suffix
 from . import util
 from .artifact_pb2 import ArtifactMetadata
 from .artifacts import (
@@ -24,24 +19,25 @@ def run_spirv_dis_on_spirv_shader(
     input_spirv_file_path: pathlib.Path,
     output_dir_path: pathlib.Path,
     spirv_dis_file_path: Optional[pathlib.Path] = None,
-
 ) -> pathlib.Path:
     if not spirv_dis_file_path:
         spirv_dis_file_path = util.spirv_dis_on_path()
 
     output_spirv_file_path = output_dir_path / (
-        util.remove_end(input_spirv_file_path.name, '.spv') + '.asm'
+        util.remove_end(input_spirv_file_path.name, ".spv") + ".asm"
     )
 
     util.file_mkdirs_parent(output_spirv_file_path)
 
-    run([
-        str(spirv_dis_file_path),
-        str(input_spirv_file_path),
-        '-o',
-        str(output_spirv_file_path),
-        '--raw-id',
-    ])
+    run(
+        [
+            str(spirv_dis_file_path),
+            str(input_spirv_file_path),
+            "-o",
+            str(output_spirv_file_path),
+            "--raw-id",
+        ]
+    )
 
     return output_spirv_file_path
 
@@ -56,22 +52,16 @@ def run_spirv_shader_job_to_spirv_asm_shader_job(
         spirv_dis_file_path = util.spirv_dis_on_path()
 
     shader_files = shader_job_get_related_files(
-        input_spirv_job_json_file_path,
-        language_suffix=spirv_suffix,
+        input_spirv_job_json_file_path, language_suffix=spirv_suffix
     )
 
-    util.copy_file(
-        input_spirv_job_json_file_path,
-        output_spirv_job_json_file_path,
-    )
+    util.copy_file(input_spirv_job_json_file_path, output_spirv_job_json_file_path)
 
     output_shader_file_paths = []  # type: List[pathlib.Path]
 
     for shader_file in shader_files:
         asm_file_path = run_spirv_dis_on_spirv_shader(
-            shader_file,
-            output_spirv_job_json_file_path.parent,
-            spirv_dis_file_path,
+            shader_file, output_spirv_job_json_file_path.parent, spirv_dis_file_path
         )
         output_shader_file_paths.append(asm_file_path)
 
@@ -79,8 +69,7 @@ def run_spirv_shader_job_to_spirv_asm_shader_job(
 
 
 def recipe_spirv_shader_job_to_spirv_asm_shader_job(
-    recipe: RecipeSpirvShaderJobToSpirvAsmShaderJob,
-    output_artifact_path: str,
+    recipe: RecipeSpirvShaderJobToSpirvAsmShaderJob, output_artifact_path: str
 ):
     artifact_execute_recipe_if_needed(recipe.spirv_shader_job_artifact)
     if len(recipe.spirv_dis_artifact) > 0:
@@ -109,15 +98,12 @@ def recipe_spirv_shader_job_to_spirv_asm_shader_job(
     )
 
     if len(recipe.spirv_dis_artifact) > 0:
-        raise NotImplementedError('Not yet implemented the use of spirv_dis_artifact')
+        raise NotImplementedError("Not yet implemented the use of spirv_dis_artifact")
 
-    spirv_dis_file_path = tool_on_path('spirv-dis')
+    spirv_dis_file_path = tool_on_path("spirv-dis")
 
     run_spirv_shader_job_to_spirv_asm_shader_job(
-        input_json_path,
-        output_json_path,
-        spirv_dis_file_path,
+        input_json_path, output_json_path, spirv_dis_file_path
     )
 
     artifact_write_metadata(output_metadata, output_artifact_path)
-

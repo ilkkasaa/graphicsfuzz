@@ -21,3 +21,5 @@ set -u
 python -m grpc.tools.protoc --python_out=. --proto_path=. --mypy_out=. gfauto/*.proto
 
 # protoc gfauto/artifact.proto gfauto/recipe.proto --python_out=. --plugin=protoc-gen-mypy=mypy-protobuf/python/protoc-gen-mypy --mypy_out=. --proto_path=.
+
+./run_formatter.sh

@@ -1,5 +1,3 @@
-
-
 import io
 from typing import Optional, List, Union
 
@@ -20,5 +18,5 @@ def log(message: str) -> None:
         print(message, flush=True)
     for stream in log_to_stream:
         stream.write(message)
-        stream.write('\n')
+        stream.write("\n")
         stream.flush()
