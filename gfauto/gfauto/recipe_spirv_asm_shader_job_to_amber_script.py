@@ -16,24 +16,24 @@ import json
 import pathlib
 from typing import Optional
 
+from . import util
 from .artifact_pb2 import ArtifactMetadata
 from .artifacts import (
-    artifact_execute_recipe_if_needed,
     Artifact,
+    artifact_execute_recipe_if_needed,
     artifact_get_inner_file_path,
+    artifact_read_metadata,
     artifact_write_metadata,
     maybe_get_text_artifact_file_path,
-    artifact_read_metadata,
 )
 from .recipe_pb2 import RecipeSpirvAsmShaderJobToAmberScript
-from . import util
 from .shader_job_util import (
-    shader_job_get_related_files,
-    frag_ext,
     asm_spirv_suffix,
     comp_ext,
-    vert_ext,
+    frag_ext,
+    shader_job_get_related_files,
     shader_job_get_shader_contents_or_none,
+    vert_ext,
 )
 
 AMBER_FENCE_TIMEOUT_MS = 60000

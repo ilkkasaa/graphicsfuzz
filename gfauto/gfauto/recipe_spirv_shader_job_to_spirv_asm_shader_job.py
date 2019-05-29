@@ -13,19 +13,19 @@
 # limitations under the License.
 
 import pathlib
-from typing import Optional, List
+from typing import List, Optional
 
-from .subprocess_util import run
-from .shader_job_util import shader_job_get_related_files, spirv_suffix
 from . import util
 from .artifact_pb2 import ArtifactMetadata
 from .artifacts import (
-    artifact_execute_recipe_if_needed,
     Artifact,
+    artifact_execute_recipe_if_needed,
     artifact_get_inner_file_path,
     artifact_write_metadata,
 )
 from .recipe_pb2 import RecipeSpirvShaderJobToSpirvAsmShaderJob
+from .shader_job_util import shader_job_get_related_files, spirv_suffix
+from .subprocess_util import run
 from .util import tool_on_path
 
 

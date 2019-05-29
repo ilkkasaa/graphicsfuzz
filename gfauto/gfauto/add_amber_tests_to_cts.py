@@ -15,9 +15,9 @@
 # limitations under the License.
 
 import argparse
-import sys
 import os
 import shutil
+import sys
 
 # This file is self-contained so it can be provided alongside Amber test files.
 

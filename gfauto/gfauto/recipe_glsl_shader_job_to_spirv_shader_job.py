@@ -13,19 +13,19 @@
 # limitations under the License.
 
 import pathlib
-from typing import Optional, List
+from typing import List, Optional
 
-from .shader_job_util import shader_job_get_related_files
-from .subprocess_util import run
-from .util import tool_on_path, file_mkdirs_parent, copy_file
 from .artifact_pb2 import ArtifactMetadata
 from .artifacts import (
-    artifact_execute_recipe_if_needed,
     Artifact,
+    artifact_execute_recipe_if_needed,
     artifact_get_inner_file_path,
     artifact_write_metadata,
 )
 from .recipe_pb2 import RecipeGlslShaderJobToSpirvShaderJob
+from .shader_job_util import shader_job_get_related_files
+from .subprocess_util import run
+from .util import copy_file, file_mkdirs_parent, tool_on_path
 
 
 def glslang_validator_on_path() -> pathlib.Path:

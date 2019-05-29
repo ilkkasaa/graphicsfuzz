@@ -13,19 +13,19 @@
 # limitations under the License.
 
 import pathlib
-from typing import Optional, List
 import re
+from typing import List, Optional
 
-from .artifact_pb2 import ArtifactMetadata
-from .recipe_pb2 import RecipeGlslShaderJobAddRedPixels
 from . import util
-from .shader_job_util import shader_job_copy
+from .artifact_pb2 import ArtifactMetadata
 from .artifacts import (
-    artifact_execute_recipe_if_needed,
     Artifact,
+    artifact_execute_recipe_if_needed,
     artifact_get_inner_file_path,
     artifact_write_metadata,
 )
+from .recipe_pb2 import RecipeGlslShaderJobAddRedPixels
+from .shader_job_util import shader_job_copy
 
 #                      | group 1       ||g2|
 pattern = re.compile(r"(void main\(\)\n)({)")
