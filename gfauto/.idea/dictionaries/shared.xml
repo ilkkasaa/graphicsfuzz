@@ -1,0 +1,25 @@
+<component name="ProjectDictionaryState">
+  <dictionary name="shared">
+    <words>
+      <w>amberscript</w>
+      <w>catchsegv</w>
+      <w>fbsize</w>
+      <w>glsl</w>
+      <w>glslang</w>
+      <w>graphicsfuzz</w>
+      <w>ivec</w>
+      <w>mkdirs</w>
+      <w>mustpass</w>
+      <w>myuniform</w>
+      <w>noqa</w>
+      <w>passthrough</w>
+      <w>protobuf</w>
+      <w>pushd</w>
+      <w>spir</w>
+      <w>spirv</w>
+      <w>vkscript</w>
+      <w>vulkan</w>
+      <w>vulkancts</w>
+    </words>
+  </dictionary>
+</component>

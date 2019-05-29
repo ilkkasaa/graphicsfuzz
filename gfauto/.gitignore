@@ -3,6 +3,8 @@
 .idea/modules.xml
 .idea/vcs.xml
 .idea/workspace.xml
+.idea/dictionaries/*
+!.idea/dictionaries/shared.xml
 
 .venv/
 *.egg-info/
