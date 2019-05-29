@@ -32,7 +32,7 @@ data {
   }
 }
 
-artifact_write_metadata(a, '//my_shader')
+artifact_write_metadata(a, '//my_glsl_shader_job')
 
 ```
 

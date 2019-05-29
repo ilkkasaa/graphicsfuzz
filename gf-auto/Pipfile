@@ -18,13 +18,26 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+
+# iPython shell is useful for modifying artifacts interactively.
 ipython = "*"
-black = "==19.3b0"
-mypy-protobuf = "*"
-grpcio-tools = "*"
 jedi = "*"
 
+# Code formatter. Explicit version given because it is a pre-release and
+# otherwise we get errors.
+black = "==19.3b0"
+
+# Plugin to protoc that outputs .pyi files (type information).
+mypy-protobuf = "*"
+
+# Provides protoc.
+grpcio-tools = "*"
+
+
 [packages]
+
+# Add "this" package as a dependency; this ensures all packages listed in
+# setup.py are installed into the venv.
 gfauto = {path = ".", editable = true}
 
 [requires]
