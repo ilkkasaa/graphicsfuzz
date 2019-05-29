@@ -16,7 +16,6 @@
 
 import argparse
 import sys
-import io
 import os
 import shutil
 
@@ -43,7 +42,7 @@ def remove_start(string, start):
 
 
 def open_helper(file, mode):
-    return io.open(file, mode, encoding="utf-8", errors="ignore")
+    return open(file, mode, encoding="utf-8", errors="ignore")
 
 
 def check_dir_exists(directory):

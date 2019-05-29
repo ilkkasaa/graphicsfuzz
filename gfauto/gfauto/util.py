@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import io
 import os
 import pathlib
 import shutil
@@ -24,12 +23,12 @@ from contextlib import contextmanager
 
 def file_open_binary(file: pathlib.Path, mode: str):
     assert mode.find("b") != -1
-    return io.open(str(file), mode)
+    return open(str(file), mode)
 
 
 def file_open_text(file: pathlib.Path, mode: str):
     assert mode.find("b") == -1
-    return io.open(str(file), mode, encoding="utf-8", errors="ignore")
+    return open(str(file), mode, encoding="utf-8", errors="ignore")
 
 
 def file_read_text(file: pathlib.Path):
@@ -48,8 +47,8 @@ def file_write_text(file: pathlib.Path, text: str):
         return f.write(text)
 
 
-def mkdirs_p(dir: pathlib.Path):
-    dir.mkdir(parents=True, exist_ok=True)
+def mkdirs_p(path: pathlib.Path):
+    path.mkdir(parents=True, exist_ok=True)
 
 
 def file_mkdirs_parent(file: pathlib.Path):

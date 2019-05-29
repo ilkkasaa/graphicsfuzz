@@ -49,12 +49,12 @@ def log_stdout_stderr(
     log("")
 
 
-def log_returncode(
+def log_return_code(
     result: Union[
         subprocess.CalledProcessError, subprocess.CompletedProcess, subprocess.Popen
     ],
 ) -> None:
-    log("RETURNCODE: " + str(result.returncode))
+    log("RETURN_CODE: " + str(result.returncode))
 
 
 def run(
@@ -84,18 +84,18 @@ def run(
         )
     except subprocess.TimeoutExpired as ex:
         convert_stdout_stderr(ex)
-        # no returncode to log in case of timeout
+        # no return code to log in case of timeout
         log_stdout_stderr(ex)
         raise ex
 
     except subprocess.CalledProcessError as ex:
         convert_stdout_stderr(ex)
-        log_returncode(ex)
+        log_return_code(ex)
         log_stdout_stderr(ex)
         raise ex
 
     convert_stdout_stderr(result)
-    log_returncode(result)
+    log_return_code(result)
 
     if verbose:
         log_stdout_stderr(result)
