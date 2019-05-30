@@ -21,17 +21,13 @@ from contextlib import contextmanager
 
 
 def file_open_binary(file: pathlib.Path, mode: str):
-    check(
-        mode.find("b") != -1,
-        AssertionError(f"|mode|(=={mode}) should contain 'b'"),
-    )
+    check(mode.find("b") != -1, AssertionError(f"|mode|(=={mode}) should contain 'b'"))
     return open(str(file), mode)
 
 
 def file_open_text(file: pathlib.Path, mode: str):
     check(
-        mode.find("b") == -1,
-        AssertionError(f"|mode|(=={mode}) should not contain 'b'"),
+        mode.find("b") == -1, AssertionError(f"|mode|(=={mode}) should not contain 'b'")
     )
     return open(str(file), mode, encoding="utf-8", errors="ignore")
 
