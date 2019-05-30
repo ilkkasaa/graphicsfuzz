@@ -22,9 +22,17 @@ ignore =
   E203
   W503
   E501
+
+  # Missing doc strings.
   D100
+  D101
   D103
+  D104
+  D107
+
+  # Use of subprocess call and run.
   S404
+  S603
 
   # Warning: First line should be in imperative mood.
   # This is the opposite of the Google style.

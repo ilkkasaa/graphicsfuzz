@@ -16,6 +16,13 @@
         ]
     },
     "default": {
+        "ensure": {
+            "hashes": [
+                "sha256:0255e4ff03aac63fcbd68602dae737c1c556aec6f9e833ca631efe07a150fc0a",
+                "sha256:9c17ba30133cde59db6b1aec56f280e2fa9ce21a994c50ac6c1a5aa8d7ee44ee"
+            ],
+            "version": "==0.8.2"
+        },
         "gfauto": {
             "editable": true,
             "path": "."

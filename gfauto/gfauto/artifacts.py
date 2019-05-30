@@ -67,6 +67,8 @@ def path_to_artifact_path(path: pathlib.Path) -> str:
 
 def artifact_path_absolute(artifact_path: str) -> str:
     """
+    Returns the absolute |artifact_path| starting with '//'.
+
     Artifact paths should almost always begin with '//', but for convenience it can be useful to
     use relative paths, especially when calling functions from an IPython shell.
     :param artifact_path: An artifact path.
@@ -81,6 +83,7 @@ def artifact_path_absolute(artifact_path: str) -> str:
 def artifact_path_to_path(artifact_path: str) -> pathlib.Path:
     """
     Returns |artifact_path| converted to an OS specific path.
+
     Artifact paths always use '/' to separate paths.
     Artifact paths usually begin with '//' which is the artifact root directory, marked via a ROOT
     file.
@@ -88,7 +91,6 @@ def artifact_path_to_path(artifact_path: str) -> pathlib.Path:
     :param artifact_path: an artifact path.
     :return:
     """
-
     if artifact_path.startswith("//"):
         return norm_path(artifact_path_get_root() / pathlib.Path(artifact_path[2:]))
 
@@ -119,7 +121,10 @@ def artifact_write_recipe_and_execute(recipe: Recipe, artifact_path: str = ""):
     return artifact_path_full
 
 
-def artifact_write_recipe(recipe: Optional[Recipe] = Recipe(), artifact_path: str = ""):
+def artifact_write_recipe(recipe: Optional[Recipe] = None, artifact_path: str = ""):
+    if recipe is None:
+        recipe = Recipe()
+
     artifact_path = artifact_path_absolute(artifact_path)
 
     json_text = proto_util.message_to_json(recipe, including_default_value_fields=True)
@@ -137,8 +142,11 @@ def artifact_read_recipe(artifact_path: str = ""):
 
 
 def artifact_write_metadata(
-    artifact_metadata: ArtifactMetadata = ArtifactMetadata(), artifact_path: str = ""
+    artifact_metadata: ArtifactMetadata = None, artifact_path: str = ""
 ):
+    if artifact_metadata is None:
+        artifact_metadata = ArtifactMetadata()
+
     artifact_path = artifact_path_absolute(artifact_path)
 
     json_text = proto_util.message_to_json(
