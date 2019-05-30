@@ -32,9 +32,10 @@ from .shader_job_util import (
     comp_ext,
     frag_ext,
     shader_job_get_related_files,
-    shader_job_get_shader_contents_or_none,
+    shader_job_get_shader_contents,
     vert_ext,
 )
+from .util import check
 
 AMBER_FENCE_TIMEOUT_MS = 60000
 
@@ -89,8 +90,12 @@ def uniform_json_to_amberscript(uniform_json_contents: str) -> str:
             continue
 
         func = entry["func"]
-        if func not in uniform_types.keys():
-            raise AssertionError("Error: unknown uniform type for function: " + func)
+
+        check(
+            func in uniform_types.keys(),
+            AssertionError(f"unknown uniform type for function{func}"),
+        )
+
         uniform_type = uniform_types[func]
 
         result += "# " + name + "\n"
@@ -179,8 +184,9 @@ def is_compute_job(input_asm_spirv_job_json_path: pathlib.Path,) -> bool:
     comp_files = shader_job_get_related_files(
         input_asm_spirv_job_json_path, [comp_ext], asm_spirv_suffix
     )
-    assert len(comp_files) <= 1, "Expected 1 or 0 compute shader files: {}".format(
-        comp_files
+    check(
+        len(comp_files) <= 1,
+        AssertionError(f"Expected 1 or 0 compute shader files: {comp_files}"),
     )
     return len(comp_files) == 1
 
@@ -205,23 +211,21 @@ def run_spirv_asm_shader_job_to_amber_script(
         glsl_vert_contents = None
         glsl_frag_contents = None
         if input_glsl_source_json_path:
-            glsl_vert_contents = shader_job_get_shader_contents_or_none(
+            glsl_vert_contents = shader_job_get_shader_contents(
                 input_glsl_source_json_path, vert_ext
             )
-            glsl_frag_contents = shader_job_get_shader_contents_or_none(
+            glsl_frag_contents = shader_job_get_shader_contents(
                 input_glsl_source_json_path, frag_ext
             )
 
         # Get spirv asm contents
-        vert_contents = shader_job_get_shader_contents_or_none(
+        vert_contents = shader_job_get_shader_contents(
             input_asm_spirv_job_json_path, vert_ext, asm_spirv_suffix
         )
 
-        frag_contents = shader_job_get_shader_contents_or_none(
-            input_asm_spirv_job_json_path, frag_ext, asm_spirv_suffix
+        frag_contents = shader_job_get_shader_contents(
+            input_asm_spirv_job_json_path, frag_ext, asm_spirv_suffix, must_exist=True
         )
-
-        assert frag_contents
 
         # Get the uniforms JSON contents.
         json_contents = util.file_read_text(input_asm_spirv_job_json_path)

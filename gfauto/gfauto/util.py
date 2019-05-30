@@ -21,12 +21,18 @@ from contextlib import contextmanager
 
 
 def file_open_binary(file: pathlib.Path, mode: str):
-    assert mode.find("b") != -1
+    check(
+        mode.find("b") != -1,
+        AssertionError(f"|mode|(=={mode}) should contain 'b'"),
+    )
     return open(str(file), mode)
 
 
 def file_open_text(file: pathlib.Path, mode: str):
-    assert mode.find("b") == -1
+    check(
+        mode.find("b") == -1,
+        AssertionError(f"|mode|(=={mode}) should not contain 'b'"),
+    )
     return open(str(file), mode, encoding="utf-8", errors="ignore")
 
 
@@ -77,8 +83,9 @@ def copy_file(source_file_path: pathlib.Path, dest_file_path: pathlib.Path):
 
 
 def remove_end(str_in: str, str_end: str):
-    assert str_in.endswith(str_end), "Expected {} to end with {}".format(
-        str_in, str_end
+    check(
+        str_in.endswith(str_end),
+        AssertionError(f"|str_in|(=={str_in}) should end with |str_end|(=={str_end})"),
     )
     return str_in[: -len(str_end)]
 
@@ -95,3 +102,8 @@ def pushd(path: pathlib.Path):
         yield
     finally:
         os.chdir(str(curr_dir))
+
+
+def check(condition: bool, exception: Exception):
+    if not condition:
+        raise exception

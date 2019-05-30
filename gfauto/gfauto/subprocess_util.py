@@ -16,6 +16,7 @@ import subprocess
 from typing import List, Union
 
 from .gflogging import log
+from .util import check
 
 
 def convert_stdout_stderr(
@@ -58,10 +59,13 @@ def log_return_code(
 
 
 def run(
-    cmd: List[str], check=True, timeout=None, verbose=False
+    cmd: List[str], check_exit_code=True, timeout=None, verbose=False
 ) -> subprocess.CompletedProcess:
 
-    assert cmd[0] is not None and isinstance(cmd[0], str)
+    check(
+        cmd[0] is not None and isinstance(cmd[0], str),
+        AssertionError("run takes a list of str, not a str"),
+    )
 
     # We capture stdout and stderr by default so we have something to report if the command fails.
 
@@ -77,7 +81,7 @@ def run(
 
         result = subprocess.run(
             cmd,
-            check=check,
+            check=check_exit_code,
             timeout=timeout,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

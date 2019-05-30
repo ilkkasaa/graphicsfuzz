@@ -21,6 +21,7 @@ import sys
 
 # This file is self-contained so it can be provided alongside Amber test files.
 
+
 SHORT_DESCRIPTION_LINE_PREFIX = "# Short description: "
 
 MUST_PASS_PATHS = [
@@ -32,12 +33,20 @@ MUST_PASS_PATHS = [
 ]
 
 
+def check(condition: bool, exception: Exception):
+    if not condition:
+        raise exception
+
+
 def log(message=""):
     print(message, flush=True)
 
 
 def remove_start(string, start):
-    assert string.startswith(start)
+    check(
+        string.startswith(start), AssertionError("|string| does not start with |start|")
+    )
+
     return string[len(start) :]
 
 
@@ -98,16 +107,22 @@ def check_and_add_tabs(line, string_name, string_value, field_index, tab_size):
     # Field index starts at 1. Change it to start at 0.
     field_index -= 1
 
-    assert len(line.expandtabs(tab_size)) <= field_index, '{} "{}" is too long!'.format(
-        string_name, string_value
+    check(
+        len(line.expandtabs(tab_size)) <= field_index,
+        AssertionError('{} "{}" is too long!'.format(string_name, string_value)),
     )
 
     while len(line.expandtabs(tab_size)) < field_index:
         line += "\t"
 
-    assert (
-        len(line.expandtabs(tab_size)) == field_index
-    ), "Field index {} is incorrect; Python script needs fixing".format(field_index)
+    check(
+        len(line.expandtabs(tab_size)) == field_index,
+        AssertionError(
+            "Field index {} is incorrect; Python script needs fixing".format(
+                field_index
+            )
+        ),
+    )
 
     return line
 

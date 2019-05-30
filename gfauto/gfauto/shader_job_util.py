@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import pathlib
-from typing import Iterable
+from typing import Iterable, Optional
 
 from . import util
 
@@ -33,14 +33,17 @@ spirv_shader_job_related_file_extensions = [".frag.spv", ".vert.spv", ".comp.spv
 asm_spirv_shader_job_related_file_extensions = [".frag.asm", ".vert.asm", ".comp.asm"]
 
 
-def shader_job_get_shader_contents_or_none(
+def shader_job_get_shader_contents(
     shader_job_file_path: pathlib.Path,
     extension: str,
     language_suffix: str = glsl_suffix,
-):
+    must_exist: bool = False,
+) -> Optional[str]:
     file = shader_job_file_path.with_suffix(extension + language_suffix)
     if file.exists():
         return util.file_read_text(file)
+    if must_exist:
+        raise AssertionError(f"could not read {file}")
 
     return None
 
