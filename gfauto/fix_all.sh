@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Copyright 2019 The GraphicsFuzz Project Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-[metadata]
-description-file = README.md
+set -x
+set -e
+set -u
 
-[pycodestyle]
-ignore = 'E203,W503,E501'
+black .
+isort -rc gfauto

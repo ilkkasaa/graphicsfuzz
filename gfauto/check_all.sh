@@ -18,4 +18,4 @@ set -x
 set -e
 set -u
 
-black .
+flake8 .

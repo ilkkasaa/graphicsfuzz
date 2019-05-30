@@ -50,6 +50,7 @@ def get_text_as_comment(text: str) -> str:
 def uniform_json_to_amberscript(uniform_json_contents: str) -> str:
     """
     Returns the string representing VkScript version of uniform declarations.
+
     Skips the special '$compute' key, if present.
 
     {
@@ -65,9 +66,7 @@ def uniform_json_to_amberscript(uniform_json_contents: str) -> str:
 
     # myuniform
     uniform ubo 0:3 float 0 42.0
-
     """
-
     uniform_types = {
         "glUniform1i": "int",
         "glUniform2i": "ivec2",
@@ -118,10 +117,7 @@ def get_amber_script_contents_from_image_shaders_contents(
     comment_text: Optional[str] = None,
     use_default_fence_timeout: bool = False,
 ) -> str:
-    """
-    Generates Amberscript representation of an image test
-    """
-
+    """Generates Amberscript representation of an image test."""
     result = ""
 
     if copyright_header_text:

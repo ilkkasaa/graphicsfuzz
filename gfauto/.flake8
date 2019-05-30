@@ -12,8 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-[metadata]
-description-file = README.md
+# This is not a TOML file; no quoting.
 
-[pycodestyle]
-ignore = 'E203,W503,E501'
+[flake8]
+filename = */gfauto/*.py
+exclude = *_pb2.py*
+max-line-length = 88
+ignore =
+  E203
+  W503
+  E501
+  D100
+  D103
+  S404
+
+  # Warning: First line should be in imperative mood.
+  # This is the opposite of the Google style.
+  D401
