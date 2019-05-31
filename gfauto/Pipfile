@@ -17,8 +17,12 @@ name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
 
-[dev-packages]
+[packages]
+# Add "this" package as a dependency; this ensures all packages listed in
+# setup.py are installed into the venv, as well as gfauto itself.
+gfauto = {path = ".", editable = true}
 
+[dev-packages]
 # autoflake = "*"  # Tool to auto-remove unused imports; does not seem to work
 # well.
 
@@ -76,13 +80,3 @@ flake8-type-annotations = "*"
 flake8-variables-names = "*"
 mccabe = "*"
 pep8-naming = "*"
-
-
-[packages]
-
-# Add "this" package as a dependency; this ensures all packages listed in
-# setup.py are installed into the venv.
-gfauto = {path = ".", editable = true}
-
-[requires]
-python_version = "3.6"

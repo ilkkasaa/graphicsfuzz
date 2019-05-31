@@ -30,6 +30,12 @@ PYTHON=${PYTHON-python3.6}
 # such as by adding to your .bashrc file.
 export PIPENV_VENV_IN_PROJECT=1
 
+# The following (optional) line causes the hard-coded versions of packages (in
+# Pipfile.lock) to be used, for better reproducibility. Enabled during CI but
+# disabled otherwise so that packages are updated automatically during
+# development.
+# export PIPENV_IGNORE_PIPFILE=1
+
 # Install project dependencies, including development dependencies, into a
 # virtual environment using pipenv.
 "${PYTHON}" -m pipenv install --dev
