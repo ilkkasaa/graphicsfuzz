@@ -41,11 +41,11 @@ def shader_job_get_shader_contents(
     language_suffix: str = glsl_suffix,
     must_exist: bool = False,
 ) -> Optional[str]:
-    file = shader_job_file_path.with_suffix(extension + language_suffix)
-    if file.exists():
-        return util.file_read_text(file)
+    shader_file = shader_job_file_path.with_suffix(extension + language_suffix)
+    if shader_file.exists():
+        return util.file_read_text(shader_file)
     if must_exist:
-        raise AssertionError(f"could not read {file}")
+        raise AssertionError(f"could not read {shader_file}")
 
     return None
 
@@ -85,15 +85,15 @@ def shader_job_copy(
 
     util.copy_file(shader_job_file_path, output_shader_job_file_path)
 
-    # [source/variant.frag, source/variant.vert, ...]
+    # = [source/variant.frag, source/variant.vert, ...]
     other_files = shader_job_get_related_files(
         shader_job_file_path, extensions, language_suffix
     )
 
-    # [variant.frag, variant.vert, ...]
+    # = [variant.frag, variant.vert, ...]
     dest_other_files = [f.name for f in other_files]
 
-    # [dest/variant.frag, dest/variant.vert, ...]
+    # = [dest/variant.frag, dest/variant.vert, ...]
     dest_other_files = [
         output_shader_job_file_path.with_name(f) for f in dest_other_files
     ]

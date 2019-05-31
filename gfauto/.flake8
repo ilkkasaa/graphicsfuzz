@@ -37,3 +37,16 @@ ignore =
   # Warning: First line should be in imperative mood.
   # This is the opposite of the Google style.
   D401
+
+  # Missing trailing comma.
+  C812
+
+  # Missing trailing comma.
+  S101
+
+  # Allow unindexed string format parameters
+  P101
+
+
+# For flake8-quotes:
+inline-quotes = "

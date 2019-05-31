@@ -52,12 +52,12 @@ def log_stdout_stderr(
     log("")
 
 
-def log_return_code(
+def log_returncode(
     result: Union[
         subprocess.CalledProcessError, subprocess.CompletedProcess, subprocess.Popen
     ],
 ) -> None:
-    log("RETURN_CODE: " + str(result.returncode))
+    log("RETURNCODE: " + str(result.returncode))
 
 
 def run(
@@ -96,12 +96,12 @@ def run(
 
     except subprocess.CalledProcessError as ex:
         convert_stdout_stderr(ex)
-        log_return_code(ex)
+        log_returncode(ex)
         log_stdout_stderr(ex)
         raise ex
 
     convert_stdout_stderr(result)
-    log_return_code(result)
+    log_returncode(result)
 
     if verbose:
         log_stdout_stderr(result)

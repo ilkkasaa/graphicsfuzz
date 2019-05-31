@@ -22,39 +22,39 @@ from contextlib import contextmanager
 # Note: Could use the built-in |file.open| and |file.write_text|, etc.
 
 
-def file_open_binary(file: pathlib.Path, mode: str):
+def file_open_binary(file: pathlib.Path, mode: str):  # noqa VNE002
     check(mode.find("b") != -1, AssertionError(f"|mode|(=={mode}) should contain 'b'"))
     return open(str(file), mode)
 
 
-def file_open_text(file: pathlib.Path, mode: str):
+def file_open_text(file: pathlib.Path, mode: str):  # noqa VNE002
     check(
         mode.find("b") == -1, AssertionError(f"|mode|(=={mode}) should not contain 'b'")
     )
     return open(str(file), mode, encoding="utf-8", errors="ignore")
 
 
-def file_read_text(file: pathlib.Path):
+def file_read_text(file: pathlib.Path):  # noqa VNE002
     with file_open_text(file, "r") as f:
         return f.read()
 
 
-def file_read_lines(file: pathlib.Path):
+def file_read_lines(file: pathlib.Path):  # noqa VNE002
     with file_open_text(file, "r") as f:
         return f.readline()
 
 
-def file_write_text(file: pathlib.Path, text: str):
+def file_write_text(file: pathlib.Path, text: str):  # noqa VNE002
     file_mkdirs_parent(file)
     with file_open_text(file, "w") as f:
         return f.write(text)
 
 
-def mkdirs_p(path: pathlib.Path):
+def mkdirs_p(path: pathlib.Path):  # noqa VNE002
     path.mkdir(parents=True, exist_ok=True)
 
 
-def file_mkdirs_parent(file: pathlib.Path):
+def file_mkdirs_parent(file: pathlib.Path):  # noqa VNE002
     mkdirs_p(file.parent)
 
 
@@ -62,7 +62,7 @@ class ToolNotOnPathError(Exception):
     pass
 
 
-def tool_on_path(tool: str) -> pathlib.Path:
+def tool_on_path(tool: str) -> pathlib.Path:  # noqa VNE002
     result = shutil.which(tool)
     if result is None:
         raise ToolNotOnPathError(
@@ -88,18 +88,18 @@ def remove_end(str_in: str, str_end: str):
     return str_in[: -len(str_end)]
 
 
-def norm_path(path: pathlib.Path):
+def norm_path(path: pathlib.Path):  # noqa VNE002
     return pathlib.Path(os.path.normpath(str(path)))
 
 
 @contextmanager
-def pushd(path: pathlib.Path):
-    curr_dir = pathlib.Path().resolve()
+def pushd(path: pathlib.Path):  # noqa VNE002
+    current_dir = pathlib.Path().resolve()
     os.chdir(str(path))
     try:
         yield
     finally:
-        os.chdir(str(curr_dir))
+        os.chdir(str(current_dir))
 
 
 def check(condition: bool, exception: Exception):

@@ -40,7 +40,7 @@ def check(condition: bool, exception: Exception):
 
 
 def log(message=""):
-    print(message, flush=True)
+    print(message, flush=True)  # noqa T001
 
 
 def remove_start(string, start):
@@ -51,7 +51,7 @@ def remove_start(string, start):
     return string[len(start) :]
 
 
-def open_helper(file, mode):
+def open_helper(file, mode):  # noqa VNE002
     return open(file, mode, encoding="utf-8", errors="ignore")
 
 
@@ -61,7 +61,7 @@ def check_dir_exists(directory):
         raise FileNotFoundError("Directory not found: {}".format(directory))
 
 
-def check_file_exists(file):
+def check_file_exists(file):  # noqa VNE002
     log("Checking that file {} exists".format(file))
     if not os.path.isfile(file):
         raise FileNotFoundError("File not found: {}".format(file))
@@ -281,7 +281,7 @@ def copyfile(source, dest):
     shutil.copyfile(source, dest)
 
 
-def remove(file):
+def remove(file):  # noqa VNE002
     log("Deleting {}".format(file))
     os.remove(file)
 
@@ -322,7 +322,7 @@ def main(args):
     parser.add_argument("vk_gl_cts", help="Path to a checkout of VK-GL-CTS")
 
     parser.add_argument(
-        "files",
+        "amber_files",
         help="One or more Amber test files (often ending in .amber_script, .amber, .vkscript)",
         nargs="+",
     )
@@ -330,13 +330,13 @@ def main(args):
     args = parser.parse_args(args)
 
     vk_gl_cts = args.vk_gl_cts
-    files = args.files
+    amber_files = args.amber_files
 
     check_dir_exists(vk_gl_cts)
     check_file_exists(get_graphics_fuzz_tests_cpp_file_path(vk_gl_cts))
 
-    for file in files:
-        add_amber_test(file, vk_gl_cts)
+    for amber_file in amber_files:
+        add_amber_test(amber_file, vk_gl_cts)
 
 
 if __name__ == "__main__":

@@ -159,7 +159,7 @@ def artifact_write_metadata(
     return artifact_path
 
 
-def artifact_read_metadata(artifact_path: str = "",):
+def artifact_read_metadata(artifact_path: str = ""):
     artifact_metadata = ArtifactMetadata()
     json_file_path = artifact_get_metadata_file_path(artifact_path)
     json_contents = util.file_read_text(json_file_path)

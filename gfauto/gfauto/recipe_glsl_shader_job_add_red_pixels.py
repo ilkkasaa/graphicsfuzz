@@ -29,7 +29,9 @@ from .artifacts import (
 from .recipe_pb2 import RecipeGlslShaderJobAddRedPixels
 from .shader_job_util import shader_job_copy
 
-#                      | group 1       ||g2|
+#                         group 1       group 2
+#                           v            v
+#                      |---------------||-|
 pattern = re.compile(r"(void main\(\)\n)({)")
 
 

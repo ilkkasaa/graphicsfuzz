@@ -31,7 +31,7 @@ def pop_stream_for_logging():
 
 def log(message: str) -> None:
     if log_to_stdout:
-        print(message, flush=True)
+        print(message, flush=True)  # noqa T001
     for stream in log_to_stream:
         stream.write(message)
         stream.write("\n")

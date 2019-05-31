@@ -85,13 +85,14 @@ def uniform_json_to_amberscript(uniform_json_contents: str) -> str:
     offset = 0  # We never have uniform offset in our tests
 
     result = ""
-    j = json.loads(uniform_json_contents)
-    for name, entry in j.items():
+    uniform_json = json.loads(uniform_json_contents)
+    for name, entry in uniform_json.items():
 
         if name == "$compute":
             continue
 
         func = entry["func"]
+        binding = entry["binding"]
 
         check(
             func in uniform_types.keys(),
@@ -101,11 +102,11 @@ def uniform_json_to_amberscript(uniform_json_contents: str) -> str:
         uniform_type = uniform_types[func]
 
         result += "# " + name + "\n"
-        result += "uniform ubo {}:{}".format(descriptor_set, entry["binding"])
+        result += f"uniform ubo {descriptor_set}:{binding}"
         result += " " + uniform_type
-        result += " {}".format(offset)
+        result += f" {offset}"
         for arg in entry["args"]:
-            result += " {}".format(arg)
+            result += f" {arg}"
         result += "\n"
 
     return result
@@ -182,7 +183,7 @@ def get_amber_script_contents_from_image_shaders_contents(
     return result
 
 
-def is_compute_job(input_asm_spirv_job_json_path: pathlib.Path,) -> bool:
+def is_compute_job(input_asm_spirv_job_json_path: pathlib.Path) -> bool:
     comp_files = shader_job_get_related_files(
         input_asm_spirv_job_json_path, [comp_ext], asm_spirv_suffix
     )
