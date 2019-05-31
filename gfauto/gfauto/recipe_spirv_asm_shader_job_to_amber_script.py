@@ -230,6 +230,9 @@ def run_spirv_asm_shader_job_to_amber_script(
             input_asm_spirv_job_json_path, frag_ext, asm_spirv_suffix, must_exist=True
         )
 
+        # Guaranteed.
+        assert frag_contents  # noqa
+
         # Get the uniforms JSON contents.
         json_contents = util.file_read_text(input_asm_spirv_job_json_path)
 

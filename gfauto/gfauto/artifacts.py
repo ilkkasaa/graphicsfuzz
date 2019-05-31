@@ -38,9 +38,7 @@ artifact_root_file_name = "ROOT"
 class Artifact:
     def __init__(self, path: str, metadata: ArtifactMetadata = None):
         self.path = path
-        self.metadata = metadata
-        if self.metadata is None:
-            self.metadata = artifact_read_metadata(path)
+        self.metadata = metadata if metadata is not None else artifact_read_metadata(path)
 
 
 class RecipeWrap:

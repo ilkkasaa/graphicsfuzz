@@ -65,11 +65,11 @@ def shader_job_get_related_files(
     files = [(f + language_suffix) for f in files]
 
     # variant_001.frag.spv, variant_001.comp.spv (does not exist), ...
-    files = [shader_job_file_path.with_suffix(f) for f in files]
+    paths = [shader_job_file_path.with_suffix(f) for f in files]
 
     # variant_001.frag.spv, ...
-    files = [f for f in files if f.exists()]
-    return files
+    paths = [p for p in paths if p.exists()]
+    return paths
 
 
 # Copy files.
