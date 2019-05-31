@@ -14,25 +14,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import io
-from typing import List, Union
+from typing import List, TextIO
 
-log_to_stdout = True
-log_to_stream = []  # type: List[Union[io.TextIOBase, io.StringIO]]
-
-
-def push_stream_for_logging(stream: Union[io.TextIOBase, io.StringIO]):
-    log_to_stream.append(stream)
+_LOG_TO_STDOUT = True
+_LOG_TO_STREAM = []  # type: List[TextIO]
 
 
-def pop_stream_for_logging():
-    log_to_stream.pop()
+def push_stream_for_logging(stream: TextIO) -> None:
+    _LOG_TO_STREAM.append(stream)
+
+
+def pop_stream_for_logging() -> None:
+    _LOG_TO_STREAM.pop()
 
 
 def log(message: str) -> None:
-    if log_to_stdout:
+    if _LOG_TO_STDOUT:
         print(message, flush=True)  # noqa T001
-    for stream in log_to_stream:
+    for stream in _LOG_TO_STREAM:
         stream.write(message)
         stream.write("\n")
         stream.flush()

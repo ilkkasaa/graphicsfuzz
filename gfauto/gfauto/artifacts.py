@@ -29,20 +29,22 @@ from .recipe_pb2 import (
 )
 from .util import norm_path
 
-artifact_metadata_file_name = "artifact.json"
-artifact_recipe_file_name = "recipe.json"
-artifact_recipe_log_file_name = "recipe.log"
-artifact_root_file_name = "ROOT"
+ARTIFACT_METADATA_FILE_NAME = "artifact.json"
+ARTIFACT_RECIPE_FILE_NAME = "recipe.json"
+ARTIFACT_RECIPE_LOG_FILE_NAME = "recipe.log"
+ARTIFACT_ROOT_FILE_NAME = "ROOT"
 
 
 class Artifact:
-    def __init__(self, path: str, metadata: ArtifactMetadata = None):
+    def __init__(self, path: str, metadata: Optional[ArtifactMetadata] = None):
         self.path = path
-        self.metadata = metadata if metadata is not None else artifact_read_metadata(path)
+        self.metadata = (
+            metadata if metadata is not None else artifact_read_metadata(path)
+        )
 
 
 class RecipeWrap:
-    def __init__(self, path: str, recipe: Recipe = None):
+    def __init__(self, path: str, recipe: Optional[Recipe] = None):
         self.path = path
         self.recipe = recipe
         if self.recipe is None:
@@ -50,13 +52,13 @@ class RecipeWrap:
 
 
 def artifact_path_get_root() -> pathlib.Path:
-    root_file_suffix = pathlib.Path(artifact_root_file_name)
+    root_file_suffix = pathlib.Path(ARTIFACT_ROOT_FILE_NAME)
     fake_file = norm_path(pathlib.Path("fake").absolute())
     for parent in fake_file.parents:
         if (parent / root_file_suffix).exists():
             return parent
     raise FileNotFoundError(
-        "Could not find root file {}".format(artifact_root_file_name)
+        "Could not find root file {}".format(ARTIFACT_ROOT_FILE_NAME)
     )
 
 
@@ -102,18 +104,18 @@ def artifact_get_directory_path(artifact_path: str = "") -> pathlib.Path:
 
 
 def artifact_get_recipe_file_path(artifact_path: str = "") -> pathlib.Path:
-    return artifact_get_inner_file_path(artifact_recipe_file_name, artifact_path)
+    return artifact_get_inner_file_path(ARTIFACT_RECIPE_FILE_NAME, artifact_path)
 
 
 def artifact_get_metadata_file_path(artifact_path: str = "") -> pathlib.Path:
-    return artifact_get_inner_file_path(artifact_metadata_file_name, artifact_path)
+    return artifact_get_inner_file_path(ARTIFACT_METADATA_FILE_NAME, artifact_path)
 
 
 def artifact_get_recipe_log_file_path(artifact_path: str) -> pathlib.Path:
-    return artifact_get_inner_file_path(artifact_recipe_log_file_name, artifact_path)
+    return artifact_get_inner_file_path(ARTIFACT_RECIPE_LOG_FILE_NAME, artifact_path)
 
 
-def artifact_write_recipe_and_execute(recipe: Recipe, artifact_path: str = ""):
+def artifact_write_recipe_and_execute(recipe: Recipe, artifact_path: str = "") -> str:
     artifact_path_full = artifact_path_absolute(artifact_path)
 
     artifact_write_recipe(recipe, artifact_path_full)
@@ -121,7 +123,9 @@ def artifact_write_recipe_and_execute(recipe: Recipe, artifact_path: str = ""):
     return artifact_path_full
 
 
-def artifact_write_recipe(recipe: Optional[Recipe] = None, artifact_path: str = ""):
+def artifact_write_recipe(
+    recipe: Optional[Recipe] = None, artifact_path: str = ""
+) -> str:
     if recipe is None:
         recipe = Recipe()
 
@@ -133,7 +137,7 @@ def artifact_write_recipe(recipe: Optional[Recipe] = None, artifact_path: str = 
     return artifact_path
 
 
-def artifact_read_recipe(artifact_path: str = ""):
+def artifact_read_recipe(artifact_path: str = "") -> Recipe:
     recipe = Recipe()
     json_file_path = artifact_get_recipe_file_path(artifact_path)
     json_text = util.file_read_text(json_file_path)
@@ -142,11 +146,8 @@ def artifact_read_recipe(artifact_path: str = ""):
 
 
 def artifact_write_metadata(
-    artifact_metadata: ArtifactMetadata = None, artifact_path: str = ""
-):
-    if artifact_metadata is None:
-        artifact_metadata = ArtifactMetadata()
-
+    artifact_metadata: ArtifactMetadata, artifact_path: str = ""
+) -> str:
     artifact_path = artifact_path_absolute(artifact_path)
 
     json_text = proto_util.message_to_json(
@@ -157,7 +158,7 @@ def artifact_write_metadata(
     return artifact_path
 
 
-def artifact_read_metadata(artifact_path: str = ""):
+def artifact_read_metadata(artifact_path: str = "") -> ArtifactMetadata:
     artifact_metadata = ArtifactMetadata()
     json_file_path = artifact_get_metadata_file_path(artifact_path)
     json_contents = util.file_read_text(json_file_path)
@@ -165,13 +166,13 @@ def artifact_read_metadata(artifact_path: str = ""):
     return artifact_metadata
 
 
-def artifact_execute_recipe_if_needed(artifact_path: str = ""):
+def artifact_execute_recipe_if_needed(artifact_path: str = "") -> None:
     artifact_execute_recipe(artifact_path, only_if_artifact_json_missing=True)
 
 
 def artifact_execute_recipe(
     artifact_path: str = "", only_if_artifact_json_missing: bool = False
-):
+) -> None:
 
     artifact_path = artifact_path_absolute(artifact_path)
 
@@ -232,7 +233,7 @@ def maybe_get_text_artifact_file_path(
     text_artifact_path: str
 ) -> Optional[pathlib.Path]:
     result = None
-    if len(text_artifact_path) > 0:
+    if text_artifact_path:
         text_artifact = Artifact(text_artifact_path)
         result = artifact_get_inner_file_path(
             text_artifact.metadata.data.text_file.text_file, text_artifact.path
@@ -244,9 +245,9 @@ def artifact_create_amber_script_from_glsl(
     input_artifact_path: str,
     out_artifact_prefix_path: str,
     test_name: Optional[str] = None,
-    spirv_opt_args: List[str] = None,
+    spirv_opt_args: Optional[List[str]] = None,
     comment: Optional[str] = None,
-):
+) -> None:
     next_input = artifact_path_absolute(input_artifact_path)
     out_artifact_prefix_path_full = artifact_path_absolute(out_artifact_prefix_path)
 
@@ -325,7 +326,7 @@ def artifact_create_amber_script_from_glsl_shader_job_artifact(
     copyright_header_artifact_path: Optional[str] = None,
     comment: Optional[str] = None,
     make_self_contained: bool = False,
-):
+) -> str:
     next_input = input_artifact_path
 
     next_metadata = artifact_read_metadata(next_input)
@@ -363,7 +364,7 @@ def artifact_create_amber_script_from_glsl_shader_job_artifact(
         next_metadata = artifact_read_metadata(next_input)
         if (
             next_metadata.data.HasField("spirv_shader_job")
-            and len(next_metadata.data.spirv_shader_job.spirv_job.spirv_opt_args) == 0
+            and not next_metadata.data.spirv_shader_job.spirv_job.spirv_opt_args
         ):
             next_input = artifact_write_recipe(
                 Recipe(
@@ -423,6 +424,9 @@ def artifact_create_amber_script_from_glsl_shader_job_artifact(
     artifact_execute_recipe_if_needed(next_input)
 
     return next_input
+
+
+# pylint:disable=wrong-import-position,cyclic-import
 
 
 from .recipe_glsl_shader_job_add_red_pixels import (  # isort:skip

@@ -18,7 +18,7 @@ from google.protobuf import json_format
 from google.protobuf.message import Message
 
 
-def json_to_message(json: str, message: Message):
+def json_to_message(json: str, message: Message) -> None:
     json_format.Parse(json, message)
 
 

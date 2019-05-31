@@ -32,18 +32,18 @@ from .shader_job_util import shader_job_copy
 #                         group 1       group 2
 #                           v            v
 #                      |---------------||-|
-pattern = re.compile(r"(void main\(\)\n)({)")
+MAIN_FUNCTION_PATTERN = re.compile(r"(void main\(\)\n)({)")
 
 
 class AddRedPixelError(Exception):
     pass
 
 
-def add_red_pixel_code_to_frag_file(frag_file: pathlib.Path):
+def add_red_pixel_code_to_frag_file(frag_file: pathlib.Path) -> None:
     frag_contents = util.file_read_text(frag_file)
 
     # Replace opening brace of main with the following.
-    (frag_contents, n) = pattern.subn(
+    (frag_contents, num_subs_made) = MAIN_FUNCTION_PATTERN.subn(
         r"""\1{
  if (gl_FragCoord.x < 10.0)
   {
@@ -53,7 +53,7 @@ def add_red_pixel_code_to_frag_file(frag_file: pathlib.Path):
         frag_contents,
     )
 
-    if n != 1:
+    if num_subs_made != 1:
         raise AddRedPixelError(
             "Failed to add red pixel code using regex in {}".format(str(frag_file))
         )
@@ -92,9 +92,9 @@ def run_glsl_shader_job_add_red_pixels(
 
 def recipe_glsl_shader_job_add_red_pixels(
     recipe: RecipeGlslShaderJobAddRedPixels, output_artifact_path: str
-):
+) -> None:
     artifact_execute_recipe_if_needed(recipe.glsl_shader_job_artifact)
-    if len(recipe.graphics_fuzz_artifact) > 0:
+    if recipe.graphics_fuzz_artifact:
         artifact_execute_recipe_if_needed(recipe.graphics_fuzz_artifact)
 
     # Wrap input artifact for convenience.
@@ -104,7 +104,7 @@ def recipe_glsl_shader_job_add_red_pixels(
     output_metadata.CopyFrom(input_glsl_artifact.metadata)
     output_metadata.data.glsl_shader_job.red_pixel_at_top_left = True
     output_metadata.derived_from.append(recipe.glsl_shader_job_artifact)
-    if len(recipe.graphics_fuzz_artifact) > 0:
+    if recipe.graphics_fuzz_artifact:
         output_metadata.derived_from.append(recipe.graphics_fuzz_artifact)
 
     input_json_path = artifact_get_inner_file_path(

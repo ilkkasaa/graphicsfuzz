@@ -19,9 +19,9 @@ import argparse
 import os
 import shutil
 import sys
+from typing import List, TextIO, cast
 
 # This file is self-contained so it can be provided alongside Amber test files.
-
 
 SHORT_DESCRIPTION_LINE_PREFIX = "# Short description: "
 
@@ -34,16 +34,16 @@ MUST_PASS_PATHS = [
 ]
 
 
-def check(condition: bool, exception: Exception):
+def check(condition: bool, exception: Exception) -> None:
     if not condition:
         raise exception
 
 
-def log(message=""):
+def log(message: str = "") -> None:
     print(message, flush=True)  # noqa T001
 
 
-def remove_start(string, start):
+def remove_start(string: str, start: str) -> str:
     check(
         string.startswith(start), AssertionError("|string| does not start with |start|")
     )
@@ -51,23 +51,24 @@ def remove_start(string, start):
     return string[len(start) :]
 
 
-def open_helper(file, mode):  # noqa VNE002
-    return open(file, mode, encoding="utf-8", errors="ignore")
+def open_helper(file: str, mode: str) -> TextIO:  # noqa VNE002
+    check(mode.find("b") != -1, AssertionError(f"|mode|(=={mode}) should contain 'b'"))
+    return cast(TextIO, open(file, mode, encoding="utf-8", errors="ignore"))
 
 
-def check_dir_exists(directory):
+def check_dir_exists(directory: str) -> None:
     log("Checking that directory {} exists".format(directory))
     if not os.path.isdir(directory):
         raise FileNotFoundError("Directory not found: {}".format(directory))
 
 
-def check_file_exists(file):  # noqa VNE002
+def check_file_exists(file: str) -> None:  # noqa VNE002
     log("Checking that file {} exists".format(file))
     if not os.path.isfile(file):
         raise FileNotFoundError("File not found: {}".format(file))
 
 
-def get_amber_test_file_path(vk_gl_cts, amber_test_name):
+def get_amber_test_file_path(vk_gl_cts: str, amber_test_name: str) -> str:
     return os.path.join(
         vk_gl_cts,
         "external",
@@ -80,7 +81,7 @@ def get_amber_test_file_path(vk_gl_cts, amber_test_name):
     )
 
 
-def get_graphics_fuzz_tests_cpp_file_path(vk_gl_cts):
+def get_graphics_fuzz_tests_cpp_file_path(vk_gl_cts: str) -> str:
     return os.path.join(
         vk_gl_cts,
         "external",
@@ -92,7 +93,7 @@ def get_graphics_fuzz_tests_cpp_file_path(vk_gl_cts):
     )
 
 
-def get_amber_test_short_description(amber_test_file_path):
+def get_amber_test_short_description(amber_test_file_path: str) -> str:
     with open_helper(amber_test_file_path, "r") as f:
         for line in f:
             if line.startswith(SHORT_DESCRIPTION_LINE_PREFIX):
@@ -103,7 +104,9 @@ def get_amber_test_short_description(amber_test_file_path):
     return ""
 
 
-def check_and_add_tabs(line, string_name, string_value, field_index, tab_size):
+def check_and_add_tabs(
+    line: str, string_name: str, string_value: str, field_index: int, tab_size: int
+) -> str:
 
     # Field index starts at 1. Change it to start at 0.
     field_index -= 1
@@ -128,7 +131,7 @@ def check_and_add_tabs(line, string_name, string_value, field_index, tab_size):
     return line
 
 
-def get_cpp_line_to_write(amber_test_name, short_description):
+def get_cpp_line_to_write(amber_test_name: str, short_description: str) -> str:
 
     # A test line has the following form, except with tabs aligning each field.
     # { "name.amber", "name", "description" },
@@ -175,7 +178,7 @@ def get_cpp_line_to_write(amber_test_name, short_description):
     return line
 
 
-def add_amber_test_to_cpp(vk_gl_cts, amber_test_name):
+def add_amber_test_to_cpp(vk_gl_cts: str, amber_test_name: str) -> None:
     log("Adding Amber test to the C++.")
 
     short_description = get_amber_test_short_description(
@@ -234,7 +237,7 @@ def add_amber_test_to_cpp(vk_gl_cts, amber_test_name):
     remove(cpp_file_bak)
 
 
-def add_amber_test_to_must_pass(amber_test_name, must_pass_file_path):
+def add_amber_test_to_must_pass(amber_test_name: str, must_pass_file_path: str) -> None:
     log("Adding the Amber test to {}".format(must_pass_file_path))
 
     must_pass_file_path_bak = must_pass_file_path + ".bak"
@@ -256,7 +259,7 @@ def add_amber_test_to_must_pass(amber_test_name, must_pass_file_path):
             # |line| contains an unwritten line.
             # Get to the point where we need to write line_to_write.
             while True:
-                if len(line) == 0 or line >= line_to_write:
+                if (not len) or line >= line_to_write:
                     break
                 pass_out.write(line)
                 line = pass_in.readline()
@@ -276,17 +279,19 @@ def add_amber_test_to_must_pass(amber_test_name, must_pass_file_path):
     remove(must_pass_file_path_bak)
 
 
-def copyfile(source, dest):
+def copyfile(source: str, dest: str) -> None:
     log("Copying {} to {}".format(source, dest))
     shutil.copyfile(source, dest)
 
 
-def remove(file):  # noqa VNE002
+def remove(file: str) -> None:  # noqa VNE002
     log("Deleting {}".format(file))
     os.remove(file)
 
 
-def copy_amber_test_file(vk_gl_cts, amber_test_name, input_amber_test_file_path):
+def copy_amber_test_file(
+    vk_gl_cts: str, amber_test_name: str, input_amber_test_file_path: str
+) -> None:
     log("Copying Amber test file")
 
     amber_test_file_path = get_amber_test_file_path(vk_gl_cts, amber_test_name)
@@ -296,7 +301,7 @@ def copy_amber_test_file(vk_gl_cts, amber_test_name, input_amber_test_file_path)
     copyfile(input_amber_test_file_path, amber_test_file_path)
 
 
-def add_amber_test(input_amber_test_file_path, vk_gl_cts):
+def add_amber_test(input_amber_test_file_path: str, vk_gl_cts: str) -> None:
     log('Adding Amber test "{}" to "{}"'.format(input_amber_test_file_path, vk_gl_cts))
     # E.g. "continue-and-merge"
     amber_test_name = os.path.basename(input_amber_test_file_path)
@@ -314,7 +319,7 @@ def add_amber_test(input_amber_test_file_path, vk_gl_cts):
         )
 
 
-def main(args):
+def main(args: List[str]) -> None:
     parser = argparse.ArgumentParser(
         description="A script to add Amber tests to the CTS."
     )
@@ -327,10 +332,10 @@ def main(args):
         nargs="+",
     )
 
-    args = parser.parse_args(args)
+    parsed_args = parser.parse_args(args)
 
-    vk_gl_cts = args.vk_gl_cts
-    amber_files = args.amber_files
+    vk_gl_cts = parsed_args.vk_gl_cts
+    amber_files = parsed_args.amber_files
 
     check_dir_exists(vk_gl_cts)
     check_file_exists(get_graphics_fuzz_tests_cpp_file_path(vk_gl_cts))

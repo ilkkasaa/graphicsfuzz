@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import subprocess
-from typing import List, Union
+from typing import List, Optional, Union
 
 from .gflogging import log
 from .util import check
@@ -61,7 +61,10 @@ def log_returncode(
 
 
 def run(
-    cmd: List[str], check_exit_code=True, timeout=None, verbose=False
+    cmd: List[str],
+    check_exit_code: bool = True,
+    timeout: Optional[float] = None,
+    verbose: bool = False,
 ) -> subprocess.CompletedProcess:
 
     check(

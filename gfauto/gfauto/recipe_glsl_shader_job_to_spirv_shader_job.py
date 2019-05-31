@@ -88,9 +88,9 @@ def run_glslang_glsl_to_spirv_job(
 
 def recipe_glsl_shader_job_to_spirv_shader_job(
     recipe: RecipeGlslShaderJobToSpirvShaderJob, output_artifact_path: str
-):
+) -> None:
     artifact_execute_recipe_if_needed(recipe.glsl_shader_job_artifact)
-    if len(recipe.glslang_validator_artifact) > 0:
+    if recipe.glslang_validator_artifact:
         artifact_execute_recipe_if_needed(recipe.glslang_validator_artifact)
 
     # Inputs:  e.g. input_glsl_artifact/{x.json, x.frag, x.vert, ...}
@@ -103,7 +103,7 @@ def recipe_glsl_shader_job_to_spirv_shader_job(
         input_glsl_artifact.path,
     )
 
-    if len(recipe.glslang_validator_artifact) > 0:
+    if recipe.glslang_validator_artifact:
         raise NotImplementedError(
             "Not yet implemented the use of glslang_validator_artifact"
         )
@@ -122,7 +122,7 @@ def recipe_glsl_shader_job_to_spirv_shader_job(
     # TODO: This could be automated.
     output_metadata.derived_from.extend(input_glsl_artifact.metadata.derived_from)
     output_metadata.derived_from.append(recipe.glsl_shader_job_artifact)
-    if len(recipe.glslang_validator_artifact) > 0:
+    if recipe.glslang_validator_artifact:
         output_metadata.derived_from.append(recipe.glslang_validator_artifact)
 
     output_metadata.data.spirv_shader_job.spirv_job.glsl_shader_job_source_artifact = (

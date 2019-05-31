@@ -26,7 +26,7 @@ from .artifacts import (
     artifact_write_metadata,
 )
 from .recipe_pb2 import RecipeSpirvShaderJobToSpirvAsmShaderJob
-from .shader_job_util import shader_job_get_related_files, spirv_suffix
+from .shader_job_util import SUFFIX_SPIRV, shader_job_get_related_files
 from .subprocess_util import run
 from .util import tool_on_path
 
@@ -68,7 +68,7 @@ def run_spirv_shader_job_to_spirv_asm_shader_job(
         spirv_dis_file_path = util.spirv_dis_on_path()
 
     shader_files = shader_job_get_related_files(
-        input_spirv_job_json_file_path, language_suffix=spirv_suffix
+        input_spirv_job_json_file_path, language_suffix=SUFFIX_SPIRV
     )
 
     util.copy_file(input_spirv_job_json_file_path, output_spirv_job_json_file_path)
@@ -86,9 +86,9 @@ def run_spirv_shader_job_to_spirv_asm_shader_job(
 
 def recipe_spirv_shader_job_to_spirv_asm_shader_job(
     recipe: RecipeSpirvShaderJobToSpirvAsmShaderJob, output_artifact_path: str
-):
+) -> None:
     artifact_execute_recipe_if_needed(recipe.spirv_shader_job_artifact)
-    if len(recipe.spirv_dis_artifact) > 0:
+    if recipe.spirv_dis_artifact:
         artifact_execute_recipe_if_needed(recipe.spirv_dis_artifact)
 
     # Wrap input artifact for convenience.
@@ -100,7 +100,7 @@ def recipe_spirv_shader_job_to_spirv_asm_shader_job(
     )
 
     output_metadata.derived_from.append(recipe.spirv_shader_job_artifact)
-    if len(recipe.spirv_dis_artifact) > 0:
+    if recipe.spirv_dis_artifact:
         output_metadata.derived_from.append(recipe.spirv_dis_artifact)
 
     input_json_path = artifact_get_inner_file_path(
@@ -113,7 +113,7 @@ def recipe_spirv_shader_job_to_spirv_asm_shader_job(
         output_artifact_path,
     )
 
-    if len(recipe.spirv_dis_artifact) > 0:
+    if recipe.spirv_dis_artifact:
         raise NotImplementedError("Not yet implemented the use of spirv_dis_artifact")
 
     spirv_dis_file_path = tool_on_path("spirv-dis")

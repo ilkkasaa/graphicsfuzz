@@ -20,3 +20,4 @@ set -u
 
 flake8 .
 mypy --strict gfauto
+pylint gfauto

@@ -19,6 +19,9 @@ verify_ssl = true
 
 [dev-packages]
 
+# autoflake = "*"  # Tool to auto-remove unused imports; does not seem to work
+# well.
+
 # iPython shell is useful for modifying artifacts interactively.
 ipython = "*"
 jedi = "*"
@@ -70,6 +73,7 @@ flake8-type-annotations = "*"
 flake8-variables-names = "*"
 mccabe = "*"
 pep8-naming = "*"
+
 
 [packages]
 

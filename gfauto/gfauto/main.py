@@ -15,7 +15,7 @@
 # limitations under the License.
 
 
-def main():
+def main() -> None:
     pass
 
 

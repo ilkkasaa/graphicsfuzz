@@ -15,30 +15,30 @@
 # limitations under the License.
 
 import pathlib
-from typing import Iterable, Optional
+from typing import Iterable, List, Optional
 
 from . import util
 
-frag_ext = ".frag"
-vert_ext = ".vert"
-comp_ext = ".comp"
+EXT_FRAG = ".frag"
+EXT_VERT = ".vert"
+EXT_COMP = ".comp"
 
-all_ext = (frag_ext, vert_ext, comp_ext)
+EXT_ALL = (EXT_FRAG, EXT_VERT, EXT_COMP)
 
-glsl_suffix = ""
-spirv_suffix = ".spv"
-asm_spirv_suffix = ".asm"
+SUFFIX_GLSL = ""
+SUFFIX_SPIRV = ".spv"
+SUFFIX_ASM_SPIRV = ".asm"
 
 
-glsl_shader_job_related_file_extensions = [".frag", ".vert", ".comp"]
-spirv_shader_job_related_file_extensions = [".frag.spv", ".vert.spv", ".comp.spv"]
-asm_spirv_shader_job_related_file_extensions = [".frag.asm", ".vert.asm", ".comp.asm"]
+EXTENSIONS_GLSL_SHADER_JOB_RELATED_FILES = [".frag", ".vert", ".comp"]
+EXTENSIONS_SPIRV_SHADER_JOB_RELATED_FILES = [".frag.spv", ".vert.spv", ".comp.spv"]
+EXTENSIONS_ASM_SPIRV_SHADER_JOB_RELATED_FILES = [".frag.asm", ".vert.asm", ".comp.asm"]
 
 
 def shader_job_get_shader_contents(
     shader_job_file_path: pathlib.Path,
     extension: str,
-    language_suffix: str = glsl_suffix,
+    language_suffix: str = SUFFIX_GLSL,
     must_exist: bool = False,
 ) -> Optional[str]:
     shader_file = shader_job_file_path.with_suffix(extension + language_suffix)
@@ -55,9 +55,9 @@ def shader_job_get_shader_contents(
 
 def shader_job_get_related_files(
     shader_job_file_path: pathlib.Path,
-    extensions: Iterable[str] = all_ext,
-    language_suffix: str = glsl_suffix,
-):
+    extensions: Iterable[str] = EXT_ALL,
+    language_suffix: str = SUFFIX_GLSL,
+) -> List[pathlib.Path]:
     # .frag, .comp, ...
     files = extensions
 
@@ -78,27 +78,29 @@ def shader_job_get_related_files(
 def shader_job_copy(
     shader_job_file_path: pathlib.Path,
     output_shader_job_file_path: pathlib.Path,
-    extensions: Iterable[str] = all_ext,
-    language_suffix: str = glsl_suffix,
-):
+    extensions: Iterable[str] = EXT_ALL,
+    language_suffix: str = SUFFIX_GLSL,
+) -> List[pathlib.Path]:
     output_files = [output_shader_job_file_path]
 
     util.copy_file(shader_job_file_path, output_shader_job_file_path)
 
     # = [source/variant.frag, source/variant.vert, ...]
-    other_files = shader_job_get_related_files(
+    other_paths = shader_job_get_related_files(
         shader_job_file_path, extensions, language_suffix
     )
 
     # = [variant.frag, variant.vert, ...]
-    dest_other_files = [f.name for f in other_files]
+    dest_other_files = [f.name for f in other_paths]
 
     # = [dest/variant.frag, dest/variant.vert, ...]
-    dest_other_files = [
+    dest_other_paths = [
         output_shader_job_file_path.with_name(f) for f in dest_other_files
     ]
 
-    for (source, dest) in zip(other_files, dest_other_files):
+    for (source, dest) in zip(
+        other_paths, dest_other_paths
+    ):  # type: (pathlib.Path, pathlib.Path)
         util.copy_file(source, dest)
         output_files.append(dest)
 

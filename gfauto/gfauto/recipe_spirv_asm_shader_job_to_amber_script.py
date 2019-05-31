@@ -30,12 +30,12 @@ from .artifacts import (
 )
 from .recipe_pb2 import RecipeSpirvAsmShaderJobToAmberScript
 from .shader_job_util import (
-    asm_spirv_suffix,
-    comp_ext,
-    frag_ext,
+    EXT_COMP,
+    EXT_FRAG,
+    EXT_VERT,
+    SUFFIX_ASM_SPIRV,
     shader_job_get_related_files,
     shader_job_get_shader_contents,
-    vert_ext,
 )
 from .util import check
 
@@ -44,7 +44,7 @@ AMBER_FENCE_TIMEOUT_MS = 60000
 
 def get_text_as_comment(text: str) -> str:
     lines = text.split("\n")
-    while len(lines[-1]) == 0:
+    while not lines[-1]:
         lines.pop()
     lines = [("# " + line).rstrip() for line in lines]
     return "\n".join(lines)
@@ -185,7 +185,7 @@ def get_amber_script_contents_from_image_shaders_contents(
 
 def is_compute_job(input_asm_spirv_job_json_path: pathlib.Path) -> bool:
     comp_files = shader_job_get_related_files(
-        input_asm_spirv_job_json_path, [comp_ext], asm_spirv_suffix
+        input_asm_spirv_job_json_path, [EXT_COMP], SUFFIX_ASM_SPIRV
     )
     check(
         len(comp_files) <= 1,
@@ -198,14 +198,14 @@ def run_spirv_asm_shader_job_to_amber_script(
     input_asm_spirv_job_json_path: pathlib.Path,
     output_amber_script_file_path: pathlib.Path,
     add_red_pixel_probe: bool = False,
-    input_glsl_source_json_path: pathlib.Path = None,
+    input_glsl_source_json_path: Optional[pathlib.Path] = None,
     copyright_header_file_path: Optional[pathlib.Path] = None,
     add_generated_comment: bool = False,
     add_graphics_fuzz_comment: bool = False,
     comment_text_file_path: Optional[pathlib.Path] = None,
     use_default_fence_timeout: bool = False,
 ) -> None:
-    if is_compute_job(input_asm_spirv_job_json_path):
+    if is_compute_job(input_asm_spirv_job_json_path):  # pylint:disable=no-else-raise
         raise NotImplementedError(
             "Converting compute shaders to AmberScript not yet implemented"
         )
@@ -215,19 +215,19 @@ def run_spirv_asm_shader_job_to_amber_script(
         glsl_frag_contents = None
         if input_glsl_source_json_path:
             glsl_vert_contents = shader_job_get_shader_contents(
-                input_glsl_source_json_path, vert_ext
+                input_glsl_source_json_path, EXT_VERT
             )
             glsl_frag_contents = shader_job_get_shader_contents(
-                input_glsl_source_json_path, frag_ext
+                input_glsl_source_json_path, EXT_FRAG
             )
 
         # Get spirv asm contents
         vert_contents = shader_job_get_shader_contents(
-            input_asm_spirv_job_json_path, vert_ext, asm_spirv_suffix
+            input_asm_spirv_job_json_path, EXT_VERT, SUFFIX_ASM_SPIRV
         )
 
         frag_contents = shader_job_get_shader_contents(
-            input_asm_spirv_job_json_path, frag_ext, asm_spirv_suffix, must_exist=True
+            input_asm_spirv_job_json_path, EXT_FRAG, SUFFIX_ASM_SPIRV, must_exist=True
         )
 
         # Guaranteed.
@@ -259,7 +259,7 @@ def run_spirv_asm_shader_job_to_amber_script(
 
 def recipe_spirv_asm_shader_job_to_amber_script(
     recipe: RecipeSpirvAsmShaderJobToAmberScript, output_artifact_path: str
-):
+) -> None:
     artifact_execute_recipe_if_needed(recipe.spirv_asm_shader_job_artifact)
 
     # Wrap input artifact for convenience.
@@ -274,7 +274,7 @@ def recipe_spirv_asm_shader_job_to_amber_script(
     input_glsl_artifact_path = (
         input_artifact.metadata.data.spirv_asm_shader_job.spirv_job.glsl_shader_job_source_artifact
     )
-    if len(input_glsl_artifact_path) > 0 and recipe.add_glsl_source_as_comment:
+    if input_glsl_artifact_path and recipe.add_glsl_source_as_comment:
         input_glsl_artifact = artifact_read_metadata(input_glsl_artifact_path)
         input_glsl_json_path = artifact_get_inner_file_path(
             input_glsl_artifact.data.glsl_shader_job.shader_job_file,
@@ -301,7 +301,7 @@ def recipe_spirv_asm_shader_job_to_amber_script(
         add_red_pixel_probe = True
 
     output_amber_script_file_name = recipe.amber_script_output_file
-    if len(output_amber_script_file_name) == 0:
+    if not output_amber_script_file_name:
         output_amber_script_file_name = (
             util.remove_end(input_json_path.name, ".json") + ".amber_script"
         )
@@ -319,7 +319,7 @@ def recipe_spirv_asm_shader_job_to_amber_script(
     glsl_source_artifact = (
         input_artifact.metadata.data.spirv_asm_shader_job.spirv_job.glsl_shader_job_source_artifact
     )
-    if len(glsl_source_artifact) > 0:
+    if glsl_source_artifact:
         output_metadata.derived_from.append(glsl_source_artifact)
 
     run_spirv_asm_shader_job_to_amber_script(
