@@ -36,6 +36,9 @@ mypy-protobuf = "*"
 # Provides protoc.
 grpcio-tools = "*"
 
+# Type checking.
+mypy = "*"
+
 # PyLint linter.
 pylint = "*"
 
