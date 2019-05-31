@@ -37,5 +37,6 @@ steps:
 - script: |
     cd gfauto
     export PYTHON=python
+    export PIPENV_IGNORE_PIPFILE=1
     ./dev_shell.sh.template
   displayName: 'Install dependencies'
