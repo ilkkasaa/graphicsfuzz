@@ -40,4 +40,6 @@ steps:
     export PIPENV_IGNORE_PIPFILE=1
     export SKIP_SHELL=1
     ./dev_shell.sh.template
+    source .venv/bin/activate
+    ./check_all.sh
   displayName: 'Install dependencies'
