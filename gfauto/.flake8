@@ -50,3 +50,10 @@ ignore =
 
 # For flake8-quotes:
 inline-quotes = "
+
+# For flake8-spellcheck. Default is whitelist.txt but using whitelist.dic means
+# we can add the file to PyCharm/IntelliJ (albeit, globally, not per project).
+# TODO: This does not work yet, so we specify it on the command line.
+#  https://github.com/MichaelAquilina/flake8-spellcheck/issues/7
+
+whitelist=whitelist.dic

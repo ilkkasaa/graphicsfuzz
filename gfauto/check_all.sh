@@ -18,6 +18,6 @@ set -x
 set -e
 set -u
 
-flake8 .
+flake8 . --whitelist=whitelist.dic
 mypy --strict gfauto
 pylint gfauto
