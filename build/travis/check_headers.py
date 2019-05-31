@@ -113,6 +113,7 @@ def exclude_filename(f: str):
         f.endswith(".primitives") or \
         f.endswith(".jar") or \
         f.endswith(".spv") or \
+        f.endswith(".dic") or \
         f in [
             ".editorconfig",
             ".gitmodules",
