@@ -12,23 +12,26 @@ GraphicsFuzz auto (this project) provides scripts for running these tools with m
 
 ## Development setup
 
-Execute `./dev_shell.sh.template` (or, copy to `dev_shell.sh` and modify as needed).
+Execute `./dev_shell.sh.template` (or, copy to `./dev_shell.sh` and modify as needed before executing).
+This generates and activates a Python virtual environment (located at `.venv/`) with all dependencies installed. 
+
+* Execute `./check_all.sh` to run various presubmit checks, linters, etc.
+* Execute `./fix_all.sh` automatically fix certain issues, such as formatting.
 
 ### PyCharm
 
 Use PyCharm to open the top-level `gfauto` directory.
-It should pick up the `.venv` (virtual environment) automatically
-for the code
-and also when you open a `Terminal` or `Python Console` tab.
+It should pick up the Python virtual environment (at `.venv/`) automatically
+for both the code
+and when you open a `Terminal` or `Python Console` tab.
 
 Install and configure plugins:
 
 * Protobuf Support
 * File Watchers (may already be installed)
-  * Add a file watcher:
+  * The watcher task should already be under version control with the following settings:
     * File type: Python
-    * Program: `$PyInterpreterDirectory$/black`
-    * Arguments: `$FilePath$`
+    * Program: `$ProjectFileDir$/fix_all.sh`
 
 
 ## Using iPython

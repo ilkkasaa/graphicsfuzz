@@ -18,5 +18,9 @@ set -x
 set -e
 set -u
 
+if [ -z ${VIRTUAL_ENV+x} ]; then
+  source .venv/bin/activate
+fi
+
 black .
 isort -rc gfauto

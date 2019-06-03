@@ -18,6 +18,10 @@ set -x
 set -e
 set -u
 
+if [ -z ${VIRTUAL_ENV+x} ]; then
+  source .venv/bin/activate
+fi
+
 flake8 . --whitelist=whitelist.dic
 mypy --strict gfauto
 pylint gfauto
