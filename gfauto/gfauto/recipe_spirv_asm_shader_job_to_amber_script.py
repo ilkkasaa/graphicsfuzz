@@ -112,7 +112,7 @@ def uniform_json_to_amberscript(uniform_json_contents: str) -> str:
     return result
 
 
-def get_amber_script_contents_from_image_shaders_contents(
+def get_amber_script_contents_from_image_shaders_contents(  # pylint: disable=too-many-branches,too-many-locals
     vert_asm_contents: Optional[str],
     frag_asm_contents: str,
     shader_job_json_contents: str,
@@ -124,6 +124,7 @@ def get_amber_script_contents_from_image_shaders_contents(
     add_graphics_fuzz_comment: bool = False,
     comment_text: Optional[str] = None,
     use_default_fence_timeout: bool = False,
+    extra_commands: Optional[str] = None,
 ) -> str:
     """Generates Amberscript representation of an image test."""
     result = ""
@@ -172,13 +173,19 @@ def get_amber_script_contents_from_image_shaders_contents(
     result += "\n\n"
 
     result += "[test]\n"
-    result += "## Uniforms\n"
-    result += uniform_json_to_amberscript(shader_job_json_contents)
-    result += "\n"
+
+    uniforms_text = uniform_json_to_amberscript(shader_job_json_contents)
+    if uniforms_text:
+        result += "## Uniforms\n"
+        result += uniforms_text
+        result += "\n"
     result += "draw rect -1 -1 2 2\n"
 
     if add_red_pixel_probe:
         result += "probe rgba (0, 0) (1, 0, 0, 1)\n"
+
+    if extra_commands:
+        result += extra_commands
 
     return result
 
@@ -194,7 +201,7 @@ def is_compute_job(input_asm_spirv_job_json_path: pathlib.Path) -> bool:
     return len(comp_files) == 1
 
 
-def run_spirv_asm_shader_job_to_amber_script(
+def run_spirv_asm_shader_job_to_amber_script(  # pylint: disable=too-many-locals
     input_asm_spirv_job_json_path: pathlib.Path,
     output_amber_script_file_path: pathlib.Path,
     add_red_pixel_probe: bool = False,
@@ -204,6 +211,7 @@ def run_spirv_asm_shader_job_to_amber_script(
     add_graphics_fuzz_comment: bool = False,
     comment_text_file_path: Optional[pathlib.Path] = None,
     use_default_fence_timeout: bool = False,
+    extra_commands: Optional[str] = None,
 ) -> None:
     if is_compute_job(input_asm_spirv_job_json_path):  # pylint:disable=no-else-raise
         raise NotImplementedError(
@@ -252,6 +260,7 @@ def run_spirv_asm_shader_job_to_amber_script(
             if comment_text_file_path is not None
             else None,
             use_default_fence_timeout,
+            extra_commands,
         )
 
         util.file_write_text(output_amber_script_file_path, result)
@@ -332,6 +341,7 @@ def recipe_spirv_asm_shader_job_to_amber_script(
         recipe.add_graphics_fuzz_comment,
         input_comment_text_file_path,
         recipe.use_default_fence_timeout,
+        recipe.extra_commands,
     )
 
     artifact_write_metadata(output_metadata, output_artifact_path)

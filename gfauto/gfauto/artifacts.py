@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import pathlib
-from typing import Iterable, List, Optional
+from typing import Iterable, Optional
 
 from . import gflogging, proto_util, util
 from .artifact_pb2 import ArtifactMetadata, ArtifactMetadataTextFile
@@ -27,7 +27,7 @@ from .recipe_pb2 import (
     RecipeSpirvShaderJobToSpirvAsmShaderJob,
     RecipeSpirvShaderJobToSpirvShaderJobOpt,
 )
-from .util import norm_path
+from .util import check, norm_path
 
 ARTIFACT_METADATA_FILE_NAME = "artifact.json"
 ARTIFACT_RECIPE_FILE_NAME = "recipe.json"
@@ -49,6 +49,9 @@ class RecipeWrap:
         self.recipe = recipe
         if self.recipe is None:
             self.recipe = artifact_read_recipe(path)
+
+    def write(self) -> None:
+        artifact_write_recipe(self.recipe, self.path)
 
 
 def artifact_path_get_root() -> pathlib.Path:
@@ -209,6 +212,13 @@ def artifact_execute_recipe(
                 recipe_spirv_asm_shader_job_to_amber_script(
                     recipe.spirv_asm_shader_job_to_amber_script, artifact_path
                 )
+            elif recipe.HasField(
+                "glsl_reference_shader_job_to_glsl_variant_shader_job"
+            ):
+                recipe_glsl_reference_shader_job_to_glsl_variant_shader_job(
+                    recipe.glsl_reference_shader_job_to_glsl_variant_shader_job,
+                    artifact_path,
+                )
             else:
                 raise NotImplementedError(
                     "Artifact {} has recipe type {} and this is not implemented".format(
@@ -220,6 +230,12 @@ def artifact_execute_recipe(
 
 
 def artifact_get_inner_file_path(inner_file: str, artifact_path: str) -> pathlib.Path:
+    check(
+        not inner_file.startswith("//"),
+        AssertionError(
+            "bad inner_file argument passed to artifact_get_inner_file_path"
+        ),
+    )
     # TODO: Consider absolute paths that we might want to support for quick hacks.
     return norm_path(
         artifact_get_directory_path(artifact_path) / pathlib.Path(inner_file)
@@ -241,81 +257,19 @@ def maybe_get_text_artifact_file_path(
     return result
 
 
-def artifact_create_amber_script_from_glsl(
-    input_artifact_path: str,
-    out_artifact_prefix_path: str,
-    test_name: Optional[str] = None,
-    spirv_opt_args: Optional[List[str]] = None,
-    comment: Optional[str] = None,
-) -> None:
-    next_input = artifact_path_absolute(input_artifact_path)
-    out_artifact_prefix_path_full = artifact_path_absolute(out_artifact_prefix_path)
+def artifact_comment_create(output_artifact_path: str, comment_text: str) -> str:
 
-    if test_name is None:
-        json_file = artifact_get_inner_file_path(
-            artifact_read_metadata(next_input).data.glsl_shader_job.shader_job_file,
-            next_input,
-        )
-        test_name = json_file.stem
+    file_name = "file.txt"
+    file_path = artifact_get_inner_file_path(file_name, output_artifact_path)
+    util.file_write_text(file_path, comment_text)
 
-    next_input = artifact_write_recipe_and_execute(
-        Recipe(
-            glsl_shader_job_to_spirv_shader_job=RecipeGlslShaderJobToSpirvShaderJob(
-                glsl_shader_job_artifact=next_input, glslang_validator_artifact=""
+    return artifact_write_metadata(
+        ArtifactMetadata(
+            data=ArtifactMetadata.Data(
+                text_file=ArtifactMetadataTextFile(text_file="file.txt")
             )
         ),
-        out_artifact_prefix_path_full + "/glsl_spirv",
-    )
-
-    if spirv_opt_args:
-        next_input = artifact_write_recipe_and_execute(
-            Recipe(
-                spirv_shader_job_to_spirv_shader_job_opt=RecipeSpirvShaderJobToSpirvShaderJobOpt(
-                    spirv_shader_job_artifact=next_input,
-                    spirv_opt_args=spirv_opt_args,
-                    spirv_opt_artifact="",
-                )
-            ),
-            out_artifact_prefix_path_full + "/glsl_spirv_o",
-        )
-
-    next_input = artifact_write_recipe_and_execute(
-        Recipe(
-            spirv_shader_job_to_spirv_asm_shader_job=RecipeSpirvShaderJobToSpirvAsmShaderJob(
-                spirv_shader_job_artifact=next_input, spirv_dis_artifact=""
-            )
-        ),
-        out_artifact_prefix_path_full + "/glsl_spirv_o_asm",
-    )
-
-    comment_artifact_path = ""
-    if comment:
-        comment_artifact_path = out_artifact_prefix_path_full + "/comment"
-        util.file_write_text(
-            artifact_get_inner_file_path("file.txt", comment_artifact_path), comment
-        )
-        artifact_write_metadata(
-            ArtifactMetadata(
-                data=ArtifactMetadata.Data(
-                    text_file=ArtifactMetadataTextFile(text_file="file.txt")
-                )
-            ),
-            comment_artifact_path,
-        )
-
-    artifact_write_recipe_and_execute(
-        Recipe(
-            spirv_asm_shader_job_to_amber_script=RecipeSpirvAsmShaderJobToAmberScript(
-                spirv_asm_shader_job_artifact=next_input,
-                make_self_contained_test=False,
-                amber_script_output_file=test_name + ".amber_script",
-                add_graphics_fuzz_comment=True,
-                use_default_fence_timeout=False,
-                add_glsl_source_as_comment=True,
-                comment_text_artifact=comment_artifact_path,
-            )
-        ),
-        out_artifact_prefix_path_full + "/glsl_spirv_o_asm_amber",
+        output_artifact_path,
     )
 
 
@@ -323,10 +277,18 @@ def artifact_create_amber_script_from_glsl_shader_job_artifact(
     input_artifact_path: str,
     out_artifact_prefix_path: str,
     spirv_opt_args: Optional[Iterable[str]] = None,
-    copyright_header_artifact_path: Optional[str] = None,
-    comment: Optional[str] = None,
     make_self_contained: bool = False,
+    amber_recipe: Optional[RecipeSpirvAsmShaderJobToAmberScript] = None,
 ) -> str:
+
+    if amber_recipe:
+        # Clone it.
+        temp = RecipeSpirvAsmShaderJobToAmberScript()
+        temp.CopyFrom(amber_recipe)
+        amber_recipe = temp
+    else:
+        amber_recipe = RecipeSpirvAsmShaderJobToAmberScript()
+
     next_input = input_artifact_path
 
     next_metadata = artifact_read_metadata(next_input)
@@ -335,7 +297,7 @@ def artifact_create_amber_script_from_glsl_shader_job_artifact(
         and not next_metadata.data.glsl_shader_job.red_pixel_at_top_left
         and make_self_contained
     ):
-        next_input = artifact_write_recipe(
+        next_input = artifact_write_recipe_and_execute(
             Recipe(
                 glsl_shader_job_add_red_pixels=RecipeGlslShaderJobAddRedPixels(
                     glsl_shader_job_artifact=next_input, graphics_fuzz_artifact=""
@@ -344,13 +306,12 @@ def artifact_create_amber_script_from_glsl_shader_job_artifact(
             out_artifact_prefix_path + "/glsl",
         )
 
-    artifact_execute_recipe_if_needed(next_input)
     next_metadata = artifact_read_metadata(next_input)
     if (
         next_metadata.data.HasField("glsl_shader_job")
         and next_metadata.data.glsl_shader_job.red_pixel_at_top_left
     ):
-        next_input = artifact_write_recipe(
+        next_input = artifact_write_recipe_and_execute(
             Recipe(
                 glsl_shader_job_to_spirv_shader_job=RecipeGlslShaderJobToSpirvShaderJob(
                     glsl_shader_job_artifact=next_input, glslang_validator_artifact=""
@@ -360,13 +321,12 @@ def artifact_create_amber_script_from_glsl_shader_job_artifact(
         )
 
     if spirv_opt_args:
-        artifact_execute_recipe_if_needed(next_input)
         next_metadata = artifact_read_metadata(next_input)
         if (
             next_metadata.data.HasField("spirv_shader_job")
             and not next_metadata.data.spirv_shader_job.spirv_job.spirv_opt_args
         ):
-            next_input = artifact_write_recipe(
+            next_input = artifact_write_recipe_and_execute(
                 Recipe(
                     spirv_shader_job_to_spirv_shader_job_opt=RecipeSpirvShaderJobToSpirvShaderJobOpt(
                         spirv_shader_job_artifact=next_input,
@@ -377,10 +337,9 @@ def artifact_create_amber_script_from_glsl_shader_job_artifact(
                 out_artifact_prefix_path + "/glsl_spirv_o",
             )
 
-    artifact_execute_recipe_if_needed(next_input)
     next_metadata = artifact_read_metadata(next_input)
     if next_metadata.data.HasField("spirv_shader_job"):
-        next_input = artifact_write_recipe(
+        next_input = artifact_write_recipe_and_execute(
             Recipe(
                 spirv_shader_job_to_spirv_asm_shader_job=RecipeSpirvShaderJobToSpirvAsmShaderJob(
                     spirv_shader_job_artifact=next_input, spirv_dis_artifact=""
@@ -389,39 +348,16 @@ def artifact_create_amber_script_from_glsl_shader_job_artifact(
             out_artifact_prefix_path + "/glsl_spirv_o_asm",
         )
 
-    comment_artifact_path = ""
-    if comment:
-        comment_artifact_path = out_artifact_prefix_path + "/comment"
-        util.file_write_text(
-            artifact_get_inner_file_path("file.txt", comment_artifact_path), comment
-        )
-        artifact_write_metadata(
-            ArtifactMetadata(
-                data=ArtifactMetadata.Data(
-                    text_file=ArtifactMetadataTextFile(text_file="file.txt")
-                )
-            ),
-            comment_artifact_path,
-        )
+    # Set the obvious fields of amber_recipe; the rest we leave alone.
+    amber_recipe.spirv_asm_shader_job_artifact = next_input
+    amber_recipe.make_self_contained_test = make_self_contained
+    if not amber_recipe.amber_script_output_file:
+        amber_recipe.amber_script_output_file = "test.amber_script"
 
-    artifact_execute_recipe_if_needed(next_input)
-    next_input = artifact_write_recipe(
-        Recipe(
-            spirv_asm_shader_job_to_amber_script=RecipeSpirvAsmShaderJobToAmberScript(
-                spirv_asm_shader_job_artifact=next_input,
-                make_self_contained_test=True,
-                amber_script_output_file="test.amber_script",
-                copyright_header_text_artifact=copyright_header_artifact_path,
-                add_graphics_fuzz_comment=True,
-                use_default_fence_timeout=True,
-                add_glsl_source_as_comment=True,
-                comment_text_artifact=comment_artifact_path,
-            )
-        ),
+    next_input = artifact_write_recipe_and_execute(
+        Recipe(spirv_asm_shader_job_to_amber_script=amber_recipe),
         out_artifact_prefix_path + "/glsl_spirv_o_asm_amber",
     )
-
-    artifact_execute_recipe_if_needed(next_input)
 
     return next_input
 
@@ -443,4 +379,7 @@ from .recipe_spirv_shader_job_to_spirv_asm_shader_job import (  # noqa isort:ski
 )
 from .recipe_spirv_shader_job_to_spirv_shader_job_opt import (  # noqa isort:skip
     recipe_spirv_shader_job_to_spirv_shader_job_opt,
+)
+from .recipe_glsl_reference_shader_job_to_glsl_variant_shader_job import (  # noqa isort:skip
+    recipe_glsl_reference_shader_job_to_glsl_variant_shader_job,
 )

@@ -18,7 +18,7 @@ import os
 import pathlib
 import shutil
 from contextlib import contextmanager
-from typing import BinaryIO, Iterator, List, TextIO, cast
+from typing import Any, BinaryIO, Iterator, List, TextIO, cast
 
 # Note: Could use the built-in |file.open| and |file.write_text|, etc.
 
@@ -110,3 +110,8 @@ def pushd(path: pathlib.Path) -> Iterator[None]:  # noqa VNE002
 def check(condition: bool, exception: Exception) -> None:
     if not condition:
         raise exception
+
+
+def check_field_truthy(field: Any, field_name: str) -> None:
+    if not field:
+        raise ValueError(f"{field_name}(={str(field)}) must be filled")
