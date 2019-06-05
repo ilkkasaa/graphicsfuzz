@@ -29,6 +29,7 @@ message Recipe {
     RecipeGlslShaderJobAddRedPixels glsl_shader_job_add_red_pixels = 4;
     RecipeSpirvAsmShaderJobToAmberScript spirv_asm_shader_job_to_amber_script = 5;
     RecipeSpirvShaderJobToSpirvAsmShaderJob spirv_shader_job_to_spirv_asm_shader_job = 6;
+    RecipeGlslReferenceShaderJobToGlslVariantShaderJob glsl_reference_shader_job_to_glsl_variant_shader_job = 7;
   }
 }
 
@@ -91,4 +92,24 @@ message RecipeSpirvAsmShaderJobToAmberScript {
   // used to allow large, fuzzed, variant shaders to run.
   bool use_default_fence_timeout = 9;
 
+  // Extra text to add to the list of commands, such as probe commands.
+  string extra_commands = 10;
+
+}
+
+message RecipeGlslReferenceShaderJobToGlslVariantShaderJob {
+
+  // Reference shader job. Will be passed to the GraphicsFuzz generate command.
+  string glsl_reference_shader_job_artifact = 1;
+  string graphicsfuzz_artifact = 2;
+
+  // TODO: Should perhaps change to a list of shader job artifacts?
+  // Artifact containing a number of donor shader jobs. Will be passed to the GraphicsFuzz generate command.
+  string glsl_donors_artifact = 3;
+
+  // The shader job output .json file. E.g. variant.json.
+  string output_shader_job_file = 4;
+
+  // The optional arguments to the GraphicsFuzz generate command.
+  repeated string other_generate_arguments = 5;
 }
