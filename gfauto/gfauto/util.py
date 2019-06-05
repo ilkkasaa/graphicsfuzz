@@ -77,10 +77,6 @@ def tool_on_path(tool: str) -> pathlib.Path:  # noqa VNE002
     return pathlib.Path(result)
 
 
-def spirv_dis_on_path() -> pathlib.Path:
-    return tool_on_path("spirv-dis")
-
-
 def copy_file(source_file_path: pathlib.Path, dest_file_path: pathlib.Path) -> None:
     file_mkdirs_parent(dest_file_path)
     shutil.copy(str(source_file_path), str(dest_file_path))

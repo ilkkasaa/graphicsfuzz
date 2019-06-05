@@ -56,6 +56,8 @@ class RecipeWrap:
         return artifact_write_recipe(self.recipe, self.path)
 
 
+LATEST_GRAPHICSFUZZ_ARTIFACT = "//binaries/graphicsfuzz_v1.2.1"
+
 BUILT_IN_BINARY_RECIPES = [
     RecipeWrap(
         "//binaries/graphicsfuzz_v1.2.1",
@@ -70,6 +72,8 @@ BUILT_IN_BINARY_RECIPES = [
                         )
                     ],
                     binaries=[
+                        #
+                        # glslangValidator
                         Binary(
                             name="glslangValidator",
                             platform="Linux",
@@ -84,6 +88,57 @@ BUILT_IN_BINARY_RECIPES = [
                             name="glslangValidator",
                             platform="Mac",
                             path="graphicsfuzz/bin/Mac/glslangValidator",
+                        ),
+                        #
+                        # spirv-opt
+                        Binary(
+                            name="spirv-opt",
+                            platform="Linux",
+                            path="graphicsfuzz/bin/Linux/spirv-opt",
+                        ),
+                        Binary(
+                            name="spirv-opt",
+                            platform="Windows",
+                            path="graphicsfuzz/bin/Windows/spirv-opt.exe",
+                        ),
+                        Binary(
+                            name="spirv-opt",
+                            platform="Mac",
+                            path="graphicsfuzz/bin/Mac/spirv-opt",
+                        ),
+                        #
+                        # spirv-dis
+                        Binary(
+                            name="spirv-dis",
+                            platform="Linux",
+                            path="graphicsfuzz/bin/Linux/spirv-dis",
+                        ),
+                        Binary(
+                            name="spirv-dis",
+                            platform="Windows",
+                            path="graphicsfuzz/bin/Windows/spirv-dis.exe",
+                        ),
+                        Binary(
+                            name="spirv-dis",
+                            platform="Mac",
+                            path="graphicsfuzz/bin/Mac/spirv-dis",
+                        ),
+                        #
+                        # spirv-as
+                        Binary(
+                            name="spirv-as",
+                            platform="Linux",
+                            path="graphicsfuzz/bin/Linux/spirv-as",
+                        ),
+                        Binary(
+                            name="spirv-as",
+                            platform="Windows",
+                            path="graphicsfuzz/bin/Windows/spirv-as.exe",
+                        ),
+                        Binary(
+                            name="spirv-as",
+                            platform="Mac",
+                            path="graphicsfuzz/bin/Mac/spirv-as",
                         ),
                     ],
                 )
@@ -351,6 +406,7 @@ def artifact_create_amber_script_from_glsl_shader_job_artifact(
     input_artifact_path: str,
     out_artifact_prefix_path: str,
     glslang_validator_artifact: str,
+    spirv_dis_artifact: str,
     spirv_opt_info: Optional[SpirvOptInfo] = None,
     make_self_contained: bool = False,
     amber_recipe: Optional[RecipeSpirvAsmShaderJobToAmberScript] = None,
@@ -361,6 +417,7 @@ def artifact_create_amber_script_from_glsl_shader_job_artifact(
     :param input_artifact_path:
     :param out_artifact_prefix_path:
     :param glslang_validator_artifact:
+    :param spirv_dis_artifact:
     :param spirv_opt_info:
     :param make_self_contained:
     :param amber_recipe:
@@ -428,7 +485,8 @@ def artifact_create_amber_script_from_glsl_shader_job_artifact(
         next_input = artifact_write_recipe_and_execute(
             Recipe(
                 spirv_shader_job_to_spirv_asm_shader_job=RecipeSpirvShaderJobToSpirvAsmShaderJob(
-                    spirv_shader_job_artifact=next_input, spirv_dis_artifact=""
+                    spirv_shader_job_artifact=next_input,
+                    spirv_dis_artifact=spirv_dis_artifact,
                 )
             ),
             out_artifact_prefix_path + "/glsl_spirv_o_asm",
