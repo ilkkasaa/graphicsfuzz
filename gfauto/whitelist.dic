@@ -59,4 +59,7 @@ runtime
 readlines
 pylint
 num
-
+uuid
+uuid4
+truthy
+graphicsfuzz
