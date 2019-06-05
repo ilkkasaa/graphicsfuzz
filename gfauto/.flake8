@@ -31,6 +31,9 @@ ignore =
   D107
   D102
 
+  # Audit url open for permitted schemes.
+  S310
+
   # Standard pseudo-random generators are not suitable for security/cryptographic purposes.
   S311
 

@@ -16,6 +16,7 @@
 
 import os
 import pathlib
+import platform
 import shutil
 from contextlib import contextmanager
 from typing import Any, BinaryIO, Iterator, List, TextIO, cast
@@ -115,3 +116,12 @@ def check(condition: bool, exception: Exception) -> None:
 def check_field_truthy(field: Any, field_name: str) -> None:
     if not field:
         raise ValueError(f"{field_name}(={str(field)}) must be filled")
+
+
+def get_platform() -> str:
+    host = platform.system()
+    if host in ("Linux", "Windows"):
+        return host
+    if host == "Darwin":
+        return "Mac"
+    raise AssertionError("Unsupported platform: {}".format(host))

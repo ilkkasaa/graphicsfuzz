@@ -16,6 +16,8 @@ syntax = "proto3";
 
 package gfauto;
 
+import "gfauto/common.proto";
+
 
 // It would be good if the recipe inputs were typed, because then we could (one day) dynamically
 // discover which recipes can be applied to which artifacts.
@@ -30,6 +32,7 @@ message Recipe {
     RecipeSpirvAsmShaderJobToAmberScript spirv_asm_shader_job_to_amber_script = 5;
     RecipeSpirvShaderJobToSpirvAsmShaderJob spirv_shader_job_to_spirv_asm_shader_job = 6;
     RecipeGlslReferenceShaderJobToGlslVariantShaderJob glsl_reference_shader_job_to_glsl_variant_shader_job = 7;
+    RecipeDownloadAndExtractArchiveSet download_and_extract_archive_set = 8;
   }
 }
 
@@ -82,8 +85,8 @@ message RecipeSpirvAsmShaderJobToAmberScript {
   // Add "A test for a bug found by GraphicsFuzz" comment.
   bool add_graphics_fuzz_comment = 6;
 
-  // If present, add text as a comment.
-  string comment_text_artifact = 7; // [(artifact_type).text_file = {}]
+  // If present, add the text as a comment.
+  string comment_text = 7;
 
   // Add the GLSL source as a comment.
   bool add_glsl_source_as_comment = 8;
@@ -112,4 +115,8 @@ message RecipeGlslReferenceShaderJobToGlslVariantShaderJob {
 
   // The optional arguments to the GraphicsFuzz generate command.
   repeated string other_generate_arguments = 5;
+}
+
+message RecipeDownloadAndExtractArchiveSet {
+  ArchiveSet archive_set = 1;
 }

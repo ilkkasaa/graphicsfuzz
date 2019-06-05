@@ -65,4 +65,8 @@ truthy
 graphicsfuzz
 randint
 amberfy
-
+zipfile
+urlretrieve
+infolist
+attr
+chmod

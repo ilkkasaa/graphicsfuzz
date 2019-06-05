@@ -15,14 +15,18 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
+from gfauto import common_pb2 as gfauto_dot_common__pb2
+
+
 DESCRIPTOR = _descriptor.FileDescriptor(
     name="gfauto/recipe.proto",
     package="gfauto",
     syntax="proto3",
     serialized_options=None,
     serialized_pb=_b(
-        '\n\x13gfauto/recipe.proto\x12\x06gfauto"\x8f\x05\n\x06Recipe\x12(\n\x07\x63ommand\x18\x01 \x01(\x0b\x32\x15.gfauto.RecipeCommandH\x00\x12Z\n#glsl_shader_job_to_spirv_shader_job\x18\x02 \x01(\x0b\x32+.gfauto.RecipeGlslShaderJobToSpirvShaderJobH\x00\x12\x63\n(spirv_shader_job_to_spirv_shader_job_opt\x18\x03 \x01(\x0b\x32/.gfauto.RecipeSpirvShaderJobToSpirvShaderJobOptH\x00\x12Q\n\x1eglsl_shader_job_add_red_pixels\x18\x04 \x01(\x0b\x32\'.gfauto.RecipeGlslShaderJobAddRedPixelsH\x00\x12\\\n$spirv_asm_shader_job_to_amber_script\x18\x05 \x01(\x0b\x32,.gfauto.RecipeSpirvAsmShaderJobToAmberScriptH\x00\x12\x63\n(spirv_shader_job_to_spirv_asm_shader_job\x18\x06 \x01(\x0b\x32/.gfauto.RecipeSpirvShaderJobToSpirvAsmShaderJobH\x00\x12z\n4glsl_reference_shader_job_to_glsl_variant_shader_job\x18\x07 \x01(\x0b\x32:.gfauto.RecipeGlslReferenceShaderJobToGlslVariantShaderJobH\x00\x42\x08\n\x06recipe" \n\rRecipeCommand\x12\x0f\n\x07\x63ommand\x18\x01 \x03(\t"k\n#RecipeGlslShaderJobToSpirvShaderJob\x12 \n\x18glsl_shader_job_artifact\x18\x01 \x01(\t\x12"\n\x1aglslang_validator_artifact\x18\x02 \x01(\t"\x80\x01\n\'RecipeSpirvShaderJobToSpirvShaderJobOpt\x12!\n\x19spirv_shader_job_artifact\x18\x01 \x01(\t\x12\x16\n\x0espirv_opt_args\x18\x02 \x03(\t\x12\x1a\n\x12spirv_opt_artifact\x18\x03 \x01(\t"c\n\x1fRecipeGlslShaderJobAddRedPixels\x12 \n\x18glsl_shader_job_artifact\x18\x01 \x01(\t\x12\x1e\n\x16graphics_fuzz_artifact\x18\x02 \x01(\t"h\n\'RecipeSpirvShaderJobToSpirvAsmShaderJob\x12!\n\x19spirv_shader_job_artifact\x18\x01 \x01(\t\x12\x1a\n\x12spirv_dis_artifact\x18\x02 \x01(\t"\xf9\x02\n$RecipeSpirvAsmShaderJobToAmberScript\x12%\n\x1dspirv_asm_shader_job_artifact\x18\x01 \x01(\t\x12 \n\x18make_self_contained_test\x18\x02 \x01(\x08\x12 \n\x18\x61mber_script_output_file\x18\x03 \x01(\t\x12&\n\x1e\x63opyright_header_text_artifact\x18\x04 \x01(\t\x12\x1d\n\x15\x61\x64\x64_generated_comment\x18\x05 \x01(\x08\x12!\n\x19\x61\x64\x64_graphics_fuzz_comment\x18\x06 \x01(\x08\x12\x1d\n\x15\x63omment_text_artifact\x18\x07 \x01(\t\x12"\n\x1a\x61\x64\x64_glsl_source_as_comment\x18\x08 \x01(\x08\x12!\n\x19use_default_fence_timeout\x18\t \x01(\x08\x12\x16\n\x0e\x65xtra_commands\x18\n \x01(\t"\xdf\x01\n2RecipeGlslReferenceShaderJobToGlslVariantShaderJob\x12*\n"glsl_reference_shader_job_artifact\x18\x01 \x01(\t\x12\x1d\n\x15graphicsfuzz_artifact\x18\x02 \x01(\t\x12\x1c\n\x14glsl_donors_artifact\x18\x03 \x01(\t\x12\x1e\n\x16output_shader_job_file\x18\x04 \x01(\t\x12 \n\x18other_generate_arguments\x18\x05 \x03(\tb\x06proto3'
+        '\n\x13gfauto/recipe.proto\x12\x06gfauto\x1a\x13gfauto/common.proto"\xe7\x05\n\x06Recipe\x12(\n\x07\x63ommand\x18\x01 \x01(\x0b\x32\x15.gfauto.RecipeCommandH\x00\x12Z\n#glsl_shader_job_to_spirv_shader_job\x18\x02 \x01(\x0b\x32+.gfauto.RecipeGlslShaderJobToSpirvShaderJobH\x00\x12\x63\n(spirv_shader_job_to_spirv_shader_job_opt\x18\x03 \x01(\x0b\x32/.gfauto.RecipeSpirvShaderJobToSpirvShaderJobOptH\x00\x12Q\n\x1eglsl_shader_job_add_red_pixels\x18\x04 \x01(\x0b\x32\'.gfauto.RecipeGlslShaderJobAddRedPixelsH\x00\x12\\\n$spirv_asm_shader_job_to_amber_script\x18\x05 \x01(\x0b\x32,.gfauto.RecipeSpirvAsmShaderJobToAmberScriptH\x00\x12\x63\n(spirv_shader_job_to_spirv_asm_shader_job\x18\x06 \x01(\x0b\x32/.gfauto.RecipeSpirvShaderJobToSpirvAsmShaderJobH\x00\x12z\n4glsl_reference_shader_job_to_glsl_variant_shader_job\x18\x07 \x01(\x0b\x32:.gfauto.RecipeGlslReferenceShaderJobToGlslVariantShaderJobH\x00\x12V\n download_and_extract_archive_set\x18\x08 \x01(\x0b\x32*.gfauto.RecipeDownloadAndExtractArchiveSetH\x00\x42\x08\n\x06recipe" \n\rRecipeCommand\x12\x0f\n\x07\x63ommand\x18\x01 \x03(\t"k\n#RecipeGlslShaderJobToSpirvShaderJob\x12 \n\x18glsl_shader_job_artifact\x18\x01 \x01(\t\x12"\n\x1aglslang_validator_artifact\x18\x02 \x01(\t"\x80\x01\n\'RecipeSpirvShaderJobToSpirvShaderJobOpt\x12!\n\x19spirv_shader_job_artifact\x18\x01 \x01(\t\x12\x16\n\x0espirv_opt_args\x18\x02 \x03(\t\x12\x1a\n\x12spirv_opt_artifact\x18\x03 \x01(\t"c\n\x1fRecipeGlslShaderJobAddRedPixels\x12 \n\x18glsl_shader_job_artifact\x18\x01 \x01(\t\x12\x1e\n\x16graphics_fuzz_artifact\x18\x02 \x01(\t"h\n\'RecipeSpirvShaderJobToSpirvAsmShaderJob\x12!\n\x19spirv_shader_job_artifact\x18\x01 \x01(\t\x12\x1a\n\x12spirv_dis_artifact\x18\x02 \x01(\t"\xf0\x02\n$RecipeSpirvAsmShaderJobToAmberScript\x12%\n\x1dspirv_asm_shader_job_artifact\x18\x01 \x01(\t\x12 \n\x18make_self_contained_test\x18\x02 \x01(\x08\x12 \n\x18\x61mber_script_output_file\x18\x03 \x01(\t\x12&\n\x1e\x63opyright_header_text_artifact\x18\x04 \x01(\t\x12\x1d\n\x15\x61\x64\x64_generated_comment\x18\x05 \x01(\x08\x12!\n\x19\x61\x64\x64_graphics_fuzz_comment\x18\x06 \x01(\x08\x12\x14\n\x0c\x63omment_text\x18\x07 \x01(\t\x12"\n\x1a\x61\x64\x64_glsl_source_as_comment\x18\x08 \x01(\x08\x12!\n\x19use_default_fence_timeout\x18\t \x01(\x08\x12\x16\n\x0e\x65xtra_commands\x18\n \x01(\t"\xdf\x01\n2RecipeGlslReferenceShaderJobToGlslVariantShaderJob\x12*\n"glsl_reference_shader_job_artifact\x18\x01 \x01(\t\x12\x1d\n\x15graphicsfuzz_artifact\x18\x02 \x01(\t\x12\x1c\n\x14glsl_donors_artifact\x18\x03 \x01(\t\x12\x1e\n\x16output_shader_job_file\x18\x04 \x01(\t\x12 \n\x18other_generate_arguments\x18\x05 \x03(\t"M\n"RecipeDownloadAndExtractArchiveSet\x12\'\n\x0b\x61rchive_set\x18\x01 \x01(\x0b\x32\x12.gfauto.ArchiveSetb\x06proto3'
     ),
+    dependencies=[gfauto_dot_common__pb2.DESCRIPTOR],
 )
 
 
@@ -159,6 +163,24 @@ _RECIPE = _descriptor.Descriptor(
             serialized_options=None,
             file=DESCRIPTOR,
         ),
+        _descriptor.FieldDescriptor(
+            name="download_and_extract_archive_set",
+            full_name="gfauto.Recipe.download_and_extract_archive_set",
+            index=7,
+            number=8,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        ),
     ],
     extensions=[],
     nested_types=[],
@@ -176,8 +198,8 @@ _RECIPE = _descriptor.Descriptor(
             fields=[],
         )
     ],
-    serialized_start=32,
-    serialized_end=687,
+    serialized_start=53,
+    serialized_end=796,
 )
 
 
@@ -215,8 +237,8 @@ _RECIPECOMMAND = _descriptor.Descriptor(
     syntax="proto3",
     extension_ranges=[],
     oneofs=[],
-    serialized_start=689,
-    serialized_end=721,
+    serialized_start=798,
+    serialized_end=830,
 )
 
 
@@ -272,8 +294,8 @@ _RECIPEGLSLSHADERJOBTOSPIRVSHADERJOB = _descriptor.Descriptor(
     syntax="proto3",
     extension_ranges=[],
     oneofs=[],
-    serialized_start=723,
-    serialized_end=830,
+    serialized_start=832,
+    serialized_end=939,
 )
 
 
@@ -347,8 +369,8 @@ _RECIPESPIRVSHADERJOBTOSPIRVSHADERJOBOPT = _descriptor.Descriptor(
     syntax="proto3",
     extension_ranges=[],
     oneofs=[],
-    serialized_start=833,
-    serialized_end=961,
+    serialized_start=942,
+    serialized_end=1070,
 )
 
 
@@ -404,8 +426,8 @@ _RECIPEGLSLSHADERJOBADDREDPIXELS = _descriptor.Descriptor(
     syntax="proto3",
     extension_ranges=[],
     oneofs=[],
-    serialized_start=963,
-    serialized_end=1062,
+    serialized_start=1072,
+    serialized_end=1171,
 )
 
 
@@ -461,8 +483,8 @@ _RECIPESPIRVSHADERJOBTOSPIRVASMSHADERJOB = _descriptor.Descriptor(
     syntax="proto3",
     extension_ranges=[],
     oneofs=[],
-    serialized_start=1064,
-    serialized_end=1168,
+    serialized_start=1173,
+    serialized_end=1277,
 )
 
 
@@ -582,8 +604,8 @@ _RECIPESPIRVASMSHADERJOBTOAMBERSCRIPT = _descriptor.Descriptor(
             file=DESCRIPTOR,
         ),
         _descriptor.FieldDescriptor(
-            name="comment_text_artifact",
-            full_name="gfauto.RecipeSpirvAsmShaderJobToAmberScript.comment_text_artifact",
+            name="comment_text",
+            full_name="gfauto.RecipeSpirvAsmShaderJobToAmberScript.comment_text",
             index=6,
             number=7,
             type=9,
@@ -662,8 +684,8 @@ _RECIPESPIRVASMSHADERJOBTOAMBERSCRIPT = _descriptor.Descriptor(
     syntax="proto3",
     extension_ranges=[],
     oneofs=[],
-    serialized_start=1171,
-    serialized_end=1548,
+    serialized_start=1280,
+    serialized_end=1648,
 )
 
 
@@ -773,8 +795,47 @@ _RECIPEGLSLREFERENCESHADERJOBTOGLSLVARIANTSHADERJOB = _descriptor.Descriptor(
     syntax="proto3",
     extension_ranges=[],
     oneofs=[],
-    serialized_start=1551,
-    serialized_end=1774,
+    serialized_start=1651,
+    serialized_end=1874,
+)
+
+
+_RECIPEDOWNLOADANDEXTRACTARCHIVESET = _descriptor.Descriptor(
+    name="RecipeDownloadAndExtractArchiveSet",
+    full_name="gfauto.RecipeDownloadAndExtractArchiveSet",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="archive_set",
+            full_name="gfauto.RecipeDownloadAndExtractArchiveSet.archive_set",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+        )
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=1876,
+    serialized_end=1953,
 )
 
 _RECIPE.fields_by_name["command"].message_type = _RECIPECOMMAND
@@ -796,6 +857,9 @@ _RECIPE.fields_by_name[
 _RECIPE.fields_by_name[
     "glsl_reference_shader_job_to_glsl_variant_shader_job"
 ].message_type = _RECIPEGLSLREFERENCESHADERJOBTOGLSLVARIANTSHADERJOB
+_RECIPE.fields_by_name[
+    "download_and_extract_archive_set"
+].message_type = _RECIPEDOWNLOADANDEXTRACTARCHIVESET
 _RECIPE.oneofs_by_name["recipe"].fields.append(_RECIPE.fields_by_name["command"])
 _RECIPE.fields_by_name["command"].containing_oneof = _RECIPE.oneofs_by_name["recipe"]
 _RECIPE.oneofs_by_name["recipe"].fields.append(
@@ -834,6 +898,15 @@ _RECIPE.oneofs_by_name["recipe"].fields.append(
 _RECIPE.fields_by_name[
     "glsl_reference_shader_job_to_glsl_variant_shader_job"
 ].containing_oneof = _RECIPE.oneofs_by_name["recipe"]
+_RECIPE.oneofs_by_name["recipe"].fields.append(
+    _RECIPE.fields_by_name["download_and_extract_archive_set"]
+)
+_RECIPE.fields_by_name[
+    "download_and_extract_archive_set"
+].containing_oneof = _RECIPE.oneofs_by_name["recipe"]
+_RECIPEDOWNLOADANDEXTRACTARCHIVESET.fields_by_name[
+    "archive_set"
+].message_type = gfauto_dot_common__pb2._ARCHIVESET
 DESCRIPTOR.message_types_by_name["Recipe"] = _RECIPE
 DESCRIPTOR.message_types_by_name["RecipeCommand"] = _RECIPECOMMAND
 DESCRIPTOR.message_types_by_name[
@@ -854,6 +927,9 @@ DESCRIPTOR.message_types_by_name[
 DESCRIPTOR.message_types_by_name[
     "RecipeGlslReferenceShaderJobToGlslVariantShaderJob"
 ] = _RECIPEGLSLREFERENCESHADERJOBTOGLSLVARIANTSHADERJOB
+DESCRIPTOR.message_types_by_name[
+    "RecipeDownloadAndExtractArchiveSet"
+] = _RECIPEDOWNLOADANDEXTRACTARCHIVESET
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Recipe = _reflection.GeneratedProtocolMessageType(
@@ -943,6 +1019,17 @@ RecipeGlslReferenceShaderJobToGlslVariantShaderJob = _reflection.GeneratedProtoc
     ),
 )
 _sym_db.RegisterMessage(RecipeGlslReferenceShaderJobToGlslVariantShaderJob)
+
+RecipeDownloadAndExtractArchiveSet = _reflection.GeneratedProtocolMessageType(
+    "RecipeDownloadAndExtractArchiveSet",
+    (_message.Message,),
+    dict(
+        DESCRIPTOR=_RECIPEDOWNLOADANDEXTRACTARCHIVESET,
+        __module__="gfauto.recipe_pb2"
+        # @@protoc_insertion_point(class_scope:gfauto.RecipeDownloadAndExtractArchiveSet)
+    ),
+)
+_sym_db.RegisterMessage(RecipeDownloadAndExtractArchiveSet)
 
 
 # @@protoc_insertion_point(module_scope)

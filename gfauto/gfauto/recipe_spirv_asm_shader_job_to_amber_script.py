@@ -44,8 +44,13 @@ AMBER_FENCE_TIMEOUT_MS = 60000
 
 def get_text_as_comment(text: str) -> str:
     lines = text.split("\n")
+
+    # Remove empty lines from start and end.
+    while not lines[0]:
+        lines.pop(0)
     while not lines[-1]:
         lines.pop()
+
     lines = [("# " + line).rstrip() for line in lines]
     return "\n".join(lines)
 
@@ -209,7 +214,7 @@ def run_spirv_asm_shader_job_to_amber_script(  # pylint: disable=too-many-locals
     copyright_header_file_path: Optional[pathlib.Path] = None,
     add_generated_comment: bool = False,
     add_graphics_fuzz_comment: bool = False,
-    comment_text_file_path: Optional[pathlib.Path] = None,
+    comment_text: Optional[str] = None,
     use_default_fence_timeout: bool = False,
     extra_commands: Optional[str] = None,
 ) -> None:
@@ -256,9 +261,7 @@ def run_spirv_asm_shader_job_to_amber_script(  # pylint: disable=too-many-locals
             else None,
             add_generated_comment,
             add_graphics_fuzz_comment,
-            util.file_read_text(comment_text_file_path)
-            if comment_text_file_path is not None
-            else None,
+            comment_text,
             use_default_fence_timeout,
             extra_commands,
         )
@@ -290,10 +293,6 @@ def recipe_spirv_asm_shader_job_to_amber_script(
             input_glsl_artifact_path,
         )
 
-    input_comment_text_file_path = maybe_get_text_artifact_file_path(
-        recipe.comment_text_artifact
-    )
-
     input_copyright_header_file_path = maybe_get_text_artifact_file_path(
         recipe.copyright_header_text_artifact
     )
@@ -320,10 +319,15 @@ def recipe_spirv_asm_shader_job_to_amber_script(
     )
 
     output_metadata = ArtifactMetadata()
-    output_metadata.data.amber_script.amber_script_file = output_amber_script_file_name
-    if add_red_pixel_probe:
-        output_metadata.data.amber_script.self_contained_test = True
     output_metadata.derived_from.append(input_artifact.path)
+
+    output_metadata_amber = output_metadata.data.amber_script
+    output_metadata_amber.amber_script_file = output_amber_script_file_name
+    if add_red_pixel_probe:
+        output_metadata_amber.self_contained_test = True
+    output_metadata_amber.glsl_shader_job_source_artifact = (
+        input_artifact.metadata.data.spirv_asm_shader_job.spirv_job.glsl_shader_job_source_artifact
+    )
 
     glsl_source_artifact = (
         input_artifact.metadata.data.spirv_asm_shader_job.spirv_job.glsl_shader_job_source_artifact
@@ -339,7 +343,7 @@ def recipe_spirv_asm_shader_job_to_amber_script(
         input_copyright_header_file_path,
         recipe.add_generated_comment,
         recipe.add_graphics_fuzz_comment,
-        input_comment_text_file_path,
+        recipe.comment_text,
         recipe.use_default_fence_timeout,
         recipe.extra_commands,
     )

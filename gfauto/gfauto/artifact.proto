@@ -16,6 +16,8 @@ syntax = "proto3";
 
 package gfauto;
 
+import "gfauto/common.proto";
+
 //import "google/protobuf/descriptor.proto";
 //
 //
@@ -49,6 +51,7 @@ message ArtifactMetadata {
       ArtifactMetadataSpirvAsmShaderJob spirv_asm_shader_job = 4;
       ArtifactMetadataAmberScript amber_script = 5;
       ArtifactMetadataTextFile text_file = 6;
+      ArtifactMetadataExtractedArchiveSet extracted_archive_set = 7;
     }
   }
 }
@@ -99,8 +102,13 @@ message ArtifactMetadataSpirvAsmShaderJob {
 message ArtifactMetadataAmberScript {
   string amber_script_file = 1;
   bool self_contained_test = 2;
+  string glsl_shader_job_source_artifact = 3;
 }
 
 message ArtifactMetadataTextFile {
   string text_file = 1;
+}
+
+message ArtifactMetadataExtractedArchiveSet {
+  ArchiveSet archive_set = 1;
 }

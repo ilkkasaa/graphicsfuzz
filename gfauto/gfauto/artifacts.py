@@ -15,12 +15,14 @@
 # limitations under the License.
 
 import pathlib
-from typing import Iterable, Optional
+from typing import List, Optional
 
 from . import gflogging, proto_util, util
 from .artifact_pb2 import ArtifactMetadata, ArtifactMetadataTextFile
+from .common_pb2 import Archive, ArchiveSet, Binary
 from .recipe_pb2 import (
     Recipe,
+    RecipeDownloadAndExtractArchiveSet,
     RecipeGlslShaderJobAddRedPixels,
     RecipeGlslShaderJobToSpirvShaderJob,
     RecipeSpirvAsmShaderJobToAmberScript,
@@ -50,8 +52,51 @@ class RecipeWrap:
         if self.recipe is None:
             self.recipe = artifact_read_recipe(path)
 
-    def write(self) -> None:
-        artifact_write_recipe(self.recipe, self.path)
+    def write(self) -> str:
+        return artifact_write_recipe(self.recipe, self.path)
+
+
+BUILT_IN_BINARY_RECIPES = [
+    RecipeWrap(
+        "//binaries/graphicsfuzz_v1.2.1",
+        Recipe(
+            download_and_extract_archive_set=RecipeDownloadAndExtractArchiveSet(
+                archive_set=ArchiveSet(
+                    archives=[
+                        Archive(
+                            url="https://github.com/google/graphicsfuzz/releases/download/v1.2.1/graphicsfuzz.zip",
+                            output_file="graphicsfuzz.zip",
+                            output_directory="graphicsfuzz",
+                        )
+                    ],
+                    binaries=[
+                        Binary(
+                            name="glslangValidator",
+                            platform="Linux",
+                            path="graphicsfuzz/bin/Linux/glslangValidator",
+                        ),
+                        Binary(
+                            name="glslangValidator",
+                            platform="Windows",
+                            path="graphicsfuzz/bin/Windows/glslangValidator.exe",
+                        ),
+                        Binary(
+                            name="glslangValidator",
+                            platform="Mac",
+                            path="graphicsfuzz/bin/Mac/glslangValidator",
+                        ),
+                    ],
+                )
+            )
+        ),
+    )
+]
+
+
+def recipes_write_built_in() -> None:
+    for recipe_wrap in BUILT_IN_BINARY_RECIPES:
+        if not artifact_get_metadata_file_path(recipe_wrap.path).exists():
+            recipe_wrap.write()
 
 
 def artifact_path_get_root() -> pathlib.Path:
@@ -149,7 +194,7 @@ def artifact_read_recipe(artifact_path: str = "") -> Recipe:
 
 
 def artifact_write_metadata(
-    artifact_metadata: ArtifactMetadata, artifact_path: str = ""
+    artifact_metadata: ArtifactMetadata, artifact_path: str
 ) -> str:
     artifact_path = artifact_path_absolute(artifact_path)
 
@@ -219,6 +264,10 @@ def artifact_execute_recipe(
                     recipe.glsl_reference_shader_job_to_glsl_variant_shader_job,
                     artifact_path,
                 )
+            elif recipe.HasField("download_and_extract_archive_set"):
+                recipe_download_and_extract_archive_set(
+                    recipe.download_and_extract_archive_set, artifact_path
+                )
             else:
                 raise NotImplementedError(
                     "Artifact {} has recipe type {} and this is not implemented".format(
@@ -243,6 +292,25 @@ def artifact_get_inner_file_path(inner_file: str, artifact_path: str) -> pathlib
 
 
 # Type specific functions
+
+
+def artifact_find_binary(
+    artifact_path: str, binary_name: str
+) -> Optional[pathlib.Path]:
+    metadata = artifact_read_metadata(artifact_path)
+
+    platform = util.get_platform()
+
+    if metadata.data.extracted_archive_set.archive_set.binaries:
+        for binary in metadata.data.extracted_archive_set.archive_set.binaries:
+            if (
+                not binary.platform or binary.platform == platform
+            ) and binary.name == binary_name:
+                return artifact_get_inner_file_path(binary.path, artifact_path)
+
+    raise AssertionError(
+        f"Could not find {binary_name} in {artifact_path} for current platform: {platform}"
+    )
 
 
 def maybe_get_text_artifact_file_path(
@@ -273,14 +341,31 @@ def artifact_comment_create(output_artifact_path: str, comment_text: str) -> str
     )
 
 
+class SpirvOptInfo:
+    def __init__(self, args: List[str], artifact: str):
+        self.args = args
+        self.artifact = artifact
+
+
 def artifact_create_amber_script_from_glsl_shader_job_artifact(
     input_artifact_path: str,
     out_artifact_prefix_path: str,
-    spirv_opt_args: Optional[Iterable[str]] = None,
+    glslang_validator_artifact: str,
+    spirv_opt_info: Optional[SpirvOptInfo] = None,
     make_self_contained: bool = False,
     amber_recipe: Optional[RecipeSpirvAsmShaderJobToAmberScript] = None,
 ) -> str:
+    """
+    Creates recipes in |out_artifact_prefix_path| that generate an AmberScript file.
 
+    :param input_artifact_path:
+    :param out_artifact_prefix_path:
+    :param glslang_validator_artifact:
+    :param spirv_opt_info:
+    :param make_self_contained:
+    :param amber_recipe:
+    :return: The output AmberScript artifact path. E.g.: //bugs/001/work/glsl_spirv_o_asm_amber
+    """
     if amber_recipe:
         # Clone it.
         temp = RecipeSpirvAsmShaderJobToAmberScript()
@@ -289,7 +374,7 @@ def artifact_create_amber_script_from_glsl_shader_job_artifact(
     else:
         amber_recipe = RecipeSpirvAsmShaderJobToAmberScript()
 
-    next_input = input_artifact_path
+    next_input = artifact_path_absolute(input_artifact_path)
 
     next_metadata = artifact_read_metadata(next_input)
     if (
@@ -314,13 +399,14 @@ def artifact_create_amber_script_from_glsl_shader_job_artifact(
         next_input = artifact_write_recipe_and_execute(
             Recipe(
                 glsl_shader_job_to_spirv_shader_job=RecipeGlslShaderJobToSpirvShaderJob(
-                    glsl_shader_job_artifact=next_input, glslang_validator_artifact=""
+                    glsl_shader_job_artifact=next_input,
+                    glslang_validator_artifact=glslang_validator_artifact,
                 )
             ),
             out_artifact_prefix_path + "/glsl_spirv",
         )
 
-    if spirv_opt_args:
+    if spirv_opt_info:
         next_metadata = artifact_read_metadata(next_input)
         if (
             next_metadata.data.HasField("spirv_shader_job")
@@ -330,8 +416,8 @@ def artifact_create_amber_script_from_glsl_shader_job_artifact(
                 Recipe(
                     spirv_shader_job_to_spirv_shader_job_opt=RecipeSpirvShaderJobToSpirvShaderJobOpt(
                         spirv_shader_job_artifact=next_input,
-                        spirv_opt_args=spirv_opt_args,
-                        spirv_opt_artifact="",
+                        spirv_opt_args=spirv_opt_info.args,
+                        spirv_opt_artifact=spirv_opt_info.artifact,
                     )
                 ),
                 out_artifact_prefix_path + "/glsl_spirv_o",
@@ -382,4 +468,7 @@ from .recipe_spirv_shader_job_to_spirv_shader_job_opt import (  # noqa isort:ski
 )
 from .recipe_glsl_reference_shader_job_to_glsl_variant_shader_job import (  # noqa isort:skip
     recipe_glsl_reference_shader_job_to_glsl_variant_shader_job,
+)
+from .recipe_download_and_extract_archive_set import (  # noqa isort:skip
+    recipe_download_and_extract_archive_set,
 )
