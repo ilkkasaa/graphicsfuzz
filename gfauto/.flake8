@@ -29,6 +29,10 @@ ignore =
   D103
   D104
   D107
+  D102
+
+  # Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+  S311
 
   # Use of subprocess call and run.
   S404
