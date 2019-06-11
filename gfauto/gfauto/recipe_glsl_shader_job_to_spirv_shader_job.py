@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import pathlib
-from typing import List, Optional
+from typing import Optional
 
 from .artifact_pb2 import ArtifactMetadata
 from .artifacts import (
@@ -63,7 +63,7 @@ def run_glslang_glsl_to_spirv_job(
     glsl_shader_job_json_file_path: pathlib.Path,
     spirv_shader_job_json_file_path: pathlib.Path,
     glslang_validator_file_path: Optional[pathlib.Path] = None,
-) -> List[pathlib.Path]:
+) -> pathlib.Path:
 
     if not glslang_validator_file_path:
         glslang_validator_file_path = tool_on_path(GLSLANG_VALIDATOR_NAME)
@@ -72,17 +72,14 @@ def run_glslang_glsl_to_spirv_job(
 
     copy_file(glsl_shader_job_json_file_path, spirv_shader_job_json_file_path)
 
-    output_shader_file_paths = []  # type: List[pathlib.Path]
-
     for glsl_shader_file in glsl_shader_files:
-        spirv_file_path = run_glslang_glsl_shader_to_spirv_shader(
+        run_glslang_glsl_shader_to_spirv_shader(
             glsl_shader_file,
             spirv_shader_job_json_file_path.parent,
             glslang_validator_file_path,
         )
-        output_shader_file_paths.append(spirv_file_path)
 
-    return output_shader_file_paths
+    return spirv_shader_job_json_file_path
 
 
 def recipe_glsl_shader_job_to_spirv_shader_job(

@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import pathlib
-from typing import List, Optional
+from typing import Optional
 
 from . import util
 from .artifact_pb2 import ArtifactMetadata
@@ -65,7 +65,7 @@ def run_spirv_shader_job_to_spirv_asm_shader_job(
     input_spirv_job_json_file_path: pathlib.Path,
     output_spirv_job_json_file_path: pathlib.Path,
     spirv_dis_file_path: Optional[pathlib.Path] = None,
-) -> List[pathlib.Path]:
+) -> pathlib.Path:
 
     if not spirv_dis_file_path:
         spirv_dis_file_path = tool_on_path(SPIRV_DIS_NAME)
@@ -76,15 +76,12 @@ def run_spirv_shader_job_to_spirv_asm_shader_job(
 
     util.copy_file(input_spirv_job_json_file_path, output_spirv_job_json_file_path)
 
-    output_shader_file_paths = []  # type: List[pathlib.Path]
-
     for shader_file in shader_files:
-        asm_file_path = run_spirv_dis_on_spirv_shader(
+        run_spirv_dis_on_spirv_shader(
             shader_file, output_spirv_job_json_file_path.parent, spirv_dis_file_path
         )
-        output_shader_file_paths.append(asm_file_path)
 
-    return output_shader_file_paths
+    return output_spirv_job_json_file_path
 
 
 def recipe_spirv_shader_job_to_spirv_asm_shader_job(

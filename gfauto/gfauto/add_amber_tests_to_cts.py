@@ -52,7 +52,9 @@ def remove_start(string: str, start: str) -> str:
 
 
 def open_helper(file: str, mode: str) -> TextIO:  # noqa VNE002
-    check(mode.find("b") != -1, AssertionError(f"|mode|(=={mode}) should contain 'b'"))
+    check(
+        mode.find("b") == -1, AssertionError(f"|mode|(=={mode}) should not contain 'b'")
+    )
     return cast(TextIO, open(file, mode, encoding="utf-8", errors="ignore"))
 
 
@@ -178,12 +180,12 @@ def get_cpp_line_to_write(amber_test_name: str, short_description: str) -> str:
     return line
 
 
-def add_amber_test_to_cpp(vk_gl_cts: str, amber_test_name: str) -> None:
+def add_amber_test_to_cpp(
+    vk_gl_cts: str, amber_test_name: str, input_amber_test_file_path: str
+) -> None:
     log("Adding Amber test to the C++.")
 
-    short_description = get_amber_test_short_description(
-        get_amber_test_file_path(vk_gl_cts, amber_test_name)
-    )
+    short_description = get_amber_test_short_description(input_amber_test_file_path)
 
     cpp_file = get_graphics_fuzz_tests_cpp_file_path(vk_gl_cts)
     cpp_file_bak = cpp_file + ".bak"
@@ -309,9 +311,9 @@ def add_amber_test(input_amber_test_file_path: str, vk_gl_cts: str) -> None:
 
     log('Using test name "{}"'.format(amber_test_name))
 
-    copy_amber_test_file(vk_gl_cts, amber_test_name, input_amber_test_file_path)
+    add_amber_test_to_cpp(vk_gl_cts, amber_test_name, input_amber_test_file_path)
 
-    add_amber_test_to_cpp(vk_gl_cts, amber_test_name)
+    copy_amber_test_file(vk_gl_cts, amber_test_name, input_amber_test_file_path)
 
     for must_pass_file_path in MUST_PASS_PATHS:
         add_amber_test_to_must_pass(

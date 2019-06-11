@@ -167,6 +167,7 @@ class RecipeSpirvAsmShaderJobToAmberScript(google___protobuf___message___Message
     add_glsl_source_as_comment = ... # type: bool
     use_default_fence_timeout = ... # type: bool
     extra_commands = ... # type: typing___Text
+    short_description = ... # type: typing___Text
 
     def __init__(self,
         spirv_asm_shader_job_artifact : typing___Optional[typing___Text] = None,
@@ -179,15 +180,16 @@ class RecipeSpirvAsmShaderJobToAmberScript(google___protobuf___message___Message
         add_glsl_source_as_comment : typing___Optional[bool] = None,
         use_default_fence_timeout : typing___Optional[bool] = None,
         extra_commands : typing___Optional[typing___Text] = None,
+        short_description : typing___Optional[typing___Text] = None,
         ) -> None: ...
     @classmethod
     def FromString(cls, s: bytes) -> RecipeSpirvAsmShaderJobToAmberScript: ...
     def MergeFrom(self, other_msg: google___protobuf___message___Message) -> None: ...
     def CopyFrom(self, other_msg: google___protobuf___message___Message) -> None: ...
     if sys.version_info >= (3,):
-        def ClearField(self, field_name: typing_extensions___Literal[u"add_generated_comment",u"add_glsl_source_as_comment",u"add_graphics_fuzz_comment",u"amber_script_output_file",u"comment_text",u"copyright_header_text_artifact",u"extra_commands",u"make_self_contained_test",u"spirv_asm_shader_job_artifact",u"use_default_fence_timeout"]) -> None: ...
+        def ClearField(self, field_name: typing_extensions___Literal[u"add_generated_comment",u"add_glsl_source_as_comment",u"add_graphics_fuzz_comment",u"amber_script_output_file",u"comment_text",u"copyright_header_text_artifact",u"extra_commands",u"make_self_contained_test",u"short_description",u"spirv_asm_shader_job_artifact",u"use_default_fence_timeout"]) -> None: ...
     else:
-        def ClearField(self, field_name: typing_extensions___Literal[b"add_generated_comment",b"add_glsl_source_as_comment",b"add_graphics_fuzz_comment",b"amber_script_output_file",b"comment_text",b"copyright_header_text_artifact",b"extra_commands",b"make_self_contained_test",b"spirv_asm_shader_job_artifact",b"use_default_fence_timeout"]) -> None: ...
+        def ClearField(self, field_name: typing_extensions___Literal[b"add_generated_comment",b"add_glsl_source_as_comment",b"add_graphics_fuzz_comment",b"amber_script_output_file",b"comment_text",b"copyright_header_text_artifact",b"extra_commands",b"make_self_contained_test",b"short_description",b"spirv_asm_shader_job_artifact",b"use_default_fence_timeout"]) -> None: ...
 
 class RecipeGlslReferenceShaderJobToGlslVariantShaderJob(google___protobuf___message___Message):
     glsl_reference_shader_job_artifact = ... # type: typing___Text

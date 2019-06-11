@@ -66,7 +66,7 @@ def run_spirv_opt_on_spirv_shader_job(
     output_spirv_shader_job_json_file_path: pathlib.Path,
     spirv_opt_args: List[str],
     spirv_opt_file_path: Optional[pathlib.Path] = None,
-) -> List[pathlib.Path]:
+) -> pathlib.Path:
 
     if not spirv_opt_file_path:
         spirv_opt_file_path = tool_on_path(SPIRV_OPT_NAME)
@@ -79,18 +79,15 @@ def run_spirv_opt_on_spirv_shader_job(
         input_spirv_shader_job_json_file_path, output_spirv_shader_job_json_file_path
     )
 
-    output_shader_file_paths = []  # type: List[pathlib.Path]
-
     for shader_file in shader_files:
-        spirv_file_path = run_spirv_opt_on_spirv_shader(
+        run_spirv_opt_on_spirv_shader(
             shader_file,
             output_spirv_shader_job_json_file_path.parent,
             spirv_opt_args,
             spirv_opt_file_path,
         )
-        output_shader_file_paths.append(spirv_file_path)
 
-    return output_shader_file_paths
+    return output_spirv_shader_job_json_file_path
 
 
 def recipe_spirv_shader_job_to_spirv_shader_job_opt(

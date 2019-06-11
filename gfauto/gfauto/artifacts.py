@@ -349,9 +349,7 @@ def artifact_get_inner_file_path(inner_file: str, artifact_path: str) -> pathlib
 # Type specific functions
 
 
-def artifact_find_binary(
-    artifact_path: str, binary_name: str
-) -> Optional[pathlib.Path]:
+def artifact_find_binary(artifact_path: str, binary_name: str) -> pathlib.Path:
     metadata = artifact_read_metadata(artifact_path)
 
     platform = util.get_platform()
@@ -366,6 +364,14 @@ def artifact_find_binary(
     raise AssertionError(
         f"Could not find {binary_name} in {artifact_path} for current platform: {platform}"
     )
+
+
+def get_text_artifact_contents(text_artifact_path: str) -> str:
+    text_artifact = Artifact(text_artifact_path)
+    file_path = artifact_get_inner_file_path(
+        text_artifact.metadata.data.text_file.text_file, text_artifact.path
+    )
+    return util.file_read_text(file_path)
 
 
 def maybe_get_text_artifact_file_path(

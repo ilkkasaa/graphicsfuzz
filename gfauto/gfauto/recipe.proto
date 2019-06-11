@@ -98,6 +98,9 @@ message RecipeSpirvAsmShaderJobToAmberScript {
   // Extra text to add to the list of commands, such as probe commands.
   string extra_commands = 10;
 
+  // Short description of the test. One sentence, 58 characters max., no period.
+  string short_description = 11;
+
 }
 
 message RecipeGlslReferenceShaderJobToGlslVariantShaderJob {

@@ -35,8 +35,6 @@ def recipe_download_and_extract_archive_set(
 ) -> None:
 
     for archive in recipe.archive_set.archives:  # type: Archive
-        log(f"Downloading {archive.url}")
-
         check_field_truthy(archive.url, "url")
         check_field_truthy(archive.output_file, "output_file")
         check_field_truthy(archive.output_directory, "output_directory")
@@ -44,10 +42,12 @@ def recipe_download_and_extract_archive_set(
         output_file_path = artifact_get_inner_file_path(
             archive.output_file, output_artifact_path
         )
+
         output_directory_path = artifact_get_inner_file_path(
             archive.output_directory, output_artifact_path
         )
 
+        log(f"Downloading {archive.url} to {str(output_file_path)}")
         urllib.request.urlretrieve(archive.url, str(output_file_path))
 
         if output_file_path.name.lower().endswith(".zip"):
