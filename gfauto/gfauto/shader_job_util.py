@@ -80,8 +80,7 @@ def shader_job_copy(
     output_shader_job_file_path: pathlib.Path,
     extensions: Iterable[str] = EXT_ALL,
     language_suffix: str = SUFFIX_GLSL,
-) -> List[pathlib.Path]:
-    output_files = [output_shader_job_file_path]
+) -> pathlib.Path:
 
     util.copy_file(shader_job_file_path, output_shader_job_file_path)
 
@@ -102,6 +101,5 @@ def shader_job_copy(
         other_paths, dest_other_paths
     ):  # type: (pathlib.Path, pathlib.Path)
         util.copy_file(source, dest)
-        output_files.append(dest)
 
-    return output_files
+    return output_shader_job_file_path

@@ -33,20 +33,26 @@ def run_generate(
     reference_shader_json: pathlib.Path,
     donors_path: pathlib.Path,
     output_shader_json: pathlib.Path,
-    other_args: List[str],
+    seed: str = None,
+    other_args: List[str] = None,
 ) -> pathlib.Path:
 
-    run(
-        [
-            "graphicsfuzz-tool",
-            "com.graphicsfuzz.generator.tool.Generate",
-            str(reference_shader_json),
-            str(donors_path),
-            "100",  # TODO(215): remove once #215 is closed again.
-            str(output_shader_json),
-        ]
-        + other_args
-    )
+    cmd = [
+        "graphicsfuzz-tool",
+        "com.graphicsfuzz.generator.tool.Generate",
+        str(reference_shader_json),
+        str(donors_path),
+        "100",  # TODO(215): remove once #215 is closed again.
+        str(output_shader_json),
+    ]
+
+    if seed:
+        cmd.append(f"--seed={seed}")
+
+    if other_args:
+        cmd.extend(other_args)
+
+    run(cmd)
 
     return output_shader_json
 
@@ -92,7 +98,9 @@ def recipe_glsl_reference_shader_job_to_glsl_variant_shader_job(
     )
 
     # Run GraphicsFuzz generate command.
-    run_generate(reference_json_path, donors_path, output_json_path, other_args)
+    run_generate(
+        reference_json_path, donors_path, output_json_path, other_args=other_args
+    )
 
     # Write final artifact metadata.
     artifact_write_metadata(output_metadata, output_artifact_path)

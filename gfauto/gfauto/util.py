@@ -22,6 +22,10 @@ from contextlib import contextmanager
 from typing import Any, BinaryIO, Iterator, List, TextIO, cast
 
 # Note: Could use the built-in |file.open| and |file.write_text|, etc.
+from gfauto import proto_util
+from gfauto.test_pb2 import Test
+
+TEST_METADATA = "test.json"
 
 
 def file_open_binary(file: pathlib.Path, mode: str) -> BinaryIO:  # noqa VNE002
@@ -38,6 +42,13 @@ def file_open_text(file: pathlib.Path, mode: str) -> TextIO:  # noqa VNE002
     # Type hint (no runtime check).
     result = cast(TextIO, open(str(file), mode, encoding="utf-8", errors="ignore"))
     return result
+
+
+def file_read_text_or_else(file: pathlib.Path, or_else: str) -> str:
+    try:
+        return file_read_text(file)
+    except IOError:
+        return or_else
 
 
 def file_read_text(file: pathlib.Path) -> str:  # noqa VNE002
@@ -77,9 +88,20 @@ def tool_on_path(tool: str) -> pathlib.Path:  # noqa VNE002
     return pathlib.Path(result)
 
 
-def copy_file(source_file_path: pathlib.Path, dest_file_path: pathlib.Path) -> None:
+def copy_file(
+    source_file_path: pathlib.Path, dest_file_path: pathlib.Path
+) -> pathlib.Path:
     file_mkdirs_parent(dest_file_path)
     shutil.copy(str(source_file_path), str(dest_file_path))
+    return dest_file_path
+
+
+def copy_dir(
+    source_dir_path: pathlib.Path, dest_dir_path: pathlib.Path
+) -> pathlib.Path:
+    file_mkdirs_parent(dest_dir_path)
+    shutil.copytree(source_dir_path, dest_dir_path)
+    return dest_dir_path
 
 
 def remove_end(str_in: str, str_end: str) -> str:
@@ -121,3 +143,16 @@ def get_platform() -> str:
     if host == "Darwin":
         return "Mac"
     raise AssertionError("Unsupported platform: {}".format(host))
+
+
+def test_metadata_write(metadata: Test, test_dir: pathlib.Path) -> pathlib.Path:
+    text = proto_util.message_to_json(metadata)
+    file_write_text(test_dir / TEST_METADATA, text)
+    return test_dir
+
+
+def test_metadata_read(test_dir: pathlib.Path) -> Test:
+    text = file_read_text(test_dir / TEST_METADATA)
+    result = Test()
+    proto_util.json_to_message(text, result)
+    return result

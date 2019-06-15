@@ -18,6 +18,8 @@ import pathlib
 import re
 from typing import List, Optional
 
+from gfauto.shader_job_util import shader_job_get_related_files
+
 from . import util
 from .artifact_pb2 import ArtifactMetadata
 from .artifacts import (
@@ -72,9 +74,9 @@ def run_glsl_shader_job_add_red_pixels(
             "Not yet implemented used of GraphicsFuzz to add red pixels to a shader"
         )
 
-    output_files = shader_job_copy(
-        input_shader_job_json_file_path, output_shader_job_json_file_path
-    )
+    shader_job_copy(input_shader_job_json_file_path, output_shader_job_json_file_path)
+
+    output_files = shader_job_get_related_files(output_shader_job_json_file_path)
 
     frag_files = [f for f in output_files if f.name.endswith(".frag")]
 
