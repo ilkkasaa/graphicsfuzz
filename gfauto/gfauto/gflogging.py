@@ -19,7 +19,7 @@ from pathlib import Path
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 from typing import List, TextIO
 
-from gfauto.util import file_read_lines, file_read_text
+from .util import file_read_text
 
 _LOG_TO_STDOUT = True
 _LOG_TO_STREAM = []  # type: List[TextIO]

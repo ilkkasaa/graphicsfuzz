@@ -29,7 +29,7 @@ from .artifacts import (
 from .recipe_pb2 import RecipeSpirvShaderJobToSpirvAsmShaderJob
 from .shader_job_util import SUFFIX_SPIRV, shader_job_get_related_files
 from .subprocess_util import run
-from .util import tool_on_path
+from .util import prepend_catchsegv_if_available, tool_on_path
 
 SPIRV_DIS_NAME = "spirv-dis"
 
@@ -49,13 +49,15 @@ def run_spirv_dis_on_spirv_shader(
     util.file_mkdirs_parent(output_spirv_file_path)
 
     run(
-        [
-            str(spirv_dis_file_path),
-            str(input_spirv_file_path),
-            "-o",
-            str(output_spirv_file_path),
-            "--raw-id",
-        ]
+        prepend_catchsegv_if_available(
+            [
+                str(spirv_dis_file_path),
+                str(input_spirv_file_path),
+                "-o",
+                str(output_spirv_file_path),
+                "--raw-id",
+            ]
+        )
     )
 
     return output_spirv_file_path

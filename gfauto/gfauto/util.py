@@ -19,6 +19,7 @@ import pathlib
 import platform
 import shutil
 from contextlib import contextmanager
+from pathlib import Path
 from typing import Any, BinaryIO, Iterator, List, TextIO, cast
 
 # Note: Could use the built-in |file.open| and |file.write_text|, etc.
@@ -39,6 +40,7 @@ def file_open_text(file: pathlib.Path, mode: str) -> TextIO:  # noqa VNE002
     check(
         mode.find("b") == -1, AssertionError(f"|mode|(=={mode}) should not contain 'b'")
     )
+    file_mkdirs_parent(file)
     # Type hint (no runtime check).
     result = cast(TextIO, open(str(file), mode, encoding="utf-8", errors="ignore"))
     return result
@@ -67,8 +69,9 @@ def file_write_text(file: pathlib.Path, text: str) -> int:  # noqa VNE002
         return f.write(text)
 
 
-def mkdirs_p(path: pathlib.Path) -> None:  # noqa VNE002
+def mkdirs_p(path: pathlib.Path) -> Path:  # noqa VNE002
     path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
 def file_mkdirs_parent(file: pathlib.Path) -> None:  # noqa VNE002
@@ -88,6 +91,15 @@ def tool_on_path(tool: str) -> pathlib.Path:  # noqa VNE002
     return pathlib.Path(result)
 
 
+def prepend_catchsegv_if_available(cmd: List[str]) -> List[str]:
+    try:
+        cmd.insert(0, str(tool_on_path("catchsegv")))
+    except ToolNotOnPathError:
+        pass
+
+    return cmd
+
+
 def copy_file(
     source_file_path: pathlib.Path, dest_file_path: pathlib.Path
 ) -> pathlib.Path:
@@ -101,6 +113,14 @@ def copy_dir(
 ) -> pathlib.Path:
     file_mkdirs_parent(dest_dir_path)
     shutil.copytree(source_dir_path, dest_dir_path)
+    return dest_dir_path
+
+
+def move_dir(
+    source_dir_path: pathlib.Path, dest_dir_path: pathlib.Path
+) -> pathlib.Path:
+    file_mkdirs_parent(dest_dir_path)
+    shutil.move(source_dir_path, dest_dir_path)
     return dest_dir_path
 
 

@@ -19,6 +19,7 @@ import shutil
 import subprocess
 import time
 from pathlib import Path
+from subprocess import CompletedProcess
 from typing import List, Optional
 
 from gfauto import gflogging
@@ -43,12 +44,12 @@ TIMEOUT_RUN = 30
 BUSY_WAIT_SLEEP_SLOW = 1.0
 
 
-def adb_path():
+def adb_path() -> Path:
     if "ANDROID_HOME" in os.environ:
         platform_tools_path = Path(os.environ["ANDROID_HOME"]) / "platform-tools"
         adb = shutil.which("adb", path=str(platform_tools_path))
         if adb:
-            return adb
+            return Path(adb)
     return tool_on_path("adb")
 
 
@@ -59,7 +60,7 @@ def adb_helper(
     verbose: bool = False,
 ) -> subprocess.CompletedProcess:
 
-    adb_cmd = [adb_path()]
+    adb_cmd = [str(adb_path())]
     if serial:
         adb_cmd.append("-s")
         adb_cmd.append(serial)
@@ -85,13 +86,13 @@ def adb_can_fail(
     return adb_helper(serial, adb_args, check_exit_code=False, verbose=verbose)
 
 
-def stay_awake_warning(serial: Optional[str] = None):
+def stay_awake_warning(serial: Optional[str] = None) -> None:
     res = adb_check(serial, ["shell", "settings get global stay_on_while_plugged_in"])
     if str(res.stdout).strip() == "0":
         log('\nWARNING: please enable "Stay Awake" from developer settings\n')
 
 
-def is_screen_off_or_locked(serial: Optional[str] = None):
+def is_screen_off_or_locked(serial: Optional[str] = None) -> bool:
     """
     :return: True: the screen is off or locked. False: unknown.
     """
@@ -110,6 +111,7 @@ def is_screen_off_or_locked(serial: Optional[str] = None):
 
 
 def prepare_device(wait_for_screen: bool, serial: Optional[str] = None) -> None:
+    adb_check(serial, ["logcat", "-c"])
     res = adb_can_fail(serial, ["shell", "test -e " + ANDROID_DEVICE_AMBER])
     check(
         res.returncode == 0,
@@ -145,7 +147,7 @@ def run_amber_on_device(
     dump_image: bool,
     dump_buffer: bool,
     skip_render: bool = False,
-    serial: str = None,
+    serial: Optional[str] = None,
 ) -> Path:
 
     with file_open_text(output_dir / "amber_log.txt", "w") as log_file:
@@ -172,11 +174,13 @@ def run_amber_on_device_helper(
     dump_image: bool,
     dump_buffer: bool,
     skip_render: bool = False,
-    serial: str = None,
+    serial: Optional[str] = None,
 ) -> Path:
     prepare_device(wait_for_screen=True, serial=serial)
 
-    adb_check(serial, ["push", amber_script_file, ANDROID_DEVICE_AMBER_SCRIPT_FILE])
+    adb_check(
+        serial, ["push", str(amber_script_file), ANDROID_DEVICE_AMBER_SCRIPT_FILE]
+    )
 
     amber_flags = "--log-graphics-calls-time --log-execute-calls"
     if skip_render:
@@ -198,13 +202,15 @@ def run_amber_on_device_helper(
 
     status = "UNEXPECTED_ERROR"
 
+    result: Optional[CompletedProcess]
+
     try:
         result = adb_can_fail(serial, cmd, verbose=True)
     except subprocess.TimeoutExpired:
         result = None
         status = "TIMEOUT"
 
-    if status != "TIMEOUT":
+    if result:
         if result.returncode != 0:
             status = "CRASH"
         elif skip_render:
@@ -214,7 +220,7 @@ def run_amber_on_device_helper(
             adb_check(
                 serial,
                 # The /. syntax means the contents of the results directory will be copied into output_dir.
-                ["pull", ANDROID_DEVICE_RESULT_DIR, output_dir / "."],
+                ["pull", ANDROID_DEVICE_RESULT_DIR + "/.", str(output_dir)],
             )
 
     # Grab log:

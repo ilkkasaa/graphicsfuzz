@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import pathlib
-from typing import List
+from typing import List, Optional
 
 from .artifact_pb2 import ArtifactMetadata, ArtifactMetadataGlslShaderJob
 from .artifacts import (
@@ -33,8 +33,8 @@ def run_generate(
     reference_shader_json: pathlib.Path,
     donors_path: pathlib.Path,
     output_shader_json: pathlib.Path,
-    seed: str = None,
-    other_args: List[str] = None,
+    seed: Optional[str] = None,
+    other_args: Optional[List[str]] = None,
 ) -> pathlib.Path:
 
     cmd = [
@@ -44,6 +44,9 @@ def run_generate(
         str(donors_path),
         "100",  # TODO(215): remove once #215 is closed again.
         str(output_shader_json),
+        "--generate-uniform-bindings",
+        "--max-uniforms",
+        "10",
     ]
 
     if seed:

@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import pathlib
-from typing import Iterable, List, Optional
+from typing import List, Optional, Union, Tuple
 
 from . import util
 
@@ -55,7 +55,7 @@ def shader_job_get_shader_contents(
 
 def shader_job_get_related_files(
     shader_job_file_path: pathlib.Path,
-    extensions: Iterable[str] = EXT_ALL,
+    extensions: Union[Tuple[str, ...], List[str]] = EXT_ALL,
     language_suffix: str = SUFFIX_GLSL,
 ) -> List[pathlib.Path]:
     # .frag, .comp, ...
@@ -78,7 +78,7 @@ def shader_job_get_related_files(
 def shader_job_copy(
     shader_job_file_path: pathlib.Path,
     output_shader_job_file_path: pathlib.Path,
-    extensions: Iterable[str] = EXT_ALL,
+    extensions: Union[Tuple[str, ...], List[str]] = EXT_ALL,
     language_suffix: str = SUFFIX_GLSL,
 ) -> pathlib.Path:
 
@@ -90,11 +90,11 @@ def shader_job_copy(
     )
 
     # = [variant.frag, variant.vert, ...]
-    dest_other_files = [f.name for f in other_paths]
+    dest_other_files = [f for f in other_paths]
 
     # = [dest/variant.frag, dest/variant.vert, ...]
     dest_other_paths = [
-        output_shader_job_file_path.with_name(f) for f in dest_other_files
+        output_shader_job_file_path.with_suffix(f.suffix) for f in dest_other_files
     ]
 
     for (source, dest) in zip(

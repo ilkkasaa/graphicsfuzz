@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import pathlib
+import random
 from typing import List, Optional
 
 from .artifact_pb2 import ArtifactMetadata
@@ -28,9 +29,51 @@ from .artifacts import (
 from .recipe_pb2 import RecipeSpirvShaderJobToSpirvShaderJobOpt
 from .shader_job_util import SUFFIX_SPIRV, shader_job_get_related_files
 from .subprocess_util import run
-from .util import copy_file, file_mkdirs_parent, tool_on_path
+from .util import (
+    copy_file,
+    file_mkdirs_parent,
+    prepend_catchsegv_if_available,
+    tool_on_path,
+)
 
 SPIRV_OPT_NAME = "spirv-opt"
+
+
+OPT_OPTIONS: List[str] = [
+    "--ccp",
+    "--combine-access-chains",
+    "--convert-local-access-chains",
+    "--copy-propagate-arrays",
+    "--eliminate-dead-branches",
+    "--eliminate-dead-code-aggressive",
+    "--eliminate-dead-inserts",
+    "--eliminate-local-multi-store",
+    "--eliminate-local-single-block",
+    "--eliminate-local-single-store",
+    "--if-conversion",
+    "--inline-entry-points-exhaustive",
+    "--merge-blocks",
+    "--merge-return",
+    "--private-to-local",
+    "--reduce-load-size",
+    "--redundancy-elimination",
+    "--scalar-replacement=100",
+    "--simplify-instructions",
+    "--vector-dce",
+]
+
+
+def random_spirv_opt_args(max_num_args: int = 30) -> List[str]:
+    result: List[str] = list()
+    num_args = random.randint(1, max_num_args)
+    for _ in range(0, num_args):
+        arg = random.choice(OPT_OPTIONS)
+        # --merge-return relies on there not being unreachable code, so we always invoke dead branch
+        # elimination before --merge-return.
+        if arg == "--merge-return":
+            result.append("--eliminate-dead-branches")
+        result.append(arg)
+    return result
 
 
 def run_spirv_opt_on_spirv_shader(
@@ -52,9 +95,12 @@ def run_spirv_opt_on_spirv_shader(
         str(input_spirv_file_path),
         "-o",
         str(output_spirv_file_path),
+        "--validate-after-all",
     ]
 
     cmd += spirv_opt_args
+
+    cmd = prepend_catchsegv_if_available(cmd)
 
     run(cmd)
 

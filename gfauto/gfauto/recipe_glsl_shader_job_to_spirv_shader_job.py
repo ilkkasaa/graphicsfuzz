@@ -28,7 +28,12 @@ from .artifacts import (
 from .recipe_pb2 import RecipeGlslShaderJobToSpirvShaderJob
 from .shader_job_util import shader_job_get_related_files
 from .subprocess_util import run
-from .util import copy_file, file_mkdirs_parent, tool_on_path
+from .util import (
+    copy_file,
+    file_mkdirs_parent,
+    prepend_catchsegv_if_available,
+    tool_on_path,
+)
 
 GLSLANG_VALIDATOR_NAME = "glslangValidator"
 
@@ -47,13 +52,15 @@ def run_glslang_glsl_shader_to_spirv_shader(
     file_mkdirs_parent(output_spirv_file_path)
 
     run(
-        [
-            str(glslang_validator_file_path),
-            "-V",
-            "-o",
-            str(output_spirv_file_path),
-            str(glsl_shader_path),
-        ]
+        prepend_catchsegv_if_available(
+            [
+                str(glslang_validator_file_path),
+                "-V",
+                "-o",
+                str(output_spirv_file_path),
+                str(glsl_shader_path),
+            ]
+        )
     )
 
     return output_spirv_file_path
