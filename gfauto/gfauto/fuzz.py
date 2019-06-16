@@ -218,6 +218,8 @@ def get_signature_from_log_contents(log_contents: str) -> str:
             )  # type: Optional[Match[str]]
             if spirv_opt_error_match:
                 group = spirv_opt_error_match.group(1)
+                # Remove numbers.
+                group = re.sub(r"\d+", "", group)
                 # Replace non-word characters with _.
                 group = re.sub(r"[^\w]", "_", group)
                 # Reduce length.
@@ -234,8 +236,12 @@ def get_signature_from_log_contents(log_contents: str) -> str:
                 amber_error_matches, None
             )  # type: Optional[Match[str]]
             if amber_error_match:
+                group = amber_error_match.group(1)
+                # Remove numbers.
+                group = re.sub(r"\d+", "", group)
                 # Replace non-word characters with _.
-                return re.sub(r"[^\w]", "_", amber_error_match.group(1))
+                group = re.sub(r"[^\w]", "_", group)
+                return group
 
     if log_contents.find("SPIR-V is not generated for failed compile or link") != -1:
         lines = log_contents.split("\n")
@@ -247,8 +253,12 @@ def get_signature_from_log_contents(log_contents: str) -> str:
                 glslang_error_matches, None
             )  # type: Optional[Match[str]]
             if glslang_error_match:
+                group = glslang_error_match.group(1)
+                # Remove numbers.
+                group = re.sub(r"\d+", "", group)
                 # Replace non-word characters with _.
-                return re.sub(r"[^\w]", "_", glslang_error_match.group(1))
+                group = re.sub(r"[^\w]", "_", group)
+                return group
 
     if log_contents.find("#00 pc") != -1:
         lines = log_contents.split("\n")
