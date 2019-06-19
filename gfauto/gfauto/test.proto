@@ -21,6 +21,7 @@ message Test {
   oneof test {
     TestGlsl glsl = 1;
   }
+  string crash_signature = 2;
 }
 
 message TestGlsl {

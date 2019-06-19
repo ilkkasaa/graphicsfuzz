@@ -20,8 +20,10 @@ import sys
 import uuid
 from pathlib import Path
 from subprocess import SubprocessError
-from typing import Iterator, Match
+from typing import Iterator, Match, Optional
 
+from gfauto.subprocess_util import run
+from gfauto.util import test_metadata_get_path, test_get_source_dir
 from .android_device import run_amber_on_device
 from .artifacts import *  # pylint: disable=wildcard-import
 from .gflogging import log_a_file
@@ -43,6 +45,8 @@ from .util import (
     test_metadata_write,
 )
 
+# TODO: Consider using "import gfauto.util" to avoid circular import issues.
+
 
 def get_random_name() -> str:
     # TODO: could change to human-readable random name or the date.
@@ -56,10 +60,10 @@ SHADER_JOB_RESULT = "shader.info.json"
 
 
 def make_subtest(
-    base_test_dir: Path, subtest_dir: Path, spirv_opt_args: Optional[List[str]]
+    base_source_dir: Path, subtest_dir: Path, spirv_opt_args: Optional[List[str]]
 ) -> Path:
-    # Create the no_opt_test by copying the base test.
-    subtest_test_dir = copy_dir(base_test_dir, subtest_dir / "test")
+    # Create the subtest by copying the base source.
+    copy_dir(base_source_dir, test_get_source_dir(subtest_dir))
 
     # Write the test metadata.
     test_metadata_write(
@@ -70,13 +74,15 @@ def make_subtest(
                 spirv_opt_args=spirv_opt_args,
             )
         ),
-        subtest_test_dir,
+        subtest_dir,
     )
 
     return subtest_dir
 
 
-def main(_: List[str]) -> None:
+def main() -> None:
+    # TODO: Use sys.argv[1:].
+
     reports_dir = Path() / "reports"
     temp_dir = Path() / "temp"
     donors_dir = Path() / "donors"
@@ -89,13 +95,13 @@ def main(_: List[str]) -> None:
 
     while True:
         test_name = get_random_name()
-        work_dir = temp_dir / test_name
+        test_dir = temp_dir / test_name
 
-        base_test_dir = work_dir / "base_test"
+        base_source_dir = test_dir / "base_source"
 
         # Copy in a randomly chosen reference.
         reference_glsl_shader_job = shader_job_copy(
-            random.choice(references), base_test_dir / REFERENCE_DIR / SHADER_JOB
+            random.choice(references), base_source_dir / REFERENCE_DIR / SHADER_JOB
         )
 
         # Pick a seed.
@@ -104,51 +110,53 @@ def main(_: List[str]) -> None:
         run_generate(
             reference_glsl_shader_job,
             donors_dir,
-            mkdirs_p(base_test_dir / VARIANT_DIR) / SHADER_JOB,
+            mkdirs_p(base_source_dir / VARIANT_DIR) / SHADER_JOB,
             str(seed),
         )
 
         test_dirs = [
             make_subtest(
-                base_test_dir,
-                work_dir / f"{test_name}_no_opt_test",
+                base_source_dir,
+                test_dir / f"{test_name}_no_opt_test",
                 spirv_opt_args=None,
             ),
             make_subtest(
-                base_test_dir,
-                work_dir / f"{test_name}_opt_O_test",
+                base_source_dir,
+                test_dir / f"{test_name}_opt_O_test",
                 spirv_opt_args=["-O"],
             ),
             make_subtest(
-                base_test_dir,
-                work_dir / f"{test_name}_opt_Os_test",
+                base_source_dir,
+                test_dir / f"{test_name}_opt_Os_test",
                 spirv_opt_args=["-Os"],
             ),
             make_subtest(
-                base_test_dir,
-                work_dir / f"{test_name}_opt_rand1_test",
+                base_source_dir,
+                test_dir / f"{test_name}_opt_rand1_test",
                 spirv_opt_args=random_spirv_opt_args(),
             ),
             make_subtest(
-                base_test_dir,
-                work_dir / f"{test_name}_opt_rand2_test",
+                base_source_dir,
+                test_dir / f"{test_name}_opt_rand2_test",
                 spirv_opt_args=random_spirv_opt_args(),
             ),
             make_subtest(
-                base_test_dir,
-                work_dir / f"{test_name}_opt_rand3_test",
+                base_source_dir,
+                test_dir / f"{test_name}_opt_rand3_test",
                 spirv_opt_args=random_spirv_opt_args(),
             ),
         ]
 
         for test_dir in test_dirs:
-            handle_test(test_dir, reports_dir)
+            if handle_test(test_dir, reports_dir):
+                # If we generated a report, don't bother trying other optimization combinations.
+                break
 
 
-def handle_test(test_dir: Path, reports_dir: Path) -> None:
-    test = test_metadata_read(test_dir / "test")
+def handle_test(test_dir: Path, reports_dir: Path) -> Optional[Path]:
+    test = test_metadata_read(test_dir)
     if test.HasField("glsl"):
-        handle_glsl_test(test.glsl, test_dir, reports_dir)
+        return handle_glsl_test(test.glsl, test_dir, reports_dir)
     else:
         raise AssertionError("Unrecognized test type")
 
@@ -309,31 +317,171 @@ def get_signature_from_log_contents(log_contents: str) -> str:
     return "no_signature"
 
 
-def handle_glsl_test(test: TestGlsl, test_dir: Path, reports_dir: Path) -> None:
+def move_test_to_crash_report_using_log_signature(
+    log_path: Path, test_dir: Path, reports_dir: Path, crash_subdirectory_name: str
+) -> Path:
+    log_contents = file_read_text(log_path)
+    signature = get_signature_from_log_contents(log_contents)
+    output_test_dir = move_dir(
+        test_dir, reports_dir / crash_subdirectory_name / signature / test_dir.name
+    )
+    test = test_metadata_read(output_test_dir)
+    test.crash_signature = signature
+    test_metadata_write(test, output_test_dir)
+    return output_test_dir
+
+
+# GLSL test_dir:
+# - 1234/ (not a proper test_dir, as it only has "base_source", not "source".
+#   - base_source/
+#     - test.json
+#     - reference/ variant/
+#       - shader.json shader.{comp,frag}
+#   - 123_no_opt/ 123_opt_O/ 123_opt_Os/ 123_opt_rand1/ etc. (proper test_dirs, as they have "source")
+#     - source/ (same as base source, but with different metadata, including a crash signature, once identified)
+#     - results/
+#       - pixel/ other_phone/ laptop/ etc.
+#         - reference/ variant/
+#           - test.amber
+#           - image.png
+#           - STATUS
+#           - log.txt
+#           - (all other result files and files for running the shader on the device)
+#         - reductions/
+#           - reduction_1/ reduction_blah/ etc. (reduction name; also a test_dir)
+#             - source/ (same as other source dirs, but with the final reduced shader source)
+#             - work/
+#               - reference/ variant/
+#                 - shader.json, shader_reduction_001_success.json,
+#                 shader_reduction_002_failed.json, etc., shader_reduced_final.json
+#                 - shader/ shader_reduction_001/
+#                 (these are the result directories for each step, containing STATUS, etc.)
+#
+
+
+def test_get_shader_job_path(test_dir: Path, is_variant: bool = True) -> Path:
+    return (
+        test_dir / "test" / (VARIANT_DIR if is_variant else REFERENCE_DIR) / SHADER_JOB
+    )
+
+
+def test_get_device_directory(test_dir: Path, device_name: str) -> Path:
+    return test_dir / "results" / device_name
+
+
+def test_get_results_directory(
+    test_dir: Path, device_name: str, is_variant: bool = True
+) -> Path:
+    return test_get_results_directory(test_dir, device_name) / (
+        VARIANT_DIR if is_variant else REFERENCE_DIR
+    )
+
+
+def test_get_reduced_test_dir(
+    test_dir: Path, device_name: str, reduction_name: str
+) -> Path:
+    return (
+        test_get_device_directory(test_dir, device_name) / "reductions" / reduction_name
+    )
+
+
+def test_get_reduction_directory(
+    test_dir: Path, device_name: str, reduction_name: str, is_variant: bool = True
+) -> Path:
+    return (
+        test_get_reduced_test_dir(test_dir, device_name, reduction_name)
+        / "work"
+        / (VARIANT_DIR if is_variant else REFERENCE_DIR)
+    )
+
+
+def run_glsl_reduce(
+    input_shader_job: Path,
+    test_metadata_path: Path,
+    output_dir: Path,
+    preserve_semantics: bool = False,
+) -> Path:
+
+    cmd = [
+        "glsl-reduce",
+        str(input_shader_job),
+        "gfauto_interestingness_test",
+        str(test_metadata_path),
+        "--output",
+        str(output_dir),
+    ]
+
+    if preserve_semantics:
+        cmd.append("--preserve-semantics")
+
+    run(cmd)
+
+    return output_dir
+
+
+def run_reduction(
+    test_dir: Path, device_name: str, reduction_name: str = "reduction1"
+) -> None:
+    test = test_metadata_read(test_dir)
+    if not test.crash_signature:
+        raise AssertionError(
+            f"Cannot reduce {str(test_dir)} because there is no crash string specified; "
+            f"for now, only crash reductions are supported"
+        )
+
+    reduction_directory = run_glsl_reduce(
+        input_shader_job=test_get_shader_job_path(test_dir, is_variant=True),
+        test_metadata_path=test_metadata_get_path(test_dir),
+        output_dir=test_get_reduction_directory(
+            test_dir, device_name, reduction_name, is_variant=True
+        ),
+        preserve_semantics=True,
+    )
+
+    # Create an intermediate test directory containing the final reduced shader.
+
+    reduced_test_dir_1 = copy_dir(test_dir, test_get_reduced_test_directory(test_dir))
+
+
+def handle_glsl_test(
+    test: TestGlsl, test_dir: Path, reports_dir: Path
+) -> Optional[Path]:
     # Maybe try just on spirv-opt first.
 
     # Run it on several devices, etc.
 
     # For now, just run the variant on the one device and see if it crashes.
 
-    output_dir = run_shader_job(
-        test_dir / "test" / VARIANT_DIR / SHADER_JOB,
-        test_dir / "results" / "android_device" / VARIANT_DIR,
-        test,
+    device_name = "android_device"
+
+    result_output_dir = test_get_results_directory(
+        test_dir, device_name, is_variant=True
+    )
+    run_shader_job(
+        test_get_shader_job_path(test_dir, is_variant=True), result_output_dir, test
     )
 
-    status_file = output_dir / "STATUS"
+    status_file = result_output_dir / "STATUS"
     status = file_read_text_or_else(status_file, "UNEXPECTED_ERROR")
 
-    if status == "CRASH":
-        log_contents = file_read_text(output_dir / "log.txt")
-        signature = get_signature_from_log_contents(log_contents)
-        move_dir(test_dir, reports_dir / "crashes" / signature / test_dir.name)
+    report_subdirectory_name = ""
 
-    if status == "HOST_CRASH":
-        log_contents = file_read_text(output_dir / "log.txt")
-        signature = get_signature_from_log_contents(log_contents)
-        move_dir(test_dir, reports_dir / "host_crashes" / signature / test_dir.name)
+    if status == "CRASH":
+        report_subdirectory_name = "crashes"
+    elif status == "HOST_CRASH":
+        report_subdirectory_name = "host_crashes"
+
+    if report_subdirectory_name:
+        log_path = result_output_dir / "log.txt"
+        report_dir = move_test_to_crash_report_using_log_signature(
+            log_path, test_dir, reports_dir, report_subdirectory_name
+        )
+
+        run_reduction(report_dir, device_name)
+        return report_dir
+
+    # No report generated.
+    return None
 
 
 def run_shader_job(shader_job: Path, output_dir: Path, test_glsl: TestGlsl) -> Path:
@@ -383,5 +531,5 @@ def run_shader_job(shader_job: Path, output_dir: Path, test_glsl: TestGlsl) -> P
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()
     sys.exit(0)
