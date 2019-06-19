@@ -156,6 +156,10 @@ def check_field_truthy(field: Any, field_name: str) -> None:
         raise ValueError(f"{field_name}(={str(field)}) must be filled")
 
 
+def check_file_exists(path: Path) -> None:
+    check(path.exists(), FileNotFoundError(f"Could not find {str(path)}"))
+
+
 def get_platform() -> str:
     host = platform.system()
     if host in ("Linux", "Windows"):

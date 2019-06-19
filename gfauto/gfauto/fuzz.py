@@ -331,8 +331,8 @@ def move_test_to_crash_report_using_log_signature(
     return output_test_dir
 
 
-# GLSL test_dir:
-# - 1234/ (not a proper test_dir, as it only has "base_source", not "source".
+# GLSL temp dir:
+# - 123/ (not a proper test_dir, as it only has "base_source", not "source".
 #   - base_source/
 #     - test.json
 #     - reference/ variant/
@@ -350,7 +350,7 @@ def move_test_to_crash_report_using_log_signature(
 #         - reductions/
 #           - reduction_1/ reduction_blah/ etc. (reduction name; also a test_dir)
 #             - source/ (same as other source dirs, but with the final reduced shader source)
-#             - work/
+#             - reduction_work/
 #               - reference/ variant/
 #                 - shader.json, shader_reduction_001_success.json,
 #                 shader_reduction_002_failed.json, etc., shader_reduced_final.json
@@ -361,7 +361,10 @@ def move_test_to_crash_report_using_log_signature(
 
 def test_get_shader_job_path(test_dir: Path, is_variant: bool = True) -> Path:
     return (
-        test_dir / "test" / (VARIANT_DIR if is_variant else REFERENCE_DIR) / SHADER_JOB
+        test_dir
+        / "source"
+        / (VARIANT_DIR if is_variant else REFERENCE_DIR)
+        / SHADER_JOB
     )
 
 
@@ -372,7 +375,7 @@ def test_get_device_directory(test_dir: Path, device_name: str) -> Path:
 def test_get_results_directory(
     test_dir: Path, device_name: str, is_variant: bool = True
 ) -> Path:
-    return test_get_results_directory(test_dir, device_name) / (
+    return test_get_device_directory(test_dir, device_name) / (
         VARIANT_DIR if is_variant else REFERENCE_DIR
     )
 
@@ -385,12 +388,12 @@ def test_get_reduced_test_dir(
     )
 
 
-def test_get_reduction_directory(
-    test_dir: Path, device_name: str, reduction_name: str, is_variant: bool = True
+def test_get_reduction_work_directory(
+    reduced_test_dir: Path, is_variant: bool = True
 ) -> Path:
     return (
-        test_get_reduced_test_dir(test_dir, device_name, reduction_name)
-        / "work"
+        reduced_test_dir
+        / "reduction_work"
         / (VARIANT_DIR if is_variant else REFERENCE_DIR)
     )
 
@@ -419,9 +422,16 @@ def run_glsl_reduce(
     return output_dir
 
 
+def get_final_reduced_shader_job_path(reduction_work_shader_dir: Path) -> Path:
+    return reduction_work_shader_dir / "shader_reduced_final.json"
+
+
 def run_reduction(
-    test_dir: Path, device_name: str, reduction_name: str = "reduction1"
-) -> None:
+    test_dir: Path,
+    device_name: str,
+    preserve_semantics: bool,
+    reduction_name: str = "reduction1",
+) -> Path:
     test = test_metadata_read(test_dir)
     if not test.crash_signature:
         raise AssertionError(
@@ -429,18 +439,43 @@ def run_reduction(
             f"for now, only crash reductions are supported"
         )
 
-    reduction_directory = run_glsl_reduce(
-        input_shader_job=test_get_shader_job_path(test_dir, is_variant=True),
-        test_metadata_path=test_metadata_get_path(test_dir),
-        output_dir=test_get_reduction_directory(
-            test_dir, device_name, reduction_name, is_variant=True
-        ),
-        preserve_semantics=True,
+    reduced_test_dir_1 = test_get_reduced_test_dir(
+        test_dir, device_name, reduction_name
     )
 
-    # Create an intermediate test directory containing the final reduced shader.
+    reduction_work_variant_dir = run_glsl_reduce(
+        input_shader_job=test_get_shader_job_path(test_dir, is_variant=True),
+        test_metadata_path=test_metadata_get_path(test_dir),
+        output_dir=test_get_reduction_work_directory(
+            reduced_test_dir_1, is_variant=True
+        ),
+        preserve_semantics=preserve_semantics,
+    )
 
-    reduced_test_dir_1 = copy_dir(test_dir, test_get_reduced_test_directory(test_dir))
+    final_reduced_shader_job_path = get_final_reduced_shader_job_path(
+        reduction_work_variant_dir
+    )
+
+    check(
+        final_reduced_shader_job_path.exists(),
+        AssertionError("Reduction failed; not yet handled"),
+    )
+
+    shader_job_copy(
+        final_reduced_shader_job_path,
+        test_get_shader_job_path(reduced_test_dir_1, is_variant=True),
+    )
+
+    return reduced_test_dir_1
+
+
+def result_get_status(result_output_dir: Path) -> str:
+    status_file = result_output_dir / "STATUS"
+    return file_read_text_or_else(status_file, "UNEXPECTED_ERROR")
+
+
+def result_get_log_path(result_output_dir: Path) -> Path:
+    return result_output_dir / "log.txt"
 
 
 def handle_glsl_test(
@@ -461,8 +496,7 @@ def handle_glsl_test(
         test_get_shader_job_path(test_dir, is_variant=True), result_output_dir, test
     )
 
-    status_file = result_output_dir / "STATUS"
-    status = file_read_text_or_else(status_file, "UNEXPECTED_ERROR")
+    status = result_get_status(result_output_dir)
 
     report_subdirectory_name = ""
 
@@ -472,12 +506,27 @@ def handle_glsl_test(
         report_subdirectory_name = "host_crashes"
 
     if report_subdirectory_name:
-        log_path = result_output_dir / "log.txt"
+        log_path = result_get_log_path(result_output_dir)
         report_dir = move_test_to_crash_report_using_log_signature(
             log_path, test_dir, reports_dir, report_subdirectory_name
         )
 
-        run_reduction(report_dir, device_name)
+        part_1_reduced_test = run_reduction(
+            report_dir, device_name, preserve_semantics=True, reduction_name="part_1"
+        )
+
+        part_2_name = "part_2"
+        run_reduction(
+            part_1_reduced_test,
+            device_name,
+            preserve_semantics=False,
+            reduction_name=part_2_name,
+        )
+
+        # Create a symlink to the "best" reduction.
+        best_reduced_test = test_get_reduced_test_dir(report_dir, device_name, "best")
+        best_reduced_test.symlink_to(part_2_name, target_is_directory=True)
+
         return report_dir
 
     # No report generated.

@@ -44,6 +44,7 @@ setup(
         "Programming Language :: Python :: 3 :: Only",
     ],
     entry_points={"console_scripts": [
-        "gfauto_fuzz = gfauto.fuzz:main"
+        "gfauto_fuzz = gfauto.fuzz:main",
+        "gfauto_interestingness_test = gfauto.gfauto_interestingness_test:main",
     ]},
 )
