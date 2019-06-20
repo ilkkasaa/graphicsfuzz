@@ -21,7 +21,7 @@ from typing import Optional
 from gfauto import fuzz, proto_util
 from gfauto.gflogging import log
 from gfauto.test_pb2 import Test
-from gfauto.util import check, check_file_exists, file_read_text
+from gfauto.util import check, check_file_exists, file_read_text, test_metadata_read
 
 
 # TODO: Maybe add helper method and throw exceptions instead of calling sys.exit.
@@ -46,7 +46,7 @@ def main() -> None:
         "string from the log.txt file.",
     )
 
-    parsed_args = parser.parse_args(sys.argv)
+    parsed_args = parser.parse_args(sys.argv[1:])
 
     test_json: Path = Path(parsed_args.test_json)
     shader_job_json: Path = Path(parsed_args.shader_job_json)
@@ -58,9 +58,8 @@ def main() -> None:
     # TODO: Remove this when we support other reduction types.
     check(bool(crash_signature), AssertionError("crash_signature is required for now"))
 
-    metadata_text = file_read_text(test_json)
-    test = Test()
-    proto_util.json_to_message(metadata_text, test)
+    test = test_metadata_read(test_json)
+
     check(
         test.HasField("glsl"),
         AssertionError(f"Provided test json {str(test_json)} does not have glsl entry"),

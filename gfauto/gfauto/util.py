@@ -173,18 +173,27 @@ def test_get_source_dir(test_dir: Path) -> Path:
     return test_dir / "source"
 
 
-def test_metadata_get_path(test_dir: Path) -> Path:
+def test_dir_get_metadata_path(test_dir: Path) -> Path:
     return test_get_source_dir(test_dir) / TEST_METADATA
 
 
-def test_metadata_write(metadata: Test, test_dir: pathlib.Path) -> pathlib.Path:
-    text = proto_util.message_to_json(metadata)
-    file_write_text(test_metadata_get_path(test_dir), text)
+def test_dir_metadata_write(metadata: Test, test_dir: pathlib.Path) -> pathlib.Path:
+    test_metadata_write(metadata, test_dir_get_metadata_path(test_dir))
     return test_dir
 
 
-def test_metadata_read(test_dir: pathlib.Path) -> Test:
-    text = file_read_text(test_metadata_get_path(test_dir))
+def test_dir_metadata_read(test_dir: pathlib.Path) -> Test:
+    return test_metadata_read(test_dir_get_metadata_path(test_dir))
+
+
+def test_metadata_read(test_metadata_path: Path) -> Test:
+    text = file_read_text(test_metadata_path)
     result = Test()
     proto_util.json_to_message(text, result)
     return result
+
+
+def test_metadata_write(metadata: Test, test_metadata_path: Path) -> Path:
+    text = proto_util.message_to_json(metadata)
+    file_write_text(test_metadata_path, text)
+    return test_metadata_path

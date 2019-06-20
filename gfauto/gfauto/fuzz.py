@@ -23,7 +23,7 @@ from subprocess import SubprocessError
 from typing import Iterator, Match, Optional
 
 from gfauto.subprocess_util import run
-from gfauto.util import test_metadata_get_path, test_get_source_dir
+from gfauto.util import test_dir_get_metadata_path, test_get_source_dir, copy_file
 from .android_device import run_amber_on_device
 from .artifacts import *  # pylint: disable=wildcard-import
 from .gflogging import log_a_file
@@ -41,8 +41,8 @@ from .util import (
     file_write_text,
     mkdirs_p,
     move_dir,
-    test_metadata_read,
-    test_metadata_write,
+    test_dir_metadata_read,
+    test_dir_metadata_write,
 )
 
 # TODO: Consider using "import gfauto.util" to avoid circular import issues.
@@ -66,7 +66,7 @@ def make_subtest(
     copy_dir(base_source_dir, test_get_source_dir(subtest_dir))
 
     # Write the test metadata.
-    test_metadata_write(
+    test_dir_metadata_write(
         Test(
             glsl=TestGlsl(
                 glslang_version_hash="",
@@ -82,6 +82,9 @@ def make_subtest(
 
 def main() -> None:
     # TODO: Use sys.argv[1:].
+
+    # TODO: Remove.
+    random.seed(0)
 
     reports_dir = Path() / "reports"
     temp_dir = Path() / "temp"
@@ -154,7 +157,7 @@ def main() -> None:
 
 
 def handle_test(test_dir: Path, reports_dir: Path) -> Optional[Path]:
-    test = test_metadata_read(test_dir)
+    test = test_dir_metadata_read(test_dir)
     if test.HasField("glsl"):
         return handle_glsl_test(test.glsl, test_dir, reports_dir)
     else:
@@ -325,9 +328,9 @@ def move_test_to_crash_report_using_log_signature(
     output_test_dir = move_dir(
         test_dir, reports_dir / crash_subdirectory_name / signature / test_dir.name
     )
-    test = test_metadata_read(output_test_dir)
+    test = test_dir_metadata_read(output_test_dir)
     test.crash_signature = signature
-    test_metadata_write(test, output_test_dir)
+    test_dir_metadata_write(test, output_test_dir)
     return output_test_dir
 
 
@@ -402,22 +405,26 @@ def run_glsl_reduce(
     input_shader_job: Path,
     test_metadata_path: Path,
     output_dir: Path,
+    crash_signature: str,
     preserve_semantics: bool = False,
 ) -> Path:
 
     cmd = [
         "glsl-reduce",
         str(input_shader_job),
-        "gfauto_interestingness_test",
-        str(test_metadata_path),
         "--output",
         str(output_dir),
+        "--",
+        "gfauto_interestingness_test",
+        "--crash_signature",
+        crash_signature,
+        str(test_metadata_path),
     ]
 
     if preserve_semantics:
-        cmd.append("--preserve-semantics")
+        cmd.insert(1, "--preserve-semantics")
 
-    run(cmd)
+    run(cmd, verbose=True)
 
     return output_dir
 
@@ -427,28 +434,30 @@ def get_final_reduced_shader_job_path(reduction_work_shader_dir: Path) -> Path:
 
 
 def run_reduction(
-    test_dir: Path,
+    test_dir_reduction_output: Path,
+    test_dir_to_reduce: Path,
     device_name: str,
     preserve_semantics: bool,
     reduction_name: str = "reduction1",
 ) -> Path:
-    test = test_metadata_read(test_dir)
+    test = test_dir_metadata_read(test_dir_to_reduce)
     if not test.crash_signature:
         raise AssertionError(
-            f"Cannot reduce {str(test_dir)} because there is no crash string specified; "
+            f"Cannot reduce {str(test_dir_to_reduce)} because there is no crash string specified; "
             f"for now, only crash reductions are supported"
         )
 
     reduced_test_dir_1 = test_get_reduced_test_dir(
-        test_dir, device_name, reduction_name
+        test_dir_reduction_output, device_name, reduction_name
     )
 
     reduction_work_variant_dir = run_glsl_reduce(
-        input_shader_job=test_get_shader_job_path(test_dir, is_variant=True),
-        test_metadata_path=test_metadata_get_path(test_dir),
+        input_shader_job=test_get_shader_job_path(test_dir_to_reduce, is_variant=True),
+        test_metadata_path=test_dir_get_metadata_path(test_dir_to_reduce),
         output_dir=test_get_reduction_work_directory(
             reduced_test_dir_1, is_variant=True
         ),
+        crash_signature=test.crash_signature,
         preserve_semantics=preserve_semantics,
     )
 
@@ -460,6 +469,10 @@ def run_reduction(
         final_reduced_shader_job_path.exists(),
         AssertionError("Reduction failed; not yet handled"),
     )
+
+    # Finally, write the test metadata and shader job, so the returned directory can be used as a test_dir.
+
+    test_dir_metadata_write(test, reduced_test_dir_1)
 
     shader_job_copy(
         final_reduced_shader_job_path,
@@ -512,13 +525,18 @@ def handle_glsl_test(
         )
 
         part_1_reduced_test = run_reduction(
-            report_dir, device_name, preserve_semantics=True, reduction_name="part_1"
+            test_dir_reduction_output=report_dir,
+            test_dir_to_reduce=report_dir,
+            device_name=device_name,
+            preserve_semantics=True,
+            reduction_name="part_1",
         )
 
         part_2_name = "part_2"
         run_reduction(
-            part_1_reduced_test,
-            device_name,
+            test_dir_reduction_output=report_dir,
+            test_dir_to_reduce=part_1_reduced_test,
+            device_name=device_name,
             preserve_semantics=False,
             reduction_name=part_2_name,
         )
