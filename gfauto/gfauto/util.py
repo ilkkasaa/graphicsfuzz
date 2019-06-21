@@ -26,8 +26,6 @@ from typing import Any, BinaryIO, Iterator, List, TextIO, cast
 from gfauto import proto_util
 from gfauto.test_pb2 import Test
 
-TEST_METADATA = "test.json"
-
 
 def file_open_binary(file: pathlib.Path, mode: str) -> BinaryIO:  # noqa VNE002
     check(mode.find("b") != -1, AssertionError(f"|mode|(=={mode}) should contain 'b'"))
@@ -175,33 +173,3 @@ def get_platform() -> str:
     if host == "Darwin":
         return "Mac"
     raise AssertionError("Unsupported platform: {}".format(host))
-
-
-def test_get_source_dir(test_dir: Path) -> Path:
-    return test_dir / "source"
-
-
-def test_dir_get_metadata_path(test_dir: Path) -> Path:
-    return test_get_source_dir(test_dir) / TEST_METADATA
-
-
-def test_dir_metadata_write(metadata: Test, test_dir: pathlib.Path) -> pathlib.Path:
-    test_metadata_write(metadata, test_dir_get_metadata_path(test_dir))
-    return test_dir
-
-
-def test_dir_metadata_read(test_dir: pathlib.Path) -> Test:
-    return test_metadata_read(test_dir_get_metadata_path(test_dir))
-
-
-def test_metadata_read(test_metadata_path: Path) -> Test:
-    text = file_read_text(test_metadata_path)
-    result = Test()
-    proto_util.json_to_message(text, result)
-    return result
-
-
-def test_metadata_write(metadata: Test, test_metadata_path: Path) -> Path:
-    text = proto_util.message_to_json(metadata)
-    file_write_text(test_metadata_path, text)
-    return test_metadata_path

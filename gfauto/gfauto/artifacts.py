@@ -17,10 +17,21 @@
 import pathlib
 from typing import List, Optional
 
-from . import gflogging, proto_util, util
-from .artifact_pb2 import ArtifactMetadata, ArtifactMetadataTextFile
-from .common_pb2 import Archive, ArchiveSet, Binary
-from .recipe_pb2 import (
+from gfauto import (
+    gflogging,
+    proto_util,
+    util,
+    recipe_glsl_shader_job_to_spirv_shader_job,
+    recipe_spirv_shader_job_to_spirv_shader_job_opt,
+    recipe_glsl_shader_job_add_red_pixels,
+    recipe_spirv_shader_job_to_spirv_asm_shader_job,
+    recipe_spirv_asm_shader_job_to_amber_script,
+    recipe_glsl_reference_shader_job_to_glsl_variant_shader_job,
+    recipe_download_and_extract_archive_set,
+)
+from gfauto.artifact_pb2 import ArtifactMetadata, ArtifactMetadataTextFile
+from gfauto.common_pb2 import Archive, ArchiveSet, Binary
+from gfauto.recipe_pb2 import (
     Recipe,
     RecipeDownloadAndExtractArchiveSet,
     RecipeGlslShaderJobAddRedPixels,
@@ -29,7 +40,7 @@ from .recipe_pb2 import (
     RecipeSpirvShaderJobToSpirvAsmShaderJob,
     RecipeSpirvShaderJobToSpirvShaderJobOpt,
 )
-from .util import check, norm_path
+from gfauto.util import check
 
 ARTIFACT_METADATA_FILE_NAME = "artifact.json"
 ARTIFACT_RECIPE_FILE_NAME = "recipe.json"
@@ -156,7 +167,7 @@ def recipes_write_built_in() -> None:
 
 def artifact_path_get_root() -> pathlib.Path:
     root_file_suffix = pathlib.Path(ARTIFACT_ROOT_FILE_NAME)
-    fake_file = norm_path(pathlib.Path("fake").absolute())
+    fake_file = util.norm_path(pathlib.Path("fake").absolute())
     for parent in fake_file.parents:
         if (parent / root_file_suffix).exists():
             return parent
@@ -181,7 +192,7 @@ def artifact_path_absolute(artifact_path: str) -> str:
     """
     if artifact_path.startswith("//"):
         return artifact_path
-    path = norm_path(pathlib.Path(artifact_path)).absolute()
+    path = util.norm_path(pathlib.Path(artifact_path)).absolute()
     return path_to_artifact_path(path)
 
 
@@ -197,9 +208,11 @@ def artifact_path_to_path(artifact_path: str) -> pathlib.Path:
     :return:
     """
     if artifact_path.startswith("//"):
-        return norm_path(artifact_path_get_root() / pathlib.Path(artifact_path[2:]))
+        return util.norm_path(
+            artifact_path_get_root() / pathlib.Path(artifact_path[2:])
+        )
 
-    return norm_path(pathlib.Path(artifact_path))
+    return util.norm_path(pathlib.Path(artifact_path))
 
 
 def artifact_get_directory_path(artifact_path: str = "") -> pathlib.Path:
@@ -293,34 +306,34 @@ def artifact_execute_recipe(
         gflogging.push_stream_for_logging(f)
         try:
             if recipe.HasField("glsl_shader_job_to_spirv_shader_job"):
-                recipe_glsl_shader_job_to_spirv_shader_job(
+                recipe_glsl_shader_job_to_spirv_shader_job.recipe_glsl_shader_job_to_spirv_shader_job(
                     recipe.glsl_shader_job_to_spirv_shader_job, artifact_path
                 )
             elif recipe.HasField("spirv_shader_job_to_spirv_shader_job_opt"):
-                recipe_spirv_shader_job_to_spirv_shader_job_opt(
+                recipe_spirv_shader_job_to_spirv_shader_job_opt.recipe_spirv_shader_job_to_spirv_shader_job_opt(
                     recipe.spirv_shader_job_to_spirv_shader_job_opt, artifact_path
                 )
             elif recipe.HasField("glsl_shader_job_add_red_pixels"):
-                recipe_glsl_shader_job_add_red_pixels(
+                recipe_glsl_shader_job_add_red_pixels.recipe_glsl_shader_job_add_red_pixels(
                     recipe.glsl_shader_job_add_red_pixels, artifact_path
                 )
             elif recipe.HasField("spirv_shader_job_to_spirv_asm_shader_job"):
-                recipe_spirv_shader_job_to_spirv_asm_shader_job(
+                recipe_spirv_shader_job_to_spirv_asm_shader_job.recipe_spirv_shader_job_to_spirv_asm_shader_job(
                     recipe.spirv_shader_job_to_spirv_asm_shader_job, artifact_path
                 )
             elif recipe.HasField("spirv_asm_shader_job_to_amber_script"):
-                recipe_spirv_asm_shader_job_to_amber_script(
+                recipe_spirv_asm_shader_job_to_amber_script.recipe_spirv_asm_shader_job_to_amber_script(
                     recipe.spirv_asm_shader_job_to_amber_script, artifact_path
                 )
             elif recipe.HasField(
                 "glsl_reference_shader_job_to_glsl_variant_shader_job"
             ):
-                recipe_glsl_reference_shader_job_to_glsl_variant_shader_job(
+                recipe_glsl_reference_shader_job_to_glsl_variant_shader_job.recipe_glsl_reference_shader_job_to_glsl_variant_shader_job(
                     recipe.glsl_reference_shader_job_to_glsl_variant_shader_job,
                     artifact_path,
                 )
             elif recipe.HasField("download_and_extract_archive_set"):
-                recipe_download_and_extract_archive_set(
+                recipe_download_and_extract_archive_set.recipe_download_and_extract_archive_set(
                     recipe.download_and_extract_archive_set, artifact_path
                 )
             else:
@@ -341,7 +354,7 @@ def artifact_get_inner_file_path(inner_file: str, artifact_path: str) -> pathlib
         ),
     )
     # TODO: Consider absolute paths that we might want to support for quick hacks.
-    return norm_path(
+    return util.norm_path(
         artifact_get_directory_path(artifact_path) / pathlib.Path(inner_file)
     )
 
@@ -510,29 +523,3 @@ def artifact_create_amber_script_from_glsl_shader_job_artifact(
     )
 
     return next_input
-
-
-# pylint:disable=wrong-import-position,cyclic-import
-
-
-from .recipe_glsl_shader_job_add_red_pixels import (  # isort:skip
-    recipe_glsl_shader_job_add_red_pixels,
-)  # noqa
-from .recipe_glsl_shader_job_to_spirv_shader_job import (  # noqa isort:skip
-    recipe_glsl_shader_job_to_spirv_shader_job,
-)
-from .recipe_spirv_asm_shader_job_to_amber_script import (  # noqa isort:skip
-    recipe_spirv_asm_shader_job_to_amber_script,
-)
-from .recipe_spirv_shader_job_to_spirv_asm_shader_job import (  # noqa isort:skip
-    recipe_spirv_shader_job_to_spirv_asm_shader_job,
-)
-from .recipe_spirv_shader_job_to_spirv_shader_job_opt import (  # noqa isort:skip
-    recipe_spirv_shader_job_to_spirv_shader_job_opt,
-)
-from .recipe_glsl_reference_shader_job_to_glsl_variant_shader_job import (  # noqa isort:skip
-    recipe_glsl_reference_shader_job_to_glsl_variant_shader_job,
-)
-from .recipe_download_and_extract_archive_set import (  # noqa isort:skip
-    recipe_download_and_extract_archive_set,
-)

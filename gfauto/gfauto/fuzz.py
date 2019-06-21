@@ -20,46 +20,35 @@ import sys
 import uuid
 from pathlib import Path
 from subprocess import SubprocessError
-from typing import Iterator, Match, Optional
+from typing import Iterator, Match, Optional, List
 
-import gfauto.proto_util
-from gfauto import host_device_util
-from gfauto.device_pb2 import DeviceList, Device
-from gfauto.subprocess_util import run
-from gfauto.util import test_dir_get_metadata_path, test_get_source_dir, copy_file
-from .android_device import run_amber_on_device
-from .artifacts import *  # pylint: disable=wildcard-import
-from .gflogging import log_a_file
-from .recipe_glsl_reference_shader_job_to_glsl_variant_shader_job import run_generate
-from .recipe_spirv_asm_shader_job_to_amber_script import AmberfySettings
-from .recipe_spirv_shader_job_to_spirv_shader_job_opt import random_spirv_opt_args
-from .shader_job_util import EXT_COMP, shader_job_copy, shader_job_get_related_files
-from .test_pb2 import Test, TestGlsl
-from .tool import BinaryPaths, glsl_shader_job_to_amber_script
-from .util import (
-    copy_dir,
-    file_open_text,
-    file_read_text,
-    file_read_text_or_else,
-    file_write_text,
-    mkdirs_p,
-    move_dir,
-    test_dir_metadata_read,
-    test_dir_metadata_write,
+from gfauto import (
+    host_device_util,
+    devices_util,
+    util,
+    test_util,
+    shader_job_util,
+    recipe_glsl_reference_shader_job_to_glsl_variant_shader_job,
+    recipe_spirv_shader_job_to_spirv_shader_job_opt,
+    subprocess_util,
+    result_util,
+    gflogging,
+    tool,
+    recipe_spirv_asm_shader_job_to_amber_script,
+    android_device,
 )
+from gfauto.device_pb2 import Device
+from gfauto.test_pb2 import Test, TestGlsl
 
-# TODO: Consider using "import gfauto.util" to avoid circular import issues.
+from gfauto.util import check
+
+# TODO: fix all imports to only import modules, not functions.
 
 
 def get_random_name() -> str:
     # TODO: could change to human-readable random name or the date.
     return uuid.uuid4().hex
 
-
-REFERENCE_DIR = "reference"
-VARIANT_DIR = "variant"
-SHADER_JOB = "shader.json"
-SHADER_JOB_RESULT = "shader.info.json"
 
 IMAGE_FILE_NAME = "image.png"
 BUFFER_FILE_NAME = "buffer.bin"
@@ -71,10 +60,10 @@ def make_subtest(
     base_source_dir: Path, subtest_dir: Path, spirv_opt_args: Optional[List[str]]
 ) -> Path:
     # Create the subtest by copying the base source.
-    copy_dir(base_source_dir, test_get_source_dir(subtest_dir))
+    util.copy_dir(base_source_dir, test_util.get_source_dir(subtest_dir))
 
     # Write the test metadata.
-    test_dir_metadata_write(
+    test_util.metadata_write(
         Test(
             glsl=TestGlsl(
                 glslang_version_hash="",
@@ -94,8 +83,8 @@ def main() -> None:
     # TODO: Remove.
     random.seed(0)
 
-    device_list = devices.read_device_list()
-    active_devices = devices.get_active_devices(device_list)
+    device_list = devices_util.read_device_list()
+    active_devices = devices_util.get_active_devices(device_list)
 
     reports_dir = Path() / "reports"
     temp_dir = Path() / "temp"
@@ -105,7 +94,7 @@ def main() -> None:
     # TODO: make GraphicsFuzz find donors recursively.
 
     # Filter to only include .json files that have at least one shader (.frag, .vert, .comp) file.
-    references = [ref for ref in references if shader_job_get_related_files(ref)]
+    references = [ref for ref in references if shader_job_util.get_related_files(ref)]
 
     while True:
         test_name = get_random_name()
@@ -114,17 +103,19 @@ def main() -> None:
         base_source_dir = test_dir / "base_source"
 
         # Copy in a randomly chosen reference.
-        reference_glsl_shader_job = shader_job_copy(
-            random.choice(references), base_source_dir / REFERENCE_DIR / SHADER_JOB
+        reference_glsl_shader_job = shader_job_util.copy(
+            random.choice(references),
+            base_source_dir / test_util.REFERENCE_DIR / test_util.SHADER_JOB,
         )
 
         # Pick a seed.
         seed = random.randint(-pow(2, 31), pow(2, 31) - 1)
 
-        run_generate(
+        recipe_glsl_reference_shader_job_to_glsl_variant_shader_job.run_generate(
             reference_glsl_shader_job,
             donors_dir,
-            mkdirs_p(base_source_dir / VARIANT_DIR) / SHADER_JOB,
+            util.mkdirs_p(base_source_dir / test_util.VARIANT_DIR)
+            / test_util.SHADER_JOB,
             str(seed),
         )
 
@@ -147,17 +138,17 @@ def main() -> None:
             make_subtest(
                 base_source_dir,
                 test_dir / f"{test_name}_opt_rand1_test",
-                spirv_opt_args=random_spirv_opt_args(),
+                spirv_opt_args=recipe_spirv_shader_job_to_spirv_shader_job_opt.random_spirv_opt_args(),
             ),
             make_subtest(
                 base_source_dir,
                 test_dir / f"{test_name}_opt_rand2_test",
-                spirv_opt_args=random_spirv_opt_args(),
+                spirv_opt_args=recipe_spirv_shader_job_to_spirv_shader_job_opt.random_spirv_opt_args(),
             ),
             make_subtest(
                 base_source_dir,
                 test_dir / f"{test_name}_opt_rand3_test",
-                spirv_opt_args=random_spirv_opt_args(),
+                spirv_opt_args=recipe_spirv_shader_job_to_spirv_shader_job_opt.random_spirv_opt_args(),
             ),
         ]
 
@@ -170,7 +161,7 @@ def main() -> None:
 def handle_test(
     test_dir: Path, reports_dir: Path, active_devices: List[Device]
 ) -> List[Path]:
-    test = test_dir_metadata_read(test_dir)
+    test = test_util.metadata_read(test_dir)
     if test.HasField("glsl"):
         return handle_glsl_test(test.glsl, test_dir, reports_dir, active_devices)
     else:
@@ -336,14 +327,14 @@ def get_signature_from_log_contents(log_contents: str) -> str:
 def move_test_to_crash_report_using_log_signature(
     log_path: Path, test_dir: Path, reports_dir: Path, crash_subdirectory_name: str
 ) -> Path:
-    log_contents = file_read_text(log_path)
+    log_contents = util.file_read_text(log_path)
     signature = get_signature_from_log_contents(log_contents)
-    output_test_dir = move_dir(
+    output_test_dir = util.move_dir(
         test_dir, reports_dir / crash_subdirectory_name / signature / test_dir.name
     )
-    test = test_dir_metadata_read(output_test_dir)
+    test = test_util.metadata_read(output_test_dir)
     test.crash_signature = signature
-    test_dir_metadata_write(test, output_test_dir)
+    test_util.metadata_write(test, output_test_dir)
     return output_test_dir
 
 
@@ -389,45 +380,6 @@ def move_test_to_crash_report_using_log_signature(
 #
 
 
-def test_get_shader_job_path(test_dir: Path, is_variant: bool = True) -> Path:
-    return (
-        test_dir
-        / "source"
-        / (VARIANT_DIR if is_variant else REFERENCE_DIR)
-        / SHADER_JOB
-    )
-
-
-def test_get_device_directory(test_dir: Path, device_name: str) -> Path:
-    return test_dir / "results" / device_name
-
-
-def test_get_results_directory(
-    test_dir: Path, device_name: str, is_variant: bool = True
-) -> Path:
-    return test_get_device_directory(test_dir, device_name) / (
-        VARIANT_DIR if is_variant else REFERENCE_DIR
-    )
-
-
-def test_get_reduced_test_dir(
-    test_dir: Path, device_name: str, reduction_name: str
-) -> Path:
-    return (
-        test_get_device_directory(test_dir, device_name) / "reductions" / reduction_name
-    )
-
-
-def test_get_reduction_work_directory(
-    reduced_test_dir: Path, is_variant: bool = True
-) -> Path:
-    return (
-        reduced_test_dir
-        / "reduction_work"
-        / (VARIANT_DIR if is_variant else REFERENCE_DIR)
-    )
-
-
 def run_glsl_reduce(
     input_shader_job: Path,
     test_metadata_path: Path,
@@ -448,7 +400,7 @@ def run_glsl_reduce(
     if preserve_semantics:
         cmd.insert(1, "--preserve-semantics")
 
-    run(cmd, verbose=True)
+    subprocess_util.run(cmd, verbose=True)
 
     return output_dir
 
@@ -464,11 +416,11 @@ def run_reduction(
     reduction_name: str = "reduction1",
     device_name: Optional[str] = None,
 ) -> Path:
-    test = test_dir_metadata_read(test_dir_to_reduce)
+    test = test_util.metadata_read(test_dir_to_reduce)
 
     if not device_name and not test.device:
         raise AssertionError(
-            f"Cannot reduce {str(test_dir_to_reduce)}; device must be specified in {str(test_dir_get_metadata_path(test_dir_to_reduce))}"
+            f"Cannot reduce {str(test_dir_to_reduce)}; device must be specified in {str(test_util.get_metadata_path(test_dir_to_reduce))}"
         )
 
     if not device_name:
@@ -480,14 +432,16 @@ def run_reduction(
             f"for now, only crash reductions are supported"
         )
 
-    reduced_test_dir_1 = test_get_reduced_test_dir(
+    reduced_test_dir_1 = test_util.get_reduced_test_dir(
         test_dir_reduction_output, device_name, reduction_name
     )
 
     reduction_work_variant_dir = run_glsl_reduce(
-        input_shader_job=test_get_shader_job_path(test_dir_to_reduce, is_variant=True),
-        test_metadata_path=test_dir_get_metadata_path(test_dir_to_reduce),
-        output_dir=test_get_reduction_work_directory(
+        input_shader_job=test_util.get_shader_job_path(
+            test_dir_to_reduce, is_variant=True
+        ),
+        test_metadata_path=test_util.get_metadata_path(test_dir_to_reduce),
+        output_dir=test_util.get_reduction_work_directory(
             reduced_test_dir_1, is_variant=True
         ),
         preserve_semantics=preserve_semantics,
@@ -504,27 +458,14 @@ def run_reduction(
 
     # Finally, write the test metadata and shader job, so the returned directory can be used as a test_dir.
 
-    test_dir_metadata_write(test, reduced_test_dir_1)
+    test_util.metadata_write(test, reduced_test_dir_1)
 
-    shader_job_copy(
+    shader_job_util.copy(
         final_reduced_shader_job_path,
-        test_get_shader_job_path(reduced_test_dir_1, is_variant=True),
+        test_util.get_shader_job_path(reduced_test_dir_1, is_variant=True),
     )
 
     return reduced_test_dir_1
-
-
-def result_get_status_path(result_output_dir: Path) -> Path:
-    return result_output_dir / "STATUS"
-
-
-def result_get_status(result_output_dir: Path) -> str:
-    status_file = result_get_status_path(result_output_dir)
-    return file_read_text_or_else(status_file, "UNEXPECTED_ERROR")
-
-
-def result_get_log_path(result_output_dir: Path) -> Path:
-    return result_output_dir / "log.txt"
 
 
 def handle_glsl_test(
@@ -537,27 +478,27 @@ def handle_glsl_test(
     for device in active_devices:
 
         result_output_dir = run_shader_job(
-            test_get_shader_job_path(test_dir, is_variant=True),
-            test_get_results_directory(test_dir, device.name, is_variant=True),
+            test_util.get_shader_job_path(test_dir, is_variant=True),
+            test_util.get_results_directory(test_dir, device.name, is_variant=True),
             test,
             device,
         )
 
-        status = result_get_status(result_output_dir)
+        status = result_util.get_status(result_output_dir)
 
-        if device.HasField("preprocess") and status == "HOST_CRASH":
-            # No need to run on real devices if the "preprocess device" fails.
+        if status == "HOST_CRASH":
+            # No need to run further on real devices if the preprocessing step failed.
             break
 
     # For each device that saw a crash, copy the test to reports_dir, adding the signature and device info to the test
     # metadata.
     for device in active_devices:
 
-        result_output_dir = test_get_results_directory(
+        result_output_dir = test_util.get_results_directory(
             test_dir, device.name, is_variant=True
         )
 
-        status = result_get_status(result_output_dir)
+        status = result_util.get_status(result_output_dir)
 
         report_subdirectory_name = ""
 
@@ -568,26 +509,26 @@ def handle_glsl_test(
 
         if report_subdirectory_name:
             # TODO: append to report_paths.
-            log_path = result_get_log_path(result_output_dir)
+            log_path = result_util.get_log_path(result_output_dir)
 
-            log_contents = file_read_text(log_path)
+            log_contents = util.file_read_text(log_path)
             signature = get_signature_from_log_contents(log_contents)
 
             # We include the device name in the directory name because it is possible that this test crashes on two
             # different devices but gives the same crash signature in both cases (e.g. for generic signatures
             # like "compile_error"). This would lead to two test copies having the same path.
-            test_dir_in_reports = copy_dir(
-                result_output_dir,
+            test_dir_in_reports = util.copy_dir(
+                test_dir,
                 reports_dir
                 / report_subdirectory_name
                 / signature
                 / f"{test_dir.name}_{device.name}",
             )
 
-            test_metadata = test_dir_metadata_read(test_dir_in_reports)
+            test_metadata = test_util.metadata_read(test_dir_in_reports)
             test_metadata.crash_signature = signature
             test_metadata.device.CopyFrom(device)
-            test_dir_metadata_write(test_metadata, test_dir_in_reports)
+            test_util.metadata_write(test_metadata, test_dir_in_reports)
 
             report_paths.append(test_dir_in_reports)
 
@@ -609,10 +550,10 @@ def handle_glsl_test(
             reduction_name=part_2_name,
         )
 
-        device_name = test_dir_metadata_read(test_dir_in_reports).device.name
+        device_name = test_util.metadata_read(test_dir_in_reports).device.name
 
         # Create a symlink to the "best" reduction.
-        best_reduced_test = test_get_reduced_test_dir(
+        best_reduced_test = test_util.get_reduced_test_dir(
             test_dir_in_reports, device_name, "best"
         )
         best_reduced_test.symlink_to(part_2_name, target_is_directory=True)
@@ -628,40 +569,46 @@ def run_shader_job(
     shader_job: Path, output_dir: Path, test_glsl: TestGlsl, device: Device
 ) -> Path:
 
-    with file_open_text(output_dir / "log.txt", "w") as log_file:
+    with util.file_open_text(output_dir / "log.txt", "w") as log_file:
         try:
             gflogging.push_stream_for_logging(log_file)
 
             # TODO: Find the right SwiftShader path here if |device| is a SwiftShader device.
 
+            # TODO: Find the amber path?
+
             # TODO: If Amber is going to be used, check if Amber can use Vulkan debug layers now, and if not, pass that
             #  info down via a bool.
 
-            binary_paths = BinaryPaths()
+            binary_paths = tool.BinaryPaths()
 
             try:
-                amber_script_file = glsl_shader_job_to_amber_script(
+                amber_script_file = tool.glsl_shader_job_to_amber_script(
                     shader_job,
                     output_dir / "test.amber",
                     output_dir,
                     binary_paths,
-                    AmberfySettings(
+                    recipe_spirv_asm_shader_job_to_amber_script.AmberfySettings(
                         spirv_opt_args=list(test_glsl.spirv_opt_args),
                         spirv_opt_hash=binary_paths.spirv_opt_hash,
                     ),
                     spirv_opt_args=list(test_glsl.spirv_opt_args),
                 )
             except SubprocessError:
-                file_write_text(output_dir / "STATUS", "HOST_CRASH")
+                util.file_write_text(output_dir / "STATUS", "HOST_CRASH")
                 return output_dir
 
-            is_compute = bool(shader_job_get_related_files(shader_job, [EXT_COMP]))
+            is_compute = bool(
+                shader_job_util.get_related_files(
+                    shader_job, [shader_job_util.EXT_COMP]
+                )
+            )
 
             # Consider device type.
 
             if device.HasField("preprocess"):
                 # The "preprocess" device type just needs to get this far, so this is a success.
-                file_write_text(output_dir / "STATUS", "SUCCESS")
+                util.file_write_text(output_dir / "STATUS", "SUCCESS")
                 return output_dir
 
             if device.HasField("host") or device.HasField("swift_shader"):
@@ -677,17 +624,23 @@ def run_shader_job(
                     dump_buffer=is_compute,
                     icd=icd,
                 )
+                return output_dir
 
-            run_amber_on_device(
-                amber_script_file,
-                output_dir,
-                dump_image=(not is_compute),
-                dump_buffer=is_compute,
-            )
+            if device.HasField("android"):
 
-            log_a_file(result_get_amber_log_path(output_dir))
+                android_device.run_amber_on_device(
+                    amber_script_file,
+                    output_dir,
+                    dump_image=(not is_compute),
+                    dump_buffer=is_compute,
+                    serial=device.android.serial,
+                )
+                return output_dir
 
-            return output_dir
+            # TODO: For a remote device (which we will probably need to support), use log_a_file to output the
+            #  "amber_log.txt" file.
+
+            raise AssertionError(f"Unhandled device type:\n{str(device)}")
 
         finally:
             gflogging.pop_stream_for_logging()

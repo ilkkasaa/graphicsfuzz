@@ -18,23 +18,9 @@ import pathlib
 import random
 from typing import List, Optional
 
-from .artifact_pb2 import ArtifactMetadata
-from .artifacts import (
-    Artifact,
-    artifact_execute_recipe_if_needed,
-    artifact_find_binary,
-    artifact_get_inner_file_path,
-    artifact_write_metadata,
-)
-from .recipe_pb2 import RecipeSpirvShaderJobToSpirvShaderJobOpt
-from .shader_job_util import SUFFIX_SPIRV, shader_job_get_related_files
-from .subprocess_util import run
-from .util import (
-    copy_file,
-    file_mkdirs_parent,
-    prepend_catchsegv_if_available,
-    tool_on_path,
-)
+from gfauto import util, subprocess_util, shader_job_util, artifacts
+from gfauto.artifact_pb2 import ArtifactMetadata
+from gfauto.recipe_pb2 import RecipeSpirvShaderJobToSpirvShaderJobOpt
 
 SPIRV_OPT_NAME = "spirv-opt"
 
@@ -84,11 +70,11 @@ def run_spirv_opt_on_spirv_shader(
 ) -> pathlib.Path:
 
     if not spirv_opt_file_path:
-        spirv_opt_file_path = tool_on_path(SPIRV_OPT_NAME)
+        spirv_opt_file_path = util.tool_on_path(SPIRV_OPT_NAME)
 
     output_spirv_file_path = output_dir_path / input_spirv_file_path.name
 
-    file_mkdirs_parent(output_spirv_file_path)
+    util.file_mkdirs_parent(output_spirv_file_path)
 
     cmd = [
         str(spirv_opt_file_path),
@@ -100,9 +86,9 @@ def run_spirv_opt_on_spirv_shader(
 
     cmd += spirv_opt_args
 
-    cmd = prepend_catchsegv_if_available(cmd)
+    cmd = util.prepend_catchsegv_if_available(cmd)
 
-    run(cmd)
+    subprocess_util.run(cmd)
 
     return output_spirv_file_path
 
@@ -115,13 +101,14 @@ def run_spirv_opt_on_spirv_shader_job(
 ) -> pathlib.Path:
 
     if not spirv_opt_file_path:
-        spirv_opt_file_path = tool_on_path(SPIRV_OPT_NAME)
+        spirv_opt_file_path = util.tool_on_path(SPIRV_OPT_NAME)
 
-    shader_files = shader_job_get_related_files(
-        input_spirv_shader_job_json_file_path, language_suffix=SUFFIX_SPIRV
+    shader_files = shader_job_util.get_related_files(
+        input_spirv_shader_job_json_file_path,
+        language_suffix=shader_job_util.SUFFIX_SPIRV,
     )
 
-    copy_file(
+    util.copy_file(
         input_spirv_shader_job_json_file_path, output_spirv_shader_job_json_file_path
     )
 
@@ -139,12 +126,12 @@ def run_spirv_opt_on_spirv_shader_job(
 def recipe_spirv_shader_job_to_spirv_shader_job_opt(
     recipe: RecipeSpirvShaderJobToSpirvShaderJobOpt, output_artifact_path: str
 ) -> None:
-    artifact_execute_recipe_if_needed(recipe.spirv_shader_job_artifact)
+    artifacts.artifact_execute_recipe_if_needed(recipe.spirv_shader_job_artifact)
     if recipe.spirv_opt_artifact:
-        artifact_execute_recipe_if_needed(recipe.spirv_opt_artifact)
+        artifacts.artifact_execute_recipe_if_needed(recipe.spirv_opt_artifact)
 
     # Wrap input artifact for convenience.
-    input_spirv_artifact = Artifact(recipe.spirv_shader_job_artifact)
+    input_spirv_artifact = artifacts.Artifact(recipe.spirv_shader_job_artifact)
 
     output_metadata = ArtifactMetadata()
     output_metadata.CopyFrom(input_spirv_artifact.metadata)
@@ -158,23 +145,23 @@ def recipe_spirv_shader_job_to_spirv_shader_job_opt(
         output_metadata.derived_from.append(recipe.spirv_opt_artifact)
 
     # Input shader job json file comes from the input artifact metadata.
-    input_shader_job_json = artifact_get_inner_file_path(
+    input_shader_job_json = artifacts.artifact_get_inner_file_path(
         input_spirv_artifact.metadata.data.spirv_shader_job.spirv_job.shader_job_file,
         input_spirv_artifact.path,
     )
 
     # Output shader job json file is the same, but in the output artifact path.
-    output_shader_job_json = artifact_get_inner_file_path(
+    output_shader_job_json = artifacts.artifact_get_inner_file_path(
         input_spirv_artifact.metadata.data.spirv_shader_job.spirv_job.shader_job_file,
         output_artifact_path,
     )
 
     if recipe.spirv_opt_artifact:
-        spirv_opt_file_path = artifact_find_binary(
+        spirv_opt_file_path = artifacts.artifact_find_binary(
             recipe.spirv_opt_artifact, SPIRV_OPT_NAME
         )
     else:
-        spirv_opt_file_path = tool_on_path(SPIRV_OPT_NAME)
+        spirv_opt_file_path = util.tool_on_path(SPIRV_OPT_NAME)
 
     run_spirv_opt_on_spirv_shader_job(
         input_shader_job_json,
@@ -183,4 +170,4 @@ def recipe_spirv_shader_job_to_spirv_shader_job_opt(
         spirv_opt_file_path,
     )
 
-    artifact_write_metadata(output_metadata, output_artifact_path)
+    artifacts.artifact_write_metadata(output_metadata, output_artifact_path)

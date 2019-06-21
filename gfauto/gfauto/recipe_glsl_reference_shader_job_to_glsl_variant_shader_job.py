@@ -17,16 +17,9 @@
 import pathlib
 from typing import List, Optional
 
-from .artifact_pb2 import ArtifactMetadata, ArtifactMetadataGlslShaderJob
-from .artifacts import (
-    artifact_execute_recipe_if_needed,
-    artifact_get_inner_file_path,
-    artifact_read_metadata,
-    artifact_write_metadata,
-)
-from .recipe_pb2 import RecipeGlslReferenceShaderJobToGlslVariantShaderJob
-from .subprocess_util import run
-from .util import check_field_truthy
+from gfauto import artifacts, util, subprocess_util
+from gfauto.artifact_pb2 import ArtifactMetadata, ArtifactMetadataGlslShaderJob
+from gfauto.recipe_pb2 import RecipeGlslReferenceShaderJobToGlslVariantShaderJob
 
 
 def run_generate(
@@ -55,7 +48,7 @@ def run_generate(
     if other_args:
         cmd.extend(other_args)
 
-    run(cmd)
+    subprocess_util.run(cmd)
 
     return output_shader_json
 
@@ -65,24 +58,28 @@ def recipe_glsl_reference_shader_job_to_glsl_variant_shader_job(
     output_artifact_path: str,
 ) -> None:
 
-    artifact_execute_recipe_if_needed(recipe.glsl_reference_shader_job_artifact)
+    artifacts.artifact_execute_recipe_if_needed(
+        recipe.glsl_reference_shader_job_artifact
+    )
     if recipe.graphicsfuzz_artifact:
-        artifact_execute_recipe_if_needed(recipe.graphicsfuzz_artifact)
-    artifact_execute_recipe_if_needed(recipe.glsl_donors_artifact)
+        artifacts.artifact_execute_recipe_if_needed(recipe.graphicsfuzz_artifact)
+    artifacts.artifact_execute_recipe_if_needed(recipe.glsl_donors_artifact)
 
     # Check fields.
-    check_field_truthy(recipe.glsl_donors_artifact, "glsl_donors_artifact")
-    check_field_truthy(recipe.output_shader_job_file, "output_shader_job_file")
+    util.check_field_truthy(recipe.glsl_donors_artifact, "glsl_donors_artifact")
+    util.check_field_truthy(recipe.output_shader_job_file, "output_shader_job_file")
 
     # Variables from recipe.
     reference_glsl_artifact_path = recipe.glsl_reference_shader_job_artifact
-    reference_glsl_shader_job = artifact_read_metadata(
+    reference_glsl_shader_job = artifacts.artifact_read_metadata(
         reference_glsl_artifact_path
     ).data.glsl_shader_job
-    reference_json_path = artifact_get_inner_file_path(
+    reference_json_path = artifacts.artifact_get_inner_file_path(
         reference_glsl_shader_job.shader_job_file, reference_glsl_artifact_path
     )
-    donors_path = artifact_get_inner_file_path("", recipe.glsl_donors_artifact)
+    donors_path = artifacts.artifact_get_inner_file_path(
+        "", recipe.glsl_donors_artifact
+    )
     other_args = list(recipe.other_generate_arguments)
 
     # Create output metadata.
@@ -96,7 +93,7 @@ def recipe_glsl_reference_shader_job_to_glsl_variant_shader_job(
     )
 
     # Output variables.
-    output_json_path = artifact_get_inner_file_path(
+    output_json_path = artifacts.artifact_get_inner_file_path(
         output_metadata.data.glsl_shader_job.shader_job_file, output_artifact_path
     )
 
@@ -106,4 +103,4 @@ def recipe_glsl_reference_shader_job_to_glsl_variant_shader_job(
     )
 
     # Write final artifact metadata.
-    artifact_write_metadata(output_metadata, output_artifact_path)
+    artifacts.artifact_write_metadata(output_metadata, output_artifact_path)

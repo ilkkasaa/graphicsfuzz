@@ -19,27 +19,11 @@ import pathlib
 from copy import copy
 from typing import List, Optional
 
-from . import util
-from .artifact_pb2 import ArtifactMetadata
-from .artifacts import (
-    Artifact,
-    artifact_execute_recipe_if_needed,
-    artifact_get_inner_file_path,
-    artifact_read_metadata,
-    artifact_write_metadata,
-    get_text_artifact_contents,
-)
-from .gflogging import log
-from .recipe_pb2 import RecipeSpirvAsmShaderJobToAmberScript
-from .shader_job_util import (
-    EXT_COMP,
-    EXT_FRAG,
-    EXT_VERT,
-    SUFFIX_ASM_SPIRV,
-    shader_job_get_related_files,
-    shader_job_get_shader_contents,
-)
-from .util import check
+from gfauto import shader_job_util, util, artifacts
+from gfauto.artifact_pb2 import ArtifactMetadata
+from gfauto.gflogging import log
+from gfauto.recipe_pb2 import RecipeSpirvAsmShaderJobToAmberScript
+from gfauto.util import check
 
 AMBER_FENCE_TIMEOUT_MS = 60000
 
@@ -317,8 +301,10 @@ def amberscriptify_image(  # pylint: disable=too-many-branches,too-many-locals
 
 
 def is_compute_job(input_asm_spirv_job_json_path: pathlib.Path) -> bool:
-    comp_files = shader_job_get_related_files(
-        input_asm_spirv_job_json_path, [EXT_COMP], SUFFIX_ASM_SPIRV
+    comp_files = shader_job_util.get_related_files(
+        input_asm_spirv_job_json_path,
+        [shader_job_util.EXT_COMP],
+        shader_job_util.SUFFIX_ASM_SPIRV,
     )
     check(
         len(comp_files) <= 1,
@@ -402,11 +388,14 @@ def run_spirv_asm_shader_job_to_amber_script(  # pylint: disable=too-many-locals
     if is_compute_job(input_asm_spirv_job_json_path):  # pylint:disable=no-else-raise
         glsl_comp_contents = None
         if input_glsl_source_json_path:
-            glsl_comp_contents = shader_job_get_shader_contents(
-                input_glsl_source_json_path, EXT_COMP
+            glsl_comp_contents = shader_job_util.get_shader_contents(
+                input_glsl_source_json_path, shader_job_util.EXT_COMP
             )
-        comp_asm_contents = shader_job_get_shader_contents(
-            input_asm_spirv_job_json_path, EXT_COMP, SUFFIX_ASM_SPIRV, must_exist=True
+        comp_asm_contents = shader_job_util.get_shader_contents(
+            input_asm_spirv_job_json_path,
+            shader_job_util.EXT_COMP,
+            shader_job_util.SUFFIX_ASM_SPIRV,
+            must_exist=True,
         )
 
         assert comp_asm_contents  # noqa
@@ -420,20 +409,25 @@ def run_spirv_asm_shader_job_to_amber_script(  # pylint: disable=too-many-locals
         glsl_vert_contents = None
         glsl_frag_contents = None
         if input_glsl_source_json_path:
-            glsl_vert_contents = shader_job_get_shader_contents(
-                input_glsl_source_json_path, EXT_VERT
+            glsl_vert_contents = shader_job_util.get_shader_contents(
+                input_glsl_source_json_path, shader_job_util.EXT_VERT
             )
-            glsl_frag_contents = shader_job_get_shader_contents(
-                input_glsl_source_json_path, EXT_FRAG
+            glsl_frag_contents = shader_job_util.get_shader_contents(
+                input_glsl_source_json_path, shader_job_util.EXT_FRAG
             )
 
         # Get spirv asm contents
-        vert_contents = shader_job_get_shader_contents(
-            input_asm_spirv_job_json_path, EXT_VERT, SUFFIX_ASM_SPIRV
+        vert_contents = shader_job_util.get_shader_contents(
+            input_asm_spirv_job_json_path,
+            shader_job_util.EXT_VERT,
+            shader_job_util.SUFFIX_ASM_SPIRV,
         )
 
-        frag_contents = shader_job_get_shader_contents(
-            input_asm_spirv_job_json_path, EXT_FRAG, SUFFIX_ASM_SPIRV, must_exist=True
+        frag_contents = shader_job_util.get_shader_contents(
+            input_asm_spirv_job_json_path,
+            shader_job_util.EXT_FRAG,
+            shader_job_util.SUFFIX_ASM_SPIRV,
+            must_exist=True,
         )
 
         # Guaranteed.
@@ -456,12 +450,12 @@ def run_spirv_asm_shader_job_to_amber_script(  # pylint: disable=too-many-locals
 def recipe_spirv_asm_shader_job_to_amber_script(
     recipe: RecipeSpirvAsmShaderJobToAmberScript, output_artifact_path: str
 ) -> None:
-    artifact_execute_recipe_if_needed(recipe.spirv_asm_shader_job_artifact)
+    artifacts.artifact_execute_recipe_if_needed(recipe.spirv_asm_shader_job_artifact)
 
     # Wrap input artifact for convenience.
-    input_artifact = Artifact(recipe.spirv_asm_shader_job_artifact)
+    input_artifact = artifacts.Artifact(recipe.spirv_asm_shader_job_artifact)
 
-    input_json_path = artifact_get_inner_file_path(
+    input_json_path = artifacts.artifact_get_inner_file_path(
         input_artifact.metadata.data.spirv_asm_shader_job.spirv_job.shader_job_file,
         input_artifact.path,
     )
@@ -471,15 +465,15 @@ def recipe_spirv_asm_shader_job_to_amber_script(
         input_artifact.metadata.data.spirv_asm_shader_job.spirv_job.glsl_shader_job_source_artifact
     )
     if input_glsl_artifact_path and recipe.add_glsl_source_as_comment:
-        input_glsl_artifact = artifact_read_metadata(input_glsl_artifact_path)
-        input_glsl_json_path = artifact_get_inner_file_path(
+        input_glsl_artifact = artifacts.artifact_read_metadata(input_glsl_artifact_path)
+        input_glsl_json_path = artifacts.artifact_get_inner_file_path(
             input_glsl_artifact.data.glsl_shader_job.shader_job_file,
             input_glsl_artifact_path,
         )
 
     input_copyright_header_text = ""
     if recipe.copyright_header_text_artifact:
-        input_copyright_header_text = get_text_artifact_contents(
+        input_copyright_header_text = artifacts.get_text_artifact_contents(
             recipe.copyright_header_text_artifact
         )
 
@@ -500,7 +494,7 @@ def recipe_spirv_asm_shader_job_to_amber_script(
             util.remove_end(input_json_path.name, ".json") + ".amber_script"
         )
 
-    output_amber_script_file_path = artifact_get_inner_file_path(
+    output_amber_script_file_path = artifacts.artifact_get_inner_file_path(
         output_amber_script_file_name, output_artifact_path
     )
 
@@ -539,4 +533,4 @@ def recipe_spirv_asm_shader_job_to_amber_script(
         add_red_pixel_probe,
     )
 
-    artifact_write_metadata(output_metadata, output_artifact_path)
+    artifacts.artifact_write_metadata(output_metadata, output_artifact_path)

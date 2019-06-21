@@ -18,18 +18,10 @@ import pathlib
 import re
 from typing import List, Optional
 
-from gfauto.shader_job_util import shader_job_get_related_files
 
-from . import util
-from .artifact_pb2 import ArtifactMetadata
-from .artifacts import (
-    Artifact,
-    artifact_execute_recipe_if_needed,
-    artifact_get_inner_file_path,
-    artifact_write_metadata,
-)
-from .recipe_pb2 import RecipeGlslShaderJobAddRedPixels
-from .shader_job_util import shader_job_copy
+from gfauto import util, shader_job_util, artifacts
+from gfauto.artifact_pb2 import ArtifactMetadata
+from gfauto.recipe_pb2 import RecipeGlslShaderJobAddRedPixels
 
 #                         group 1       group 2
 #                           v            v
@@ -74,9 +66,11 @@ def run_glsl_shader_job_add_red_pixels(
             "Not yet implemented used of GraphicsFuzz to add red pixels to a shader"
         )
 
-    shader_job_copy(input_shader_job_json_file_path, output_shader_job_json_file_path)
+    shader_job_util.copy(
+        input_shader_job_json_file_path, output_shader_job_json_file_path
+    )
 
-    output_files = shader_job_get_related_files(output_shader_job_json_file_path)
+    output_files = shader_job_util.get_related_files(output_shader_job_json_file_path)
 
     frag_files = [f for f in output_files if f.name.endswith(".frag")]
 
@@ -95,12 +89,12 @@ def run_glsl_shader_job_add_red_pixels(
 def recipe_glsl_shader_job_add_red_pixels(
     recipe: RecipeGlslShaderJobAddRedPixels, output_artifact_path: str
 ) -> None:
-    artifact_execute_recipe_if_needed(recipe.glsl_shader_job_artifact)
+    artifacts.artifact_execute_recipe_if_needed(recipe.glsl_shader_job_artifact)
     if recipe.graphics_fuzz_artifact:
-        artifact_execute_recipe_if_needed(recipe.graphics_fuzz_artifact)
+        artifacts.artifact_execute_recipe_if_needed(recipe.graphics_fuzz_artifact)
 
     # Wrap input artifact for convenience.
-    input_glsl_artifact = Artifact(recipe.glsl_shader_job_artifact)
+    input_glsl_artifact = artifacts.Artifact(recipe.glsl_shader_job_artifact)
 
     output_metadata = ArtifactMetadata()
     output_metadata.CopyFrom(input_glsl_artifact.metadata)
@@ -109,15 +103,15 @@ def recipe_glsl_shader_job_add_red_pixels(
     if recipe.graphics_fuzz_artifact:
         output_metadata.derived_from.append(recipe.graphics_fuzz_artifact)
 
-    input_json_path = artifact_get_inner_file_path(
+    input_json_path = artifacts.artifact_get_inner_file_path(
         input_glsl_artifact.metadata.data.glsl_shader_job.shader_job_file,
         input_glsl_artifact.path,
     )
 
-    output_json_path = artifact_get_inner_file_path(
+    output_json_path = artifacts.artifact_get_inner_file_path(
         output_metadata.data.glsl_shader_job.shader_job_file, output_artifact_path
     )
 
     run_glsl_shader_job_add_red_pixels(input_json_path, output_json_path)
 
-    artifact_write_metadata(output_metadata, output_artifact_path)
+    artifacts.artifact_write_metadata(output_metadata, output_artifact_path)

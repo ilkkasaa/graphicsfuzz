@@ -22,13 +22,11 @@ from pathlib import Path
 from subprocess import CompletedProcess
 from typing import List, Optional
 
-from gfauto import gflogging, util, fuzz
+from gfauto import gflogging, util, fuzz, result_util, subprocess_util
 from gfauto.device_pb2 import Device, DeviceAndroid
 from gfauto.gflogging import log
 from gfauto.util import check, file_open_text, file_write_text
 
-from .subprocess_util import run
-from .util import tool_on_path
 
 ANDROID_DEVICE_DIR = "/data/local/tmp"
 ANDROID_AMBER_NDK = "amber_ndk"
@@ -47,7 +45,7 @@ def adb_path() -> Path:
         adb = shutil.which("adb", path=str(platform_tools_path))
         if adb:
             return Path(adb)
-    return tool_on_path("adb")
+    return util.tool_on_path("adb")
 
 
 def adb_helper(
@@ -64,7 +62,7 @@ def adb_helper(
 
     adb_cmd.extend(adb_args)
 
-    return run(
+    return subprocess_util.run(
         adb_cmd,
         check_exit_code=check_exit_code,
         timeout=fuzz.AMBER_RUN_TIME_LIMIT,
@@ -266,6 +264,6 @@ def run_amber_on_device_helper(
 
     log("\nSTATUS " + status + "\n")
 
-    file_write_text(fuzz.result_get_status_path(output_dir), status)
+    file_write_text(result_util.get_status_path(output_dir), status)
 
     return output_dir

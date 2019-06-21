@@ -46,6 +46,6 @@ setup(
     entry_points={"console_scripts": [
         "gfauto_fuzz = gfauto.fuzz:main",
         "gfauto_interestingness_test = gfauto.gfauto_interestingness_test:main",
-        "gfauto_write_device_file = gfauto.devices:write_device_file",
+        "gfauto_write_device_file = gfauto.devices_util:write_device_file",
     ]},
 )

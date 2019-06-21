@@ -17,7 +17,7 @@
 import pathlib
 from typing import List, Optional, Union, Tuple
 
-from . import util
+from gfauto import util
 
 EXT_FRAG = ".frag"
 EXT_VERT = ".vert"
@@ -35,7 +35,7 @@ EXTENSIONS_SPIRV_SHADER_JOB_RELATED_FILES = [".frag.spv", ".vert.spv", ".comp.sp
 EXTENSIONS_ASM_SPIRV_SHADER_JOB_RELATED_FILES = [".frag.asm", ".vert.asm", ".comp.asm"]
 
 
-def shader_job_get_shader_contents(
+def get_shader_contents(
     shader_job_file_path: pathlib.Path,
     extension: str,
     language_suffix: str = SUFFIX_GLSL,
@@ -53,7 +53,7 @@ def shader_job_get_shader_contents(
 # Get related files.
 
 
-def shader_job_get_related_files(
+def get_related_files(
     shader_job_file_path: pathlib.Path,
     extensions: Union[Tuple[str, ...], List[str]] = EXT_ALL,
     language_suffix: str = SUFFIX_GLSL,
@@ -75,7 +75,7 @@ def shader_job_get_related_files(
 # Copy files.
 
 
-def shader_job_copy(
+def copy(
     shader_job_file_path: pathlib.Path,
     output_shader_job_file_path: pathlib.Path,
     extensions: Union[Tuple[str, ...], List[str]] = EXT_ALL,
@@ -85,9 +85,7 @@ def shader_job_copy(
     util.copy_file(shader_job_file_path, output_shader_job_file_path)
 
     # = [source/variant.frag, source/variant.vert, ...]
-    other_paths = shader_job_get_related_files(
-        shader_job_file_path, extensions, language_suffix
-    )
+    other_paths = get_related_files(shader_job_file_path, extensions, language_suffix)
 
     # = [variant.frag, variant.vert, ...]
     dest_other_files = [f for f in other_paths]
