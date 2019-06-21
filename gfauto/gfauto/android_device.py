@@ -22,7 +22,8 @@ from pathlib import Path
 from subprocess import CompletedProcess
 from typing import List, Optional
 
-from gfauto import gflogging
+from gfauto import gflogging, util, fuzz
+from gfauto.device_pb2 import Device, DeviceAndroid
 from gfauto.gflogging import log
 from gfauto.util import check, file_open_text, file_write_text
 
@@ -36,10 +37,6 @@ ANDROID_DEVICE_AMBER = ANDROID_DEVICE_DIR + "/" + ANDROID_AMBER_NDK
 ANDROID_DEVICE_GRAPHICSFUZZ_DIR = ANDROID_DEVICE_DIR + "/graphicsfuzz"
 ANDROID_DEVICE_RESULT_DIR = ANDROID_DEVICE_GRAPHICSFUZZ_DIR + "/result"
 ANDROID_DEVICE_AMBER_SCRIPT_FILE = ANDROID_DEVICE_GRAPHICSFUZZ_DIR + "/test.amber"
-IMAGE_FILE = "image.png"
-BUFFER_FILE = "buffer.bin"
-
-TIMEOUT_RUN = 30
 
 BUSY_WAIT_SLEEP_SLOW = 1.0
 
@@ -68,7 +65,10 @@ def adb_helper(
     adb_cmd.extend(adb_args)
 
     return run(
-        adb_cmd, check_exit_code=check_exit_code, timeout=TIMEOUT_RUN, verbose=verbose
+        adb_cmd,
+        check_exit_code=check_exit_code,
+        timeout=fuzz.AMBER_RUN_TIME_LIMIT,
+        verbose=verbose,
     )
 
 
@@ -108,6 +108,45 @@ def is_screen_off_or_locked(serial: Optional[str] = None) -> bool:
         return True
 
     return False
+
+
+def get_all_android_devices() -> List[Device]:
+    result = []  # type: List[Device]
+
+    log("Getting the list of connected Android devices via adb")
+
+    adb_devices = adb_check(None, ["devices", "-l"], verbose=True)
+    stdout = adb_devices.stdout  # type: str
+    lines = stdout.splitlines()
+    # Remove empty lines.
+    lines = [l for l in lines if l]
+    check(
+        lines[0].startswith("List of devices"),
+        AssertionError("Could find list of devices from 'adb devices'"),
+    )
+    for i in range(1, len(lines)):
+        fields = lines[i].split()
+        device_serial = fields[0]
+        device_state = fields[1]
+        if device_state != "device":
+            log(
+                f'Skipping adb device with serial {device_serial} as its state "{device_state}" is not "device".'
+            )
+        # Set a simple model name, but then try to find the actual model name.
+        device_model = "android_device"
+        for j in range(2, len(fields)):
+            if fields[j].startswith("model:"):
+                device_model = util.remove_start(fields[j], "model:")
+                break
+
+        device = Device(
+            name=f"{device_model}_{device_serial}",
+            android=DeviceAndroid(serial=device_serial, model=device_model),
+        )
+        log(f"Found Android device:\n{str(device)}")
+        result.append(device)
+
+    return result
 
 
 def prepare_device(wait_for_screen: bool, serial: Optional[str] = None) -> None:
@@ -182,15 +221,15 @@ def run_amber_on_device_helper(
         serial, ["push", str(amber_script_file), ANDROID_DEVICE_AMBER_SCRIPT_FILE]
     )
 
-    amber_flags = "--log-graphics-calls-time --log-execute-calls"
+    amber_flags = "--log-graphics-calls-time"
     if skip_render:
         # -ps tells amber to stop after pipeline creation
         amber_flags += " -ps"
     else:
         if dump_image:
-            amber_flags += f" -i {IMAGE_FILE}"
+            amber_flags += f" -i {fuzz.IMAGE_FILE_NAME}"
         if dump_buffer:
-            amber_flags += f" -b {BUFFER_FILE} -B 0"
+            amber_flags += f" -b {fuzz.BUFFER_FILE_NAME} -B 0"
 
     cmd = [
         "shell",
@@ -202,21 +241,20 @@ def run_amber_on_device_helper(
 
     status = "UNEXPECTED_ERROR"
 
-    result: Optional[CompletedProcess]
+    result: Optional[CompletedProcess] = None
 
     try:
         result = adb_can_fail(serial, cmd, verbose=True)
     except subprocess.TimeoutExpired:
-        result = None
         status = "TIMEOUT"
 
     if result:
         if result.returncode != 0:
             status = "CRASH"
-        elif skip_render:
-            status = "SUCCESS"
         else:
             status = "SUCCESS"
+
+        if not skip_render:
             adb_check(
                 serial,
                 # The /. syntax means the contents of the results directory will be copied into output_dir.
@@ -228,6 +266,6 @@ def run_amber_on_device_helper(
 
     log("\nSTATUS " + status + "\n")
 
-    file_write_text(output_dir / "STATUS", status)
+    file_write_text(fuzz.result_get_status_path(output_dir), status)
 
     return output_dir

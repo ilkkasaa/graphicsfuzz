@@ -26,6 +26,12 @@ from gfauto.util import check, check_file_exists, file_read_text, test_metadata_
 
 # TODO: Maybe add helper method and throw exceptions instead of calling sys.exit.
 
+# TODO: Could we make the interestingness test the only way of running a shader job (or indeed, any test)?
+#  We would want to pass the output directory (default is one will be created, as is currently the case), the test_json,
+#  no crash signature nor device (we could get that from the test_json), although perhaps these could be overridden?
+#  A device (or test?) could then even specify a custom interestingness command, although the default one would probably
+#  be the same for all devices and it would look at the device info in the test_json?
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(

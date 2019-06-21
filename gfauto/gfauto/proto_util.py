@@ -23,7 +23,7 @@ def json_to_message(json: str, message: Message) -> None:
 
 
 def message_to_json(
-    message: Message, including_default_value_fields: bool = False
+    message: Message, including_default_value_fields: bool = True
 ) -> str:
     return json_format.MessageToJson(
         message,

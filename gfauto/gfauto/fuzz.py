@@ -22,6 +22,9 @@ from pathlib import Path
 from subprocess import SubprocessError
 from typing import Iterator, Match, Optional
 
+import gfauto.proto_util
+from gfauto import host_device_util
+from gfauto.device_pb2 import DeviceList, Device
 from gfauto.subprocess_util import run
 from gfauto.util import test_dir_get_metadata_path, test_get_source_dir, copy_file
 from .android_device import run_amber_on_device
@@ -58,6 +61,11 @@ VARIANT_DIR = "variant"
 SHADER_JOB = "shader.json"
 SHADER_JOB_RESULT = "shader.info.json"
 
+IMAGE_FILE_NAME = "image.png"
+BUFFER_FILE_NAME = "buffer.bin"
+
+AMBER_RUN_TIME_LIMIT = 30
+
 
 def make_subtest(
     base_source_dir: Path, subtest_dir: Path, spirv_opt_args: Optional[List[str]]
@@ -85,6 +93,9 @@ def main() -> None:
 
     # TODO: Remove.
     random.seed(0)
+
+    device_list = devices.read_device_list()
+    active_devices = devices.get_active_devices(device_list)
 
     reports_dir = Path() / "reports"
     temp_dir = Path() / "temp"
@@ -151,15 +162,17 @@ def main() -> None:
         ]
 
         for test_dir in test_dirs:
-            if handle_test(test_dir, reports_dir):
+            if handle_test(test_dir, reports_dir, active_devices):
                 # If we generated a report, don't bother trying other optimization combinations.
                 break
 
 
-def handle_test(test_dir: Path, reports_dir: Path) -> Optional[Path]:
+def handle_test(
+    test_dir: Path, reports_dir: Path, active_devices: List[Device]
+) -> List[Path]:
     test = test_dir_metadata_read(test_dir)
     if test.HasField("glsl"):
-        return handle_glsl_test(test.glsl, test_dir, reports_dir)
+        return handle_glsl_test(test.glsl, test_dir, reports_dir, active_devices)
     else:
         raise AssertionError("Unrecognized test type")
 
@@ -334,6 +347,17 @@ def move_test_to_crash_report_using_log_signature(
     return output_test_dir
 
 
+# What we need:
+#  - A test should create a clone of itself, specialized for one specific device (e.g. device serial and crash string).
+#    - It may have results for multiple devices (for extra information), but the result for the target device is the
+#      main one. So, we can run a test on multiple devices and get results. At the end, we can check the results and
+#      then clone it for each device if a bug was found (updating the device and crash signature), and including all the
+#      results.
+#    - When cloning each test to become a bug report, we will need to add the device name into the directory name to
+#      ensure it is unique, although it should be unlikely to clash except for common crash signatures like
+#      "compile_error".
+#    - We can reduce such a cloned test without any extra information.
+
 # GLSL temp dir:
 # - 123/ (not a proper test_dir, as it only has "base_source", not "source".
 #   - base_source/
@@ -349,7 +373,7 @@ def move_test_to_crash_report_using_log_signature(
 #           - image.png
 #           - STATUS
 #           - log.txt
-#           - (all other result files and files for running the shader on the device)
+#           - (all other result files and intermediate files for running the shader on the device)
 #         - reductions/
 #           - reduction_1/ reduction_blah/ etc. (reduction name; also a test_dir)
 #             - source/ (same as other source dirs, but with the final reduced shader source)
@@ -359,6 +383,9 @@ def move_test_to_crash_report_using_log_signature(
 #                 shader_reduction_002_failed.json, etc., shader_reduced_final.json
 #                 - shader/ shader_reduction_001/
 #                 (these are the result directories for each step, containing STATUS, etc.)
+#             - results/ (a final run of the reduced shader on the target device, and maybe other devices)
+#               - pixel/ other_phone/ laptop/ etc.
+#                 - reference/ variant/
 #
 
 
@@ -405,7 +432,6 @@ def run_glsl_reduce(
     input_shader_job: Path,
     test_metadata_path: Path,
     output_dir: Path,
-    crash_signature: str,
     preserve_semantics: bool = False,
 ) -> Path:
 
@@ -416,8 +442,6 @@ def run_glsl_reduce(
         str(output_dir),
         "--",
         "gfauto_interestingness_test",
-        "--crash_signature",
-        crash_signature,
         str(test_metadata_path),
     ]
 
@@ -436,11 +460,20 @@ def get_final_reduced_shader_job_path(reduction_work_shader_dir: Path) -> Path:
 def run_reduction(
     test_dir_reduction_output: Path,
     test_dir_to_reduce: Path,
-    device_name: str,
     preserve_semantics: bool,
     reduction_name: str = "reduction1",
+    device_name: Optional[str] = None,
 ) -> Path:
     test = test_dir_metadata_read(test_dir_to_reduce)
+
+    if not device_name and not test.device:
+        raise AssertionError(
+            f"Cannot reduce {str(test_dir_to_reduce)}; device must be specified in {str(test_dir_get_metadata_path(test_dir_to_reduce))}"
+        )
+
+    if not device_name:
+        device_name = test.device.name
+
     if not test.crash_signature:
         raise AssertionError(
             f"Cannot reduce {str(test_dir_to_reduce)} because there is no crash string specified; "
@@ -457,7 +490,6 @@ def run_reduction(
         output_dir=test_get_reduction_work_directory(
             reduced_test_dir_1, is_variant=True
         ),
-        crash_signature=test.crash_signature,
         preserve_semantics=preserve_semantics,
     )
 
@@ -482,8 +514,12 @@ def run_reduction(
     return reduced_test_dir_1
 
 
+def result_get_status_path(result_output_dir: Path) -> Path:
+    return result_output_dir / "STATUS"
+
+
 def result_get_status(result_output_dir: Path) -> str:
-    status_file = result_output_dir / "STATUS"
+    status_file = result_get_status_path(result_output_dir)
     return file_read_text_or_else(status_file, "UNEXPECTED_ERROR")
 
 
@@ -492,77 +528,118 @@ def result_get_log_path(result_output_dir: Path) -> Path:
 
 
 def handle_glsl_test(
-    test: TestGlsl, test_dir: Path, reports_dir: Path
-) -> Optional[Path]:
-    # Maybe try just on spirv-opt first.
+    test: TestGlsl, test_dir: Path, reports_dir: Path, active_devices: List[Device]
+) -> List[Path]:
 
-    # Run it on several devices, etc.
+    report_paths: List[Path] = []
 
-    # For now, just run the variant on the one device and see if it crashes.
+    # Run on all devices.
+    for device in active_devices:
 
-    device_name = "android_device"
-
-    result_output_dir = test_get_results_directory(
-        test_dir, device_name, is_variant=True
-    )
-    run_shader_job(
-        test_get_shader_job_path(test_dir, is_variant=True), result_output_dir, test
-    )
-
-    status = result_get_status(result_output_dir)
-
-    report_subdirectory_name = ""
-
-    if status == "CRASH":
-        report_subdirectory_name = "crashes"
-    elif status == "HOST_CRASH":
-        report_subdirectory_name = "host_crashes"
-
-    if report_subdirectory_name:
-        log_path = result_get_log_path(result_output_dir)
-        report_dir = move_test_to_crash_report_using_log_signature(
-            log_path, test_dir, reports_dir, report_subdirectory_name
+        result_output_dir = run_shader_job(
+            test_get_shader_job_path(test_dir, is_variant=True),
+            test_get_results_directory(test_dir, device.name, is_variant=True),
+            test,
+            device,
         )
+
+        status = result_get_status(result_output_dir)
+
+        if device.HasField("preprocess") and status == "HOST_CRASH":
+            # No need to run on real devices if the "preprocess device" fails.
+            break
+
+    # For each device that saw a crash, copy the test to reports_dir, adding the signature and device info to the test
+    # metadata.
+    for device in active_devices:
+
+        result_output_dir = test_get_results_directory(
+            test_dir, device.name, is_variant=True
+        )
+
+        status = result_get_status(result_output_dir)
+
+        report_subdirectory_name = ""
+
+        if status == "CRASH":
+            report_subdirectory_name = "crashes"
+        elif status == "HOST_CRASH":
+            report_subdirectory_name = "host_crashes"
+
+        if report_subdirectory_name:
+            # TODO: append to report_paths.
+            log_path = result_get_log_path(result_output_dir)
+
+            log_contents = file_read_text(log_path)
+            signature = get_signature_from_log_contents(log_contents)
+
+            # We include the device name in the directory name because it is possible that this test crashes on two
+            # different devices but gives the same crash signature in both cases (e.g. for generic signatures
+            # like "compile_error"). This would lead to two test copies having the same path.
+            test_dir_in_reports = copy_dir(
+                result_output_dir,
+                reports_dir
+                / report_subdirectory_name
+                / signature
+                / f"{test_dir.name}_{device.name}",
+            )
+
+            test_metadata = test_dir_metadata_read(test_dir_in_reports)
+            test_metadata.crash_signature = signature
+            test_metadata.device.CopyFrom(device)
+            test_dir_metadata_write(test_metadata, test_dir_in_reports)
+
+            report_paths.append(test_dir_in_reports)
+
+    # For each report, run a reduction on the target device with the device-specific crash signature.
+    for test_dir_in_reports in report_paths:
 
         part_1_reduced_test = run_reduction(
-            test_dir_reduction_output=report_dir,
-            test_dir_to_reduce=report_dir,
-            device_name=device_name,
+            test_dir_reduction_output=test_dir_in_reports,
+            test_dir_to_reduce=test_dir_in_reports,
             preserve_semantics=True,
-            reduction_name="part_1",
+            reduction_name="part_1_preserve_semantics",
         )
 
-        part_2_name = "part_2"
+        part_2_name = "part_2_change_semantics"
         run_reduction(
-            test_dir_reduction_output=report_dir,
+            test_dir_reduction_output=test_dir_in_reports,
             test_dir_to_reduce=part_1_reduced_test,
-            device_name=device_name,
             preserve_semantics=False,
             reduction_name=part_2_name,
         )
 
+        device_name = test_dir_metadata_read(test_dir_in_reports).device.name
+
         # Create a symlink to the "best" reduction.
-        best_reduced_test = test_get_reduced_test_dir(report_dir, device_name, "best")
+        best_reduced_test = test_get_reduced_test_dir(
+            test_dir_in_reports, device_name, "best"
+        )
         best_reduced_test.symlink_to(part_2_name, target_is_directory=True)
 
-        return report_dir
-
-    # No report generated.
-    return None
+    return report_paths
 
 
-def run_shader_job(shader_job: Path, output_dir: Path, test_glsl: TestGlsl) -> Path:
+def result_get_amber_log_path(result_dir: Path) -> Path:
+    return result_dir / "amber_log.txt"
+
+
+def run_shader_job(
+    shader_job: Path, output_dir: Path, test_glsl: TestGlsl, device: Device
+) -> Path:
 
     with file_open_text(output_dir / "log.txt", "w") as log_file:
         try:
             gflogging.push_stream_for_logging(log_file)
 
+            # TODO: Find the right SwiftShader path here if |device| is a SwiftShader device.
+
+            # TODO: If Amber is going to be used, check if Amber can use Vulkan debug layers now, and if not, pass that
+            #  info down via a bool.
+
             binary_paths = BinaryPaths()
 
-            # TODO: Catch exceptions for glslang, spirv-opt, etc.
-
             try:
-
                 amber_script_file = glsl_shader_job_to_amber_script(
                     shader_job,
                     output_dir / "test.amber",
@@ -578,9 +655,28 @@ def run_shader_job(shader_job: Path, output_dir: Path, test_glsl: TestGlsl) -> P
                 file_write_text(output_dir / "STATUS", "HOST_CRASH")
                 return output_dir
 
-            # Do something different here depending on the device.
-
             is_compute = bool(shader_job_get_related_files(shader_job, [EXT_COMP]))
+
+            # Consider device type.
+
+            if device.HasField("preprocess"):
+                # The "preprocess" device type just needs to get this far, so this is a success.
+                file_write_text(output_dir / "STATUS", "SUCCESS")
+                return output_dir
+
+            if device.HasField("host") or device.HasField("swift_shader"):
+
+                # TODO: Set if using SwiftShader.
+                icd = None  # type: Optional[Path]
+
+                # Run the shader on the host using Amber.
+                host_device_util.run_amber(
+                    amber_script_file,
+                    output_dir,
+                    dump_image=(not is_compute),
+                    dump_buffer=is_compute,
+                    icd=icd,
+                )
 
             run_amber_on_device(
                 amber_script_file,
@@ -589,7 +685,7 @@ def run_shader_job(shader_job: Path, output_dir: Path, test_glsl: TestGlsl) -> P
                 dump_buffer=is_compute,
             )
 
-            log_a_file(output_dir / "amber_log.txt")
+            log_a_file(result_get_amber_log_path(output_dir))
 
             return output_dir
 

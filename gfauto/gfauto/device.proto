@@ -16,19 +16,37 @@ syntax = "proto3";
 
 package gfauto;
 
-import "gfauto/device.proto";
 
-
-message Test {
-  oneof test {
-    TestGlsl glsl = 1;
-  }
-  string crash_signature = 2;
-  Device device = 3;
+message DeviceList {
+  repeated string active_device_names = 1;
+  repeated Device devices = 2;
 }
 
-message TestGlsl {
-  string glslang_version_hash = 1;
-  string spirv_opt_version_hash = 2;
-  repeated string spirv_opt_args = 3;
+message Device {
+  string name = 1;
+  oneof device {
+    DevicePreprocess preprocess = 2;
+    DeviceSwiftShader swift_shader = 3;
+    DeviceHost host = 4;
+    DeviceAndroid android = 5;
+  }
+}
+
+message DeviceSwiftShader {
+  string version_hash = 1;
+}
+
+// A virtual device that just executes all steps up until actual the graphics hardware or simulator is needed. This
+// helps to find bugs in, say, spirv-opt.
+message DevicePreprocess {
+
+}
+
+message DeviceHost {
+
+}
+
+message DeviceAndroid {
+  string serial = 1;
+  string model = 2;
 }

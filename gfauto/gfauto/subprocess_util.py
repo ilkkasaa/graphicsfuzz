@@ -13,9 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import os
 import subprocess
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict
 
 from .gflogging import log
 from .util import check
@@ -65,10 +65,20 @@ def run(
     check_exit_code: bool = True,
     timeout: Optional[float] = None,
     verbose: bool = False,
+    env: Optional[Dict[str, str]] = None,
 ) -> subprocess.CompletedProcess:
+    """
+    Runs |cmd|, blocks until it terminates, and returns a CompleteProcess object.
 
+    :param cmd:
+    :param check_exit_code:
+    :param timeout:
+    :param verbose:
+    :param env: Environment variables that will be *added* to the environment of the child process.
+    :return:
+    """
     check(
-        cmd[0] is not None and isinstance(cmd[0], str),
+        bool(cmd) and cmd[0] is not None and isinstance(cmd[0], str),
         AssertionError("run takes a list of str, not a str"),
     )
 
@@ -81,15 +91,20 @@ def run(
 
     # Note: changes here should be reflected in run_catchsegv()
 
+    env_child: Optional[Dict[str, str]] = None
+    if env:
+        env_child = os.environ.copy()
+        env_child.update(env)
+
     try:
         log("Exec" + (" (verbose):" if verbose else ":") + str(cmd))
-
         result = subprocess.run(
             cmd,
             check=check_exit_code,
             timeout=timeout,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            env=env_child,
         )
     except subprocess.TimeoutExpired as ex:
         convert_stdout_stderr(ex)

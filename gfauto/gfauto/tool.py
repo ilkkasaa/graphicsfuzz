@@ -51,11 +51,13 @@ class BinaryPaths:
         spirv_opt_binary: Optional[Path] = None,
         spirv_opt_hash: Optional[str] = None,
         spirv_dis_binary: Optional[Path] = None,
+        swift_shader_icd: Optional[Path] = None,
     ):
         self.glslang_binary = glslang_binary
         self.spirv_opt_binary = spirv_opt_binary
         self.spirv_opt_hash = spirv_opt_hash
         self.spirv_dis_binary = spirv_dis_binary
+        self.swift_shader_icd = swift_shader_icd
 
 
 def get_copyright_header_google(year: str) -> str:

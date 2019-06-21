@@ -124,6 +124,14 @@ def move_dir(
     return dest_dir_path
 
 
+def remove_start(string: str, start: str) -> str:
+    check(
+        string.startswith(start), AssertionError("|string| does not start with |start|")
+    )
+
+    return string[len(start) :]
+
+
 def remove_end(str_in: str, str_end: str) -> str:
     check(
         str_in.endswith(str_end),
