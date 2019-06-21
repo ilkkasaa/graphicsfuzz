@@ -74,7 +74,7 @@ def main() -> None:
     )
 
     status = result_util.get_status(output_dir)
-    if status not in ("CRASH", "HOST_CRASH"):
+    if status not in ("CRASH", "TOOL_CRASH"):
         log("Shader run did not crash; not interesting.")
         sys.exit(1)
 

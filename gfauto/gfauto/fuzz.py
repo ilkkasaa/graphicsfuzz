@@ -486,7 +486,7 @@ def handle_glsl_test(
 
         status = result_util.get_status(result_output_dir)
 
-        if status == "HOST_CRASH":
+        if status == "TOOL_CRASH":
             # No need to run further on real devices if the preprocessing step failed.
             break
 
@@ -504,8 +504,8 @@ def handle_glsl_test(
 
         if status == "CRASH":
             report_subdirectory_name = "crashes"
-        elif status == "HOST_CRASH":
-            report_subdirectory_name = "host_crashes"
+        elif status == "TOOL_CRASH":
+            report_subdirectory_name = "tool_crashes"
 
         if report_subdirectory_name:
             # TODO: append to report_paths.
@@ -595,7 +595,7 @@ def run_shader_job(
                     spirv_opt_args=list(test_glsl.spirv_opt_args),
                 )
             except SubprocessError:
-                util.file_write_text(output_dir / "STATUS", "HOST_CRASH")
+                util.file_write_text(output_dir / "STATUS", "TOOL_CRASH")
                 return output_dir
 
             is_compute = bool(
