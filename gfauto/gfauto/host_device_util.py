@@ -17,7 +17,7 @@ import subprocess
 from pathlib import Path
 from typing import Optional, Dict
 
-from gfauto import fuzz, util, gflogging, subprocess_util
+from gfauto import fuzz, util, gflogging, subprocess_util, result_util
 from gfauto.gflogging import log
 
 
@@ -88,6 +88,8 @@ def run_amber_helper(
             cmd.append("-B")
             cmd.append("0")
 
+    util.prepend_catchsegv_if_available(cmd)
+
     status = "UNEXPECTED_ERROR"
 
     result: Optional[subprocess.CompletedProcess] = None
@@ -116,6 +118,6 @@ def run_amber_helper(
 
     log("\nSTATUS " + status + "\n")
 
-    util.file_write_text(fuzz.result_get_status_path(output_dir), status)
+    util.file_write_text(result_util.get_status_path(output_dir), status)
 
     return output_dir
