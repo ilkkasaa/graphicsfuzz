@@ -487,7 +487,7 @@ def handle_glsl_test(
         status = result_util.get_status(result_output_dir)
 
         if status == "TOOL_CRASH":
-            # No need to run further on real devices if the preprocessing step failed.
+            # No need to run further on real devices if the pre-processing step failed.
             break
 
     # For each device that saw a crash, copy the test to reports_dir, adding the signature and device info to the test
@@ -573,14 +573,22 @@ def run_shader_job(
         try:
             gflogging.push_stream_for_logging(log_file)
 
-            # TODO: Find the right SwiftShader path here if |device| is a SwiftShader device.
-
-            # TODO: Find the amber path?
+            # TODO: Find amber path?
 
             # TODO: If Amber is going to be used, check if Amber can use Vulkan debug layers now, and if not, pass that
             #  info down via a bool.
 
             binary_paths = tool.BinaryPaths()
+
+            if device.HasField("swift_shader"):
+                # TODO: Find the right SwiftShader path here (or maybe earlier so it is only done once?) based on
+                #  version hash and known binaries, etc.
+                binary_paths.swift_shader_icd = (
+                    Path("binaries")
+                    / "swiftshader_vulkan"
+                    / util.get_platform()
+                    / "vk_swiftshader_icd.json"
+                )
 
             try:
                 amber_script_file = tool.glsl_shader_job_to_amber_script(
@@ -612,9 +620,14 @@ def run_shader_job(
                 return output_dir
 
             if device.HasField("host") or device.HasField("swift_shader"):
+                icd: Optional[Path] = None
 
-                # TODO: Set if using SwiftShader.
-                icd = None  # type: Optional[Path]
+                if device.HasField("swift_shader"):
+                    check(
+                        bool(binary_paths.swift_shader_icd),
+                        AssertionError("SwiftShader path not found"),
+                    )
+                    icd = binary_paths.swift_shader_icd
 
                 # Run the shader on the host using Amber.
                 host_device_util.run_amber(

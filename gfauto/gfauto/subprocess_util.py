@@ -93,6 +93,7 @@ def run(
 
     env_child: Optional[Dict[str, str]] = None
     if env:
+        log(f"Extra environment variables are: {env}")
         env_child = os.environ.copy()
         env_child.update(env)
 
