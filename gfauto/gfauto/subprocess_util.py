@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import signal
+import time
 import subprocess
 from typing import List, Optional, Union, Dict
 
@@ -35,6 +37,17 @@ def convert_stdout_stderr(
         result.stderr = result.stderr.decode(encoding="utf-8", errors="ignore")
 
 
+def log_stdout_stderr_helper(stdout: str, stderr: str) -> None:
+
+    log("STDOUT:")
+    log(stdout)
+    log("")
+
+    log("STDERR:")
+    log(stderr)
+    log("")
+
+
 def log_stdout_stderr(
     result: Union[
         subprocess.CalledProcessError,
@@ -42,14 +55,11 @@ def log_stdout_stderr(
         subprocess.TimeoutExpired,
     ],
 ) -> None:
+    log_stdout_stderr_helper(result.stdout, result.stderr)
 
-    log("STDOUT:")
-    log(result.stdout)
-    log("")
 
-    log("STDERR:")
-    log(result.stderr)
-    log("")
+def log_returncode_helper(returncode: int) -> None:
+    log(f"RETURNCODE: {str(returncode)}")
 
 
 def log_returncode(
@@ -57,7 +67,62 @@ def log_returncode(
         subprocess.CalledProcessError, subprocess.CompletedProcess, subprocess.Popen
     ],
 ) -> None:
-    log("RETURNCODE: " + str(result.returncode))
+    log_returncode_helper(result.returncode)
+
+
+def posix_kill_group(process: subprocess.Popen) -> None:
+    os.killpg(process.pid, signal.SIGTERM)
+    time.sleep(1)
+    os.killpg(process.pid, signal.SIGKILL)
+
+
+def run_helper(
+    cmd: List[str],
+    check_exit_code: bool = True,
+    timeout: Optional[float] = None,
+    env: Optional[Dict[str, str]] = None,
+) -> subprocess.CompletedProcess:
+    check(
+        bool(cmd) and cmd[0] is not None and isinstance(cmd[0], str),
+        AssertionError("run takes a list of str, not a str"),
+    )
+
+    env_child: Optional[Dict[str, str]] = None
+    if env:
+        log(f"Extra environment variables are: {env}")
+        env_child = os.environ.copy()
+        env_child.update(env)
+
+    with subprocess.Popen(
+        cmd,
+        encoding="utf-8",
+        errors="ignore",
+        start_new_session=True,
+        env=env_child,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    ) as process:
+        try:
+            stdout, stderr = process.communicate(input=None, timeout=timeout)
+        except subprocess.TimeoutExpired:
+            try:
+                posix_kill_group(process)
+            except AttributeError:
+                process.kill()
+            stdout, stderr = process.communicate()
+            assert timeout  # noqa
+            raise subprocess.TimeoutExpired(process.args, timeout, stdout, stderr)
+        except:  # noqa
+            try:
+                posix_kill_group(process)
+            except AttributeError:
+                process.kill()
+            raise
+
+        exit_code = process.poll()
+        if check_exit_code and exit_code != 0:
+            raise subprocess.CalledProcessError(exit_code, process.args, stdout, stderr)
+        return subprocess.CompletedProcess(process.args, exit_code, stdout, stderr)
 
 
 def run(
@@ -67,61 +132,20 @@ def run(
     verbose: bool = False,
     env: Optional[Dict[str, str]] = None,
 ) -> subprocess.CompletedProcess:
-    """
-    Runs |cmd|, blocks until it terminates, and returns a CompleteProcess object.
-
-    :param cmd:
-    :param check_exit_code:
-    :param timeout:
-    :param verbose:
-    :param env: Environment variables that will be *added* to the environment of the child process.
-    :return:
-    """
-    check(
-        bool(cmd) and cmd[0] is not None and isinstance(cmd[0], str),
-        AssertionError("run takes a list of str, not a str"),
-    )
-
-    # We capture stdout and stderr by default so we have something to report if the command fails.
-
-    # Note: "encoding=" and "errors=" are Python 3.6.
-    # We manually decode to utf-8 instead of using "universal_newlines=" so we have full control.
-    # text= is Python 3.6.
-    # Do not use shell=True.
-
-    # Note: changes here should be reflected in run_catchsegv()
-
-    env_child: Optional[Dict[str, str]] = None
-    if env:
-        log(f"Extra environment variables are: {env}")
-        env_child = os.environ.copy()
-        env_child.update(env)
-
+    log("Exec" + (" (verbose):" if verbose else ":") + str(cmd))
     try:
-        log("Exec" + (" (verbose):" if verbose else ":") + str(cmd))
-        result = subprocess.run(
-            cmd,
-            check=check_exit_code,
-            timeout=timeout,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=env_child,
-        )
+        result = run_helper(cmd, check_exit_code, timeout, env)
     except subprocess.TimeoutExpired as ex:
-        convert_stdout_stderr(ex)
         # no return code to log in case of timeout
         log_stdout_stderr(ex)
         raise ex
 
     except subprocess.CalledProcessError as ex:
-        convert_stdout_stderr(ex)
         log_returncode(ex)
         log_stdout_stderr(ex)
         raise ex
 
-    convert_stdout_stderr(result)
     log_returncode(result)
-
     if verbose:
         log_stdout_stderr(result)
 

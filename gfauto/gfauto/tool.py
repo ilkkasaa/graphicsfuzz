@@ -17,6 +17,8 @@
 from pathlib import Path
 from typing import List, Optional
 
+from gfauto import shader_job_util, subprocess_util, util
+from gfauto.util import check
 from .artifacts import (
     artifact_execute_recipe_if_needed,
     artifact_find_binary,
@@ -51,12 +53,14 @@ class BinaryPaths:
         spirv_opt_binary: Optional[Path] = None,
         spirv_opt_hash: Optional[str] = None,
         spirv_dis_binary: Optional[Path] = None,
+        spirv_val_binary: Optional[Path] = None,
         swift_shader_icd: Optional[Path] = None,
     ):
         self.glslang_binary = glslang_binary
         self.spirv_opt_binary = spirv_opt_binary
         self.spirv_opt_hash = spirv_opt_hash
         self.spirv_dis_binary = spirv_dis_binary
+        self.spirv_val_binary = spirv_val_binary
         self.swift_shader_icd = swift_shader_icd
 
 
@@ -139,6 +143,27 @@ def glslang_glsl_shader_job_to_spirv(
     )
 
 
+def run_spirv_val_on_shader(shader_path: Path, spirv_val_path: Path) -> None:
+    subprocess_util.run(
+        util.prepend_catchsegv_if_available([str(spirv_val_path), str(shader_path)])
+    )
+
+
+def validate_spirv_shader_job_helper(input_json: Path, spirv_val_path: Path) -> None:
+    shader_paths = shader_job_util.get_related_files(
+        input_json, shader_job_util.EXT_ALL, shader_job_util.SUFFIX_SPIRV
+    )
+    for shader_path in shader_paths:
+        run_spirv_val_on_shader(shader_path, spirv_val_path)
+
+
+def validate_spirv_shader_job(input_json: Path, binary_paths: BinaryPaths) -> None:
+    check(bool(binary_paths.spirv_val_binary), AssertionError("Need spirv-val path"))
+    assert binary_paths.spirv_val_binary  # noqa, keeps the type checker happy.
+
+    validate_spirv_shader_job_helper(input_json, binary_paths.spirv_val_binary)
+
+
 def glsl_shader_job_to_amber_script(
     input_json: Path,
     output_amber: Path,
@@ -153,6 +178,8 @@ def glsl_shader_job_to_amber_script(
     result = glslang_glsl_shader_job_to_spirv(
         result, work_dir / "1_spirv" / result.name, binary_paths
     )
+
+    validate_spirv_shader_job(result, binary_paths)
 
     if spirv_opt_args:
         result = spirv_opt_shader_job(

@@ -23,22 +23,19 @@ from pathlib import Path
 from typing import Any, BinaryIO, Iterator, List, TextIO, cast
 
 # Note: Could use the built-in |file.open| and |file.write_text|, etc.
-from gfauto import proto_util
-from gfauto.test_pb2 import Test
 
 
 def file_open_binary(file: pathlib.Path, mode: str) -> BinaryIO:  # noqa VNE002
-    check(mode.find("b") != -1, AssertionError(f"|mode|(=={mode}) should contain 'b'"))
+    check("b" in mode, AssertionError(f"|mode|(=={mode}) should contain 'b'"))
     # Type hint (no runtime check).
     result = cast(BinaryIO, open(str(file), mode))
     return result
 
 
 def file_open_text(file: pathlib.Path, mode: str) -> TextIO:  # noqa VNE002
-    check(
-        mode.find("b") == -1, AssertionError(f"|mode|(=={mode}) should not contain 'b'")
-    )
-    file_mkdirs_parent(file)
+    check("b" not in mode, AssertionError(f"|mode|(=={mode}) should not contain 'b'"))
+    if "w" in mode:
+        file_mkdirs_parent(file)
     # Type hint (no runtime check).
     result = cast(TextIO, open(str(file), mode, encoding="utf-8", errors="ignore"))
     return result

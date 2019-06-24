@@ -16,6 +16,7 @@
 
 import random
 import re
+import shutil
 import sys
 import uuid
 from pathlib import Path
@@ -41,6 +42,7 @@ from gfauto.device_pb2 import Device
 from gfauto.test_pb2 import Test, TestGlsl
 
 from gfauto.util import check
+
 
 # TODO: fix all imports to only import modules, not functions.
 
@@ -81,7 +83,7 @@ def main() -> None:
     # TODO: Use sys.argv[1:].
 
     # TODO: Remove.
-    random.seed(0)
+    random.seed(16343)
 
     device_list = devices_util.read_device_list()
     active_devices = devices_util.get_active_devices(device_list)
@@ -119,7 +121,7 @@ def main() -> None:
             str(seed),
         )
 
-        test_dirs = [
+        subtest_dirs = [
             make_subtest(
                 base_source_dir,
                 test_dir / f"{test_name}_no_opt_test",
@@ -152,10 +154,12 @@ def main() -> None:
             ),
         ]
 
-        for test_dir in test_dirs:
-            if handle_test(test_dir, reports_dir, active_devices):
+        for subtest_dir in subtest_dirs:
+            if handle_test(subtest_dir, reports_dir, active_devices):
                 # If we generated a report, don't bother trying other optimization combinations.
                 break
+
+        shutil.rmtree(test_dir)
 
 
 def handle_test(
@@ -204,6 +208,15 @@ PATTERN_SPIRV_OPT_ERROR = re.compile(r"^error: line \d+: ([\w .'\-\"]+)")
 # Backtrace:
 # /data/git/graphicsfuzz/graphicsfuzz/target/graphicsfuzz/bin/Linux/spirv-opt(_ZN8spvtools3opt21StructuredCFGAnalysis16SwitchMergeBlockEj+0x369)[0x5bd6d9]
 PATTERN_CATCHSEGV_STACK_FRAME = re.compile(r"Backtrace:\n.*/([^/(]*\([^)+]+)\+")
+
+# E.g.
+# Backtrace:
+# /data/git/graphicsfuzz/gfauto/temp/june20/binaries/swiftshader_vulkan/Linux/libvk_swiftshader.so(+0x1d537d)[0x7f51ebd1237d]
+# /data/git/graphicsfuzz/gfauto/temp/june20/binaries/swiftshader_vulkan/Linux/libvk_swiftshader.so  0x1d537d
+# ^ group 1                                                                                          ^ group 2
+PATTERN_CATCHSEGV_STACK_FRAME_ADDRESS = re.compile(
+    r"Backtrace:\n(.*)\(\+([x\da-fA-F]+)+\)\["
+)
 
 
 def get_signature_from_log_contents(log_contents: str) -> str:
@@ -308,6 +321,7 @@ def get_signature_from_log_contents(log_contents: str) -> str:
 
             break
 
+    # catchsegv "Backtrace:" with source code info.
     if log_contents.find("Backtrace:") != -1:
         catchsegv_matches = re.finditer(
             PATTERN_CATCHSEGV_STACK_FRAME, log_contents
@@ -321,7 +335,53 @@ def get_signature_from_log_contents(log_contents: str) -> str:
             group = group[:50]
             return group
 
+    if log_contents.find("Backtrace:") != -1:
+        result = get_signature_from_catchsegv_frame_address(log_contents)
+        if result:
+            return result
+
     return "no_signature"
+
+
+def get_signature_from_catchsegv_frame_address(log_contents: str) -> Optional[str]:
+    catchsegv_address_matches = re.finditer(
+        PATTERN_CATCHSEGV_STACK_FRAME_ADDRESS, log_contents
+    )  # type: Iterator[Match[str]]
+    catchsegv_address_match = next(
+        catchsegv_address_matches, None
+    )  # type: Optional[Match[str]]
+    if not catchsegv_address_match:
+        return None
+    module = Path(catchsegv_address_match.group(1))
+    if not module.exists():
+        return None
+    address = catchsegv_address_match.group(2)
+    function_signature = get_function_signature_from_address(module, address)
+    if not function_signature:
+        return None
+    # Replace non-word characters with _.
+    function_signature = re.sub(r"[^\w]", "_", function_signature)
+    # Reduce length.
+    function_signature = function_signature[:50]
+    return function_signature
+
+
+def get_function_signature_from_address(module: Path, address: str) -> Optional[str]:
+    try:
+        address_tool = util.tool_on_path("addr2line")
+        result = subprocess_util.run(
+            [str(address_tool), "-e", str(module), address, "-f", "-C"],
+            check_exit_code=False,
+        )
+        if result.returncode != 0:
+            return None
+        stdout = result.stdout  # type: str
+        lines = stdout.splitlines()
+        if not lines:
+            return None
+        return lines[0]
+    except util.ToolNotOnPathError:
+        return None
 
 
 def move_test_to_crash_report_using_log_signature(
@@ -400,13 +460,27 @@ def run_glsl_reduce(
     if preserve_semantics:
         cmd.insert(1, "--preserve-semantics")
 
-    subprocess_util.run(cmd, verbose=True)
+    # Log the reduction.
+    with util.file_open_text(output_dir / "command.log", "w") as f:
+        gflogging.push_stream_for_logging(f)
+        try:
+            # The reducer can fail, but it will typically output an exception file, so we can ignore the exit code.
+            subprocess_util.run(cmd, verbose=True, check_exit_code=False)
+        finally:
+            gflogging.pop_stream_for_logging()
 
     return output_dir
 
 
 def get_final_reduced_shader_job_path(reduction_work_shader_dir: Path) -> Path:
     return reduction_work_shader_dir / "shader_reduced_final.json"
+
+
+class ReductionFailedError(Exception):
+    def __init__(self, message: str, reduction_name: str, reduction_work_dir: Path):
+        super().__init__(message)
+        self.reduction_name = reduction_name
+        self.reduction_work_dir = reduction_work_dir
 
 
 def run_reduction(
@@ -453,7 +527,11 @@ def run_reduction(
 
     check(
         final_reduced_shader_job_path.exists(),
-        AssertionError("Reduction failed; not yet handled"),
+        ReductionFailedError(
+            "Reduction failed; not yet handled",
+            reduction_name,
+            reduction_work_variant_dir,
+        ),
     )
 
     # Finally, write the test metadata and shader job, so the returned directory can be used as a test_dir.
@@ -535,28 +613,42 @@ def handle_glsl_test(
     # For each report, run a reduction on the target device with the device-specific crash signature.
     for test_dir_in_reports in report_paths:
 
-        part_1_reduced_test = run_reduction(
-            test_dir_reduction_output=test_dir_in_reports,
-            test_dir_to_reduce=test_dir_in_reports,
-            preserve_semantics=True,
-            reduction_name="part_1_preserve_semantics",
-        )
+        test_metadata = test_util.metadata_read(test_dir_in_reports)
 
-        part_2_name = "part_2_change_semantics"
-        run_reduction(
-            test_dir_reduction_output=test_dir_in_reports,
-            test_dir_to_reduce=part_1_reduced_test,
-            preserve_semantics=False,
-            reduction_name=part_2_name,
-        )
+        try:
 
-        device_name = test_util.metadata_read(test_dir_in_reports).device.name
+            part_1_reduced_test = run_reduction(
+                test_dir_reduction_output=test_dir_in_reports,
+                test_dir_to_reduce=test_dir_in_reports,
+                preserve_semantics=True,
+                reduction_name="part_1_preserve_semantics",
+            )
 
-        # Create a symlink to the "best" reduction.
-        best_reduced_test = test_util.get_reduced_test_dir(
-            test_dir_in_reports, device_name, "best"
-        )
-        best_reduced_test.symlink_to(part_2_name, target_is_directory=True)
+            part_2_name = "part_2_change_semantics"
+            run_reduction(
+                test_dir_reduction_output=test_dir_in_reports,
+                test_dir_to_reduce=part_1_reduced_test,
+                preserve_semantics=False,
+                reduction_name=part_2_name,
+            )
+
+            device_name = test_metadata.device.name
+
+            # Create a symlink to the "best" reduction.
+            best_reduced_test = test_util.get_reduced_test_dir(
+                test_dir_in_reports, device_name, "best"
+            )
+            best_reduced_test.symlink_to(part_2_name, target_is_directory=True)
+        except ReductionFailedError as ex:
+            # Create a symlink to the failed reduction so it is easy to investigate failed reductions.
+            link_to_failed_reduction_path = (
+                reports_dir
+                / "failed_reductions"
+                / f"{test_dir_in_reports.name}_{ex.reduction_name}"
+            )
+            link_to_failed_reduction_path.symlink_to(
+                ex.reduction_work_dir, target_is_directory=True
+            )
 
     return report_paths
 
@@ -579,6 +671,10 @@ def run_shader_job(
             #  info down via a bool.
 
             binary_paths = tool.BinaryPaths()
+
+            # TODO: find specific version of spirv-val.
+
+            binary_paths.spirv_val_binary = util.tool_on_path("spirv-val")
 
             if device.HasField("swift_shader"):
                 # TODO: Find the right SwiftShader path here (or maybe earlier so it is only done once?) based on
