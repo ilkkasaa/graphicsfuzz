@@ -21,7 +21,7 @@ import sys
 import uuid
 from pathlib import Path
 from subprocess import SubprocessError
-from typing import Iterator, Match, Optional, List
+from typing import Iterator, Match, Optional, List, Dict
 
 from gfauto import (
     host_device_util,
@@ -37,14 +37,15 @@ from gfauto import (
     tool,
     recipe_spirv_asm_shader_job_to_amber_script,
     android_device,
+    built_in_binaries,
+    recipe_glsl_shader_job_to_spirv_shader_job,
 )
+from gfauto.common_pb2 import Binary
 from gfauto.device_pb2 import Device
 from gfauto.test_pb2 import Test, TestGlsl
+from gfauto.tool import BinaryPaths
 
 from gfauto.util import check
-
-
-# TODO: fix all imports to only import modules, not functions.
 
 
 def get_random_name() -> str:
@@ -59,22 +60,23 @@ AMBER_RUN_TIME_LIMIT = 30
 
 
 def make_subtest(
-    base_source_dir: Path, subtest_dir: Path, spirv_opt_args: Optional[List[str]]
+    base_source_dir: Path,
+    subtest_dir: Path,
+    spirv_opt_args: Optional[List[str]],
+    binary_manager: built_in_binaries.BinaryManager,
 ) -> Path:
     # Create the subtest by copying the base source.
     util.copy_dir(base_source_dir, test_util.get_source_dir(subtest_dir))
 
+    test = Test(glsl=TestGlsl(spirv_opt_args=spirv_opt_args))
+
+    test.binaries.append(binary_manager.get_binary_by_name(name="glslangValidator"))
+    test.binaries.append(binary_manager.get_binary_by_name(name="spirv-dis"))
+    if spirv_opt_args:
+        test.binaries.append(binary_manager.get_binary_by_name(name="spirv-opt"))
+
     # Write the test metadata.
-    test_util.metadata_write(
-        Test(
-            glsl=TestGlsl(
-                glslang_version_hash="",
-                spirv_opt_version_hash="",
-                spirv_opt_args=spirv_opt_args,
-            )
-        ),
-        subtest_dir,
-    )
+    test_util.metadata_write(test, subtest_dir)
 
     return subtest_dir
 
@@ -83,7 +85,7 @@ def main() -> None:
     # TODO: Use sys.argv[1:].
 
     # TODO: Remove.
-    random.seed(16343)
+    random.seed(77)
 
     device_list = devices_util.read_device_list()
     active_devices = devices_util.get_active_devices(device_list)
@@ -97,6 +99,8 @@ def main() -> None:
 
     # Filter to only include .json files that have at least one shader (.frag, .vert, .comp) file.
     references = [ref for ref in references if shader_job_util.get_related_files(ref)]
+
+    binary_manager = built_in_binaries.BinaryManager(built_in_binaries.DEFAULT_BINARIES)
 
     while True:
         test_name = get_random_name()
@@ -114,6 +118,7 @@ def main() -> None:
         seed = random.randint(-pow(2, 31), pow(2, 31) - 1)
 
         recipe_glsl_reference_shader_job_to_glsl_variant_shader_job.run_generate(
+            util.tool_on_path("graphicsfuzz-tool"),
             reference_glsl_shader_job,
             donors_dir,
             util.mkdirs_p(base_source_dir / test_util.VARIANT_DIR)
@@ -126,36 +131,42 @@ def main() -> None:
                 base_source_dir,
                 test_dir / f"{test_name}_no_opt_test",
                 spirv_opt_args=None,
+                binary_manager=binary_manager,
             ),
             make_subtest(
                 base_source_dir,
                 test_dir / f"{test_name}_opt_O_test",
                 spirv_opt_args=["-O"],
+                binary_manager=binary_manager,
             ),
             make_subtest(
                 base_source_dir,
                 test_dir / f"{test_name}_opt_Os_test",
                 spirv_opt_args=["-Os"],
+                binary_manager=binary_manager,
             ),
             make_subtest(
                 base_source_dir,
                 test_dir / f"{test_name}_opt_rand1_test",
                 spirv_opt_args=recipe_spirv_shader_job_to_spirv_shader_job_opt.random_spirv_opt_args(),
+                binary_manager=binary_manager,
             ),
             make_subtest(
                 base_source_dir,
                 test_dir / f"{test_name}_opt_rand2_test",
                 spirv_opt_args=recipe_spirv_shader_job_to_spirv_shader_job_opt.random_spirv_opt_args(),
+                binary_manager=binary_manager,
             ),
             make_subtest(
                 base_source_dir,
                 test_dir / f"{test_name}_opt_rand3_test",
                 spirv_opt_args=recipe_spirv_shader_job_to_spirv_shader_job_opt.random_spirv_opt_args(),
+                binary_manager=binary_manager,
             ),
         ]
 
         for subtest_dir in subtest_dirs:
-            if handle_test(subtest_dir, reports_dir, active_devices):
+            if handle_test(subtest_dir, reports_dir, active_devices, binary_manager):
                 # If we generated a report, don't bother trying other optimization combinations.
                 break
 
@@ -163,11 +174,16 @@ def main() -> None:
 
 
 def handle_test(
-    test_dir: Path, reports_dir: Path, active_devices: List[Device]
+    test_dir: Path,
+    reports_dir: Path,
+    active_devices: List[Device],
+    binary_manager: built_in_binaries.BinaryManager,
 ) -> List[Path]:
     test = test_util.metadata_read(test_dir)
     if test.HasField("glsl"):
-        return handle_glsl_test(test.glsl, test_dir, reports_dir, active_devices)
+        return handle_glsl_test(
+            test, test_dir, reports_dir, active_devices, binary_manager
+        )
     else:
         raise AssertionError("Unrecognized test type")
 
@@ -547,7 +563,11 @@ def run_reduction(
 
 
 def handle_glsl_test(
-    test: TestGlsl, test_dir: Path, reports_dir: Path, active_devices: List[Device]
+    test: Test,
+    test_dir: Path,
+    reports_dir: Path,
+    active_devices: List[Device],
+    binary_manager: built_in_binaries.BinaryManager,
 ) -> List[Path]:
 
     report_paths: List[Path] = []
@@ -560,6 +580,7 @@ def handle_glsl_test(
             test_util.get_results_directory(test_dir, device.name, is_variant=True),
             test,
             device,
+            binary_manager,
         )
 
         status = result_util.get_status(result_output_dir)
@@ -570,6 +591,7 @@ def handle_glsl_test(
 
     # For each device that saw a crash, copy the test to reports_dir, adding the signature and device info to the test
     # metadata.
+    # TODO: Consider moving the device binaries list into test.binaries?
     for device in active_devices:
 
         result_output_dir = test_util.get_results_directory(
@@ -586,7 +608,6 @@ def handle_glsl_test(
             report_subdirectory_name = "tool_crashes"
 
         if report_subdirectory_name:
-            # TODO: append to report_paths.
             log_path = result_util.get_log_path(result_output_dir)
 
             log_contents = util.file_read_text(log_path)
@@ -658,19 +679,38 @@ def result_get_amber_log_path(result_dir: Path) -> Path:
 
 
 def run_shader_job(
-    shader_job: Path, output_dir: Path, test_glsl: TestGlsl, device: Device
+    shader_job: Path,
+    output_dir: Path,
+    test: Test,
+    device: Device,
+    binary_manager: built_in_binaries.BinaryManager,
 ) -> Path:
 
     with util.file_open_text(output_dir / "log.txt", "w") as log_file:
         try:
             gflogging.push_stream_for_logging(log_file)
 
+            binary_paths = tool.BinaryPaths()
+
+            device_binaries = list(device.binaries)
+            test_binaries = list(test.binaries)
+
+            binary_paths.glslang_binary = binary_manager.get_binary_path_by_name(
+                name=built_in_binaries.GLSLANG_VALIDATOR_NAME,
+                device_binaries=device_binaries,
+                test_binaries=test_binaries,
+            )
+
+            binary_paths.glslang_binary = binary_manager.get_binary_path_by_name(
+                name=built_in_binaries.GLSLANG_VALIDATOR_NAME,
+                device_binaries=device_binaries,
+                test_binaries=test_binaries,
+            )
+
             # TODO: Find amber path?
 
             # TODO: If Amber is going to be used, check if Amber can use Vulkan debug layers now, and if not, pass that
             #  info down via a bool.
-
-            binary_paths = tool.BinaryPaths()
 
             # TODO: find specific version of spirv-val.
 
@@ -693,7 +733,7 @@ def run_shader_job(
                     output_dir,
                     binary_paths,
                     recipe_spirv_asm_shader_job_to_amber_script.AmberfySettings(
-                        spirv_opt_args=list(test_glsl.spirv_opt_args),
+                        spirv_opt_args=list(test.test_glsl.spirv_opt_args),
                         spirv_opt_hash=binary_paths.spirv_opt_hash,
                     ),
                     spirv_opt_args=list(test_glsl.spirv_opt_args),

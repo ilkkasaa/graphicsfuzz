@@ -17,11 +17,9 @@
 import pathlib
 from typing import Optional
 
-from gfauto import util, subprocess_util, shader_job_util, artifacts
+from gfauto import util, subprocess_util, shader_job_util, artifacts, built_in_binaries
 from gfauto.artifact_pb2 import ArtifactMetadata
 from gfauto.recipe_pb2 import RecipeGlslShaderJobToSpirvShaderJob
-
-GLSLANG_VALIDATOR_NAME = "glslangValidator"
 
 
 def run_glslang_glsl_shader_to_spirv_shader(
@@ -31,7 +29,9 @@ def run_glslang_glsl_shader_to_spirv_shader(
 ) -> pathlib.Path:
 
     if not glslang_validator_file_path:
-        glslang_validator_file_path = util.tool_on_path(GLSLANG_VALIDATOR_NAME)
+        glslang_validator_file_path = util.tool_on_path(
+            built_in_binaries.GLSLANG_VALIDATOR_NAME
+        )
 
     output_spirv_file_path = output_dir_path / (glsl_shader_path.name + ".spv")
 
@@ -59,7 +59,9 @@ def run_glslang_glsl_to_spirv_job(
 ) -> pathlib.Path:
 
     if not glslang_validator_file_path:
-        glslang_validator_file_path = util.tool_on_path(GLSLANG_VALIDATOR_NAME)
+        glslang_validator_file_path = util.tool_on_path(
+            built_in_binaries.GLSLANG_VALIDATOR_NAME
+        )
 
     glsl_shader_files = shader_job_util.get_related_files(
         glsl_shader_job_json_file_path
@@ -96,10 +98,12 @@ def recipe_glsl_shader_job_to_spirv_shader_job(
 
     if recipe.glslang_validator_artifact:
         glslang_validator_file_path = artifacts.artifact_find_binary(
-            recipe.glslang_validator_artifact, GLSLANG_VALIDATOR_NAME
+            recipe.glslang_validator_artifact, built_in_binaries.GLSLANG_VALIDATOR_NAME
         )
     else:
-        glslang_validator_file_path = util.tool_on_path(GLSLANG_VALIDATOR_NAME)
+        glslang_validator_file_path = util.tool_on_path(
+            built_in_binaries.GLSLANG_VALIDATOR_NAME
+        )
 
     output_metadata = ArtifactMetadata()
     output_metadata.CopyFrom(input_glsl_artifact.metadata)

@@ -17,10 +17,28 @@ syntax = "proto3";
 package gfauto;
 
 
+// Defines a binary (or really, any file) and also defines a way to *find* a binary.
 message Binary {
+
+  // E.g. glslangValidator.
   string name = 1;
-  string platform = 2;
+
+  // This should be a list of strings (tags) containing the platform and other details.
+  // E.g. "Linux", "x64", "Debug", "jemalloc", "msan".
+  // When being used to specify how to *find* a binary, the tags must be found in the binary definition.
+  // E.g. "Debug", "msan".
+  // Typically, the current platform will also need to be found (e.g. "Linux") before the Binary can be chosen for use.
+  repeated string tags = 2;
+
+  // Used when defining a binary within a recipe or artifact. Gives the path (always using '/' as the directory
+  // separator) relative from the artifact.json and recipe.json file to the binary, after the ArchiveSet has been
+  // extracted.
+  // Should be empty in Settings.
+  // Also used internally (but never written to disk) to store the resolved path to a binary.
   string path = 3;
+
+  // This should typically be a hash of some kind.
+  string version = 4;
 }
 
 message Archive {

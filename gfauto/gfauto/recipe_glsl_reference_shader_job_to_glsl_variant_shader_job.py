@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import pathlib
+from pathlib import Path
 from typing import List, Optional
 
 from gfauto import artifacts, util, subprocess_util
@@ -23,6 +24,7 @@ from gfauto.recipe_pb2 import RecipeGlslReferenceShaderJobToGlslVariantShaderJob
 
 
 def run_generate(
+    graphicsfuzz_tool_path: Path,
     reference_shader_json: pathlib.Path,
     donors_path: pathlib.Path,
     output_shader_json: pathlib.Path,
@@ -31,7 +33,7 @@ def run_generate(
 ) -> pathlib.Path:
 
     cmd = [
-        "graphicsfuzz-tool",
+        str(graphicsfuzz_tool_path),
         "com.graphicsfuzz.generator.tool.Generate",
         str(reference_shader_json),
         str(donors_path),
@@ -99,7 +101,11 @@ def recipe_glsl_reference_shader_job_to_glsl_variant_shader_job(
 
     # Run GraphicsFuzz generate command.
     run_generate(
-        reference_json_path, donors_path, output_json_path, other_args=other_args
+        util.tool_on_path("graphicsfuzz-tool"),
+        reference_json_path,
+        donors_path,
+        output_json_path,
+        other_args=other_args,
     )
 
     # Write final artifact metadata.

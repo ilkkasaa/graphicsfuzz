@@ -65,7 +65,7 @@ def main() -> None:
     output_dir = fuzz.run_shader_job(
         shader_job_json,
         output_dir=shader_job_json.with_suffix(""),
-        test_glsl=test.glsl,
+        test=test,
         device=test.device,
     )
 

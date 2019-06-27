@@ -16,6 +16,7 @@ syntax = "proto3";
 
 package gfauto;
 
+import "gfauto/common.proto";
 
 message DeviceList {
   repeated string active_device_names = 1;
@@ -30,13 +31,17 @@ message Device {
     DeviceHost host = 4;
     DeviceAndroid android = 5;
   }
+  // A device can specify/override some binaries. E.g. you may want several SwiftShader "devices" with different
+  // versions or configurations of SwiftShader.
+  repeated Binary binaries = 6;
 }
 
 message DeviceSwiftShader {
-  string version_hash = 1;
+  // Optional.
+  Binary swift_shader_binary = 1;
 }
 
-// A virtual device that just executes all steps up until actual the graphics hardware or simulator is needed. This
+// A virtual device that just executes all steps up until the actual graphics hardware or simulator is needed. This
 // helps to find bugs in, say, spirv-opt.
 message DevicePreprocess {
 

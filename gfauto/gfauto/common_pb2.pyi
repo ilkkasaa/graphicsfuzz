@@ -2,6 +2,7 @@
 import sys
 from google.protobuf.internal.containers import (
     RepeatedCompositeFieldContainer as google___protobuf___internal___containers___RepeatedCompositeFieldContainer,
+    RepeatedScalarFieldContainer as google___protobuf___internal___containers___RepeatedScalarFieldContainer,
 )
 
 from google.protobuf.message import (
@@ -21,22 +22,24 @@ from typing_extensions import (
 
 class Binary(google___protobuf___message___Message):
     name = ... # type: typing___Text
-    platform = ... # type: typing___Text
+    tags = ... # type: google___protobuf___internal___containers___RepeatedScalarFieldContainer[typing___Text]
     path = ... # type: typing___Text
+    version = ... # type: typing___Text
 
     def __init__(self,
         name : typing___Optional[typing___Text] = None,
-        platform : typing___Optional[typing___Text] = None,
+        tags : typing___Optional[typing___Iterable[typing___Text]] = None,
         path : typing___Optional[typing___Text] = None,
+        version : typing___Optional[typing___Text] = None,
         ) -> None: ...
     @classmethod
     def FromString(cls, s: bytes) -> Binary: ...
     def MergeFrom(self, other_msg: google___protobuf___message___Message) -> None: ...
     def CopyFrom(self, other_msg: google___protobuf___message___Message) -> None: ...
     if sys.version_info >= (3,):
-        def ClearField(self, field_name: typing_extensions___Literal[u"name",u"path",u"platform"]) -> None: ...
+        def ClearField(self, field_name: typing_extensions___Literal[u"name",u"path",u"tags",u"version"]) -> None: ...
     else:
-        def ClearField(self, field_name: typing_extensions___Literal[b"name",b"path",b"platform"]) -> None: ...
+        def ClearField(self, field_name: typing_extensions___Literal[b"name",b"path",b"tags",b"version"]) -> None: ...
 
 class Archive(google___protobuf___message___Message):
     url = ... # type: typing___Text

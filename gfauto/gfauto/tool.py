@@ -17,33 +17,39 @@
 from pathlib import Path
 from typing import List, Optional
 
-from gfauto import shader_job_util, subprocess_util, util
+from gfauto import shader_job_util, subprocess_util, util, built_in_binaries
 from gfauto.util import check
-from .artifacts import (
+from gfauto.artifacts import (
     artifact_execute_recipe_if_needed,
     artifact_find_binary,
     recipes_write_built_in,
 )
-from .gflogging import log
-from .recipe_glsl_shader_job_to_spirv_shader_job import (
+from gfauto.gflogging import log
+from gfauto.recipe_glsl_shader_job_to_spirv_shader_job import (
     GLSLANG_VALIDATOR_NAME,
     run_glslang_glsl_to_spirv_job,
 )
-from .recipe_spirv_asm_shader_job_to_amber_script import (
+from gfauto.recipe_spirv_asm_shader_job_to_amber_script import (
     AmberfySettings,
     run_spirv_asm_shader_job_to_amber_script,
 )
-from .recipe_spirv_shader_job_to_spirv_asm_shader_job import (
+from gfauto.recipe_spirv_shader_job_to_spirv_asm_shader_job import (
     SPIRV_DIS_NAME,
     run_spirv_shader_job_to_spirv_asm_shader_job,
 )
-from .recipe_spirv_shader_job_to_spirv_shader_job_opt import (
+from gfauto.recipe_spirv_shader_job_to_spirv_shader_job_opt import (
     SPIRV_OPT_NAME,
     run_spirv_opt_on_spirv_shader_job,
 )
-from .util import file_read_text
+from gfauto.util import file_read_text
 
 AMBER_COMMAND_PROBE_TOP_LEFT_RED = "probe rgba (0, 0) (1, 0, 0, 1)\n"
+
+
+class PathAndVersion:
+    def __init__(self, path: Optional[Path] = None, version: Optional[str] = None):
+        self.path = path
+        self.version = version
 
 
 class BinaryPaths:
@@ -51,14 +57,12 @@ class BinaryPaths:
         self,
         glslang_binary: Optional[Path] = None,
         spirv_opt_binary: Optional[Path] = None,
-        spirv_opt_hash: Optional[str] = None,
         spirv_dis_binary: Optional[Path] = None,
         spirv_val_binary: Optional[Path] = None,
         swift_shader_icd: Optional[Path] = None,
     ):
         self.glslang_binary = glslang_binary
         self.spirv_opt_binary = spirv_opt_binary
-        self.spirv_opt_hash = spirv_opt_hash
         self.spirv_dis_binary = spirv_dis_binary
         self.spirv_val_binary = spirv_val_binary
         self.swift_shader_icd = swift_shader_icd

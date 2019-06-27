@@ -15,7 +15,8 @@
 # limitations under the License.
 
 import pathlib
-from typing import List, Optional
+from pathlib import Path
+from typing import List, Optional, Tuple
 
 from gfauto import (
     gflogging,
@@ -57,112 +58,52 @@ class Artifact:
 
 
 class RecipeWrap:
+    recipe: Recipe
+
     def __init__(self, path: str, recipe: Optional[Recipe] = None):
         self.path = path
-        self.recipe = recipe
-        if self.recipe is None:
-            self.recipe = artifact_read_recipe(path)
+        self.recipe = recipe or artifact_read_recipe(path)
 
     def write(self) -> str:
         return artifact_write_recipe(self.recipe, self.path)
-
-
-LATEST_GRAPHICSFUZZ_ARTIFACT = "//binaries/graphicsfuzz_v1.2.1"
-
-BUILT_IN_BINARY_RECIPES = [
-    RecipeWrap(
-        "//binaries/graphicsfuzz_v1.2.1",
-        Recipe(
-            download_and_extract_archive_set=RecipeDownloadAndExtractArchiveSet(
-                archive_set=ArchiveSet(
-                    archives=[
-                        Archive(
-                            url="https://github.com/google/graphicsfuzz/releases/download/v1.2.1/graphicsfuzz.zip",
-                            output_file="graphicsfuzz.zip",
-                            output_directory="graphicsfuzz",
-                        )
-                    ],
-                    binaries=[
-                        #
-                        # glslangValidator
-                        Binary(
-                            name="glslangValidator",
-                            platform="Linux",
-                            path="graphicsfuzz/bin/Linux/glslangValidator",
-                        ),
-                        Binary(
-                            name="glslangValidator",
-                            platform="Windows",
-                            path="graphicsfuzz/bin/Windows/glslangValidator.exe",
-                        ),
-                        Binary(
-                            name="glslangValidator",
-                            platform="Mac",
-                            path="graphicsfuzz/bin/Mac/glslangValidator",
-                        ),
-                        #
-                        # spirv-opt
-                        Binary(
-                            name="spirv-opt",
-                            platform="Linux",
-                            path="graphicsfuzz/bin/Linux/spirv-opt",
-                        ),
-                        Binary(
-                            name="spirv-opt",
-                            platform="Windows",
-                            path="graphicsfuzz/bin/Windows/spirv-opt.exe",
-                        ),
-                        Binary(
-                            name="spirv-opt",
-                            platform="Mac",
-                            path="graphicsfuzz/bin/Mac/spirv-opt",
-                        ),
-                        #
-                        # spirv-dis
-                        Binary(
-                            name="spirv-dis",
-                            platform="Linux",
-                            path="graphicsfuzz/bin/Linux/spirv-dis",
-                        ),
-                        Binary(
-                            name="spirv-dis",
-                            platform="Windows",
-                            path="graphicsfuzz/bin/Windows/spirv-dis.exe",
-                        ),
-                        Binary(
-                            name="spirv-dis",
-                            platform="Mac",
-                            path="graphicsfuzz/bin/Mac/spirv-dis",
-                        ),
-                        #
-                        # spirv-as
-                        Binary(
-                            name="spirv-as",
-                            platform="Linux",
-                            path="graphicsfuzz/bin/Linux/spirv-as",
-                        ),
-                        Binary(
-                            name="spirv-as",
-                            platform="Windows",
-                            path="graphicsfuzz/bin/Windows/spirv-as.exe",
-                        ),
-                        Binary(
-                            name="spirv-as",
-                            platform="Mac",
-                            path="graphicsfuzz/bin/Mac/spirv-as",
-                        ),
-                    ],
-                )
-            )
-        ),
-    )
-]
 
 
 def recipes_write_built_in() -> None:
     for recipe_wrap in BUILT_IN_BINARY_RECIPES:
         if not artifact_get_metadata_file_path(recipe_wrap.path).exists():
             recipe_wrap.write()
+
+
+def binary_artifacts_find(artifact_path_prefix: str) -> List[Tuple[ArchiveSet, str]]:
+    artifact_paths = artifacts_find(artifact_path_prefix)
+    result: List[Tuple[ArchiveSet, str]] = []
+    for artifact_path in artifact_paths:
+        archive_set = None
+        if artifact_get_metadata_file_path(artifact_path).exists():
+            metadata = artifact_read_metadata(artifact_path)
+            if metadata.data.HasField("extracted_archive_set"):
+                archive_set = metadata.data.extracted_archive_set.archive_set
+        elif artifact_get_recipe_file_path(artifact_path).exists():
+            recipe = artifact_read_recipe(artifact_path)
+            if recipe.HasField("download_and_extract_archive_set"):
+                archive_set = recipe.download_and_extract_archive_set.archive_set
+        if archive_set:
+            result.append((archive_set, artifact_path))
+
+    return result
+
+
+def artifacts_find(artifact_path_prefix: str) -> List[str]:
+    path_prefix = artifact_get_directory_path(artifact_path_prefix)
+
+    metadata_files = path_prefix.rglob("*.json")
+    metadata_files = (
+        file
+        for file in metadata_files
+        if file.name in (ARTIFACT_METADATA_FILE_NAME, ARTIFACT_RECIPE_FILE_NAME)
+    )
+    artifact_paths = set(path_to_artifact_path(file.parent) for file in metadata_files)
+    return sorted(artifact_paths)
 
 
 def artifact_path_get_root() -> pathlib.Path:

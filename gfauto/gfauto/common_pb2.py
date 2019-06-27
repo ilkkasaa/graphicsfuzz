@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='gfauto',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x13gfauto/common.proto\x12\x06gfauto\"6\n\x06\x42inary\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x10\n\x08platform\x18\x02 \x01(\t\x12\x0c\n\x04path\x18\x03 \x01(\t\"E\n\x07\x41rchive\x12\x0b\n\x03url\x18\x01 \x01(\t\x12\x13\n\x0boutput_file\x18\x02 \x01(\t\x12\x18\n\x10output_directory\x18\x03 \x01(\t\"Q\n\nArchiveSet\x12!\n\x08\x61rchives\x18\x01 \x03(\x0b\x32\x0f.gfauto.Archive\x12 \n\x08\x62inaries\x18\x02 \x03(\x0b\x32\x0e.gfauto.Binaryb\x06proto3')
+  serialized_pb=_b('\n\x13gfauto/common.proto\x12\x06gfauto\"C\n\x06\x42inary\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04tags\x18\x02 \x03(\t\x12\x0c\n\x04path\x18\x03 \x01(\t\x12\x0f\n\x07version\x18\x04 \x01(\t\"E\n\x07\x41rchive\x12\x0b\n\x03url\x18\x01 \x01(\t\x12\x13\n\x0boutput_file\x18\x02 \x01(\t\x12\x18\n\x10output_directory\x18\x03 \x01(\t\"Q\n\nArchiveSet\x12!\n\x08\x61rchives\x18\x01 \x03(\x0b\x32\x0f.gfauto.Archive\x12 \n\x08\x62inaries\x18\x02 \x03(\x0b\x32\x0e.gfauto.Binaryb\x06proto3')
 )
 
 
@@ -41,15 +41,22 @@ _BINARY = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='platform', full_name='gfauto.Binary.platform', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
+      name='tags', full_name='gfauto.Binary.tags', index=1,
+      number=2, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='path', full_name='gfauto.Binary.path', index=2,
       number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='version', full_name='gfauto.Binary.version', index=3,
+      number=4, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -67,7 +74,7 @@ _BINARY = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=31,
-  serialized_end=85,
+  serialized_end=98,
 )
 
 
@@ -111,8 +118,8 @@ _ARCHIVE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=87,
-  serialized_end=156,
+  serialized_start=100,
+  serialized_end=169,
 )
 
 
@@ -149,8 +156,8 @@ _ARCHIVESET = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=158,
-  serialized_end=239,
+  serialized_start=171,
+  serialized_end=252,
 )
 
 _ARCHIVESET.fields_by_name['archives'].message_type = _ARCHIVE

@@ -13,6 +13,7 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
+from gfauto import common_pb2 as gfauto_dot_common__pb2
 from gfauto import device_pb2 as gfauto_dot_device__pb2
 
 
@@ -21,9 +22,9 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='gfauto',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x11gfauto/test.proto\x12\x06gfauto\x1a\x13gfauto/device.proto\"i\n\x04Test\x12 \n\x04glsl\x18\x01 \x01(\x0b\x32\x10.gfauto.TestGlslH\x00\x12\x17\n\x0f\x63rash_signature\x18\x02 \x01(\t\x12\x1e\n\x06\x64\x65vice\x18\x03 \x01(\x0b\x32\x0e.gfauto.DeviceB\x06\n\x04test\"`\n\x08TestGlsl\x12\x1c\n\x14glslang_version_hash\x18\x01 \x01(\t\x12\x1e\n\x16spirv_opt_version_hash\x18\x02 \x01(\t\x12\x16\n\x0espirv_opt_args\x18\x03 \x03(\tb\x06proto3')
+  serialized_pb=_b('\n\x11gfauto/test.proto\x12\x06gfauto\x1a\x13gfauto/common.proto\x1a\x13gfauto/device.proto\"\x8b\x01\n\x04Test\x12 \n\x04glsl\x18\x01 \x01(\x0b\x32\x10.gfauto.TestGlslH\x00\x12\x17\n\x0f\x63rash_signature\x18\x02 \x01(\t\x12\x1e\n\x06\x64\x65vice\x18\x03 \x01(\x0b\x32\x0e.gfauto.Device\x12 \n\x08\x62inaries\x18\x04 \x03(\x0b\x32\x0e.gfauto.BinaryB\x06\n\x04test\"\"\n\x08TestGlsl\x12\x16\n\x0espirv_opt_args\x18\x01 \x03(\tb\x06proto3')
   ,
-  dependencies=[gfauto_dot_device__pb2.DESCRIPTOR,])
+  dependencies=[gfauto_dot_common__pb2.DESCRIPTOR,gfauto_dot_device__pb2.DESCRIPTOR,])
 
 
 
@@ -56,6 +57,13 @@ _TEST = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='binaries', full_name='gfauto.Test.binaries', index=3,
+      number=4, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -71,8 +79,8 @@ _TEST = _descriptor.Descriptor(
       name='test', full_name='gfauto.Test.test',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=50,
-  serialized_end=155,
+  serialized_start=72,
+  serialized_end=211,
 )
 
 
@@ -84,22 +92,8 @@ _TESTGLSL = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='glslang_version_hash', full_name='gfauto.TestGlsl.glslang_version_hash', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='spirv_opt_version_hash', full_name='gfauto.TestGlsl.spirv_opt_version_hash', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='spirv_opt_args', full_name='gfauto.TestGlsl.spirv_opt_args', index=2,
-      number=3, type=9, cpp_type=9, label=3,
+      name='spirv_opt_args', full_name='gfauto.TestGlsl.spirv_opt_args', index=0,
+      number=1, type=9, cpp_type=9, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -116,12 +110,13 @@ _TESTGLSL = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=157,
-  serialized_end=253,
+  serialized_start=213,
+  serialized_end=247,
 )
 
 _TEST.fields_by_name['glsl'].message_type = _TESTGLSL
 _TEST.fields_by_name['device'].message_type = gfauto_dot_device__pb2._DEVICE
+_TEST.fields_by_name['binaries'].message_type = gfauto_dot_common__pb2._BINARY
 _TEST.oneofs_by_name['test'].fields.append(
   _TEST.fields_by_name['glsl'])
 _TEST.fields_by_name['glsl'].containing_oneof = _TEST.oneofs_by_name['test']
