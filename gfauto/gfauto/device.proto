@@ -37,8 +37,6 @@ message Device {
 }
 
 message DeviceSwiftShader {
-  // Optional.
-  Binary swift_shader_binary = 1;
 }
 
 // A virtual device that just executes all steps up until the actual graphics hardware or simulator is needed. This

@@ -24,7 +24,7 @@ message Binary {
   string name = 1;
 
   // This should be a list of strings (tags) containing the platform and other details.
-  // E.g. "Linux", "x64", "Debug", "jemalloc", "msan".
+  // E.g. "Linux", "x64", "Debug", "malloc", "msan".
   // When being used to specify how to *find* a binary, the tags must be found in the binary definition.
   // E.g. "Debug", "msan".
   // Typically, the current platform will also need to be found (e.g. "Linux") before the Binary can be chosen for use.

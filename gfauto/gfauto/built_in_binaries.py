@@ -15,13 +15,19 @@
 # limitations under the License.
 from pathlib import Path
 from typing import List, Optional, Dict, Tuple
-from gfauto import artifacts, tool
+from gfauto import artifacts
 from gfauto.common_pb2 import ArchiveSet, Archive, Binary
 from gfauto.recipe_pb2 import RecipeDownloadAndExtractArchiveSet, Recipe
 
 LATEST_GRAPHICSFUZZ_ARTIFACT = "//binaries/graphicsfuzz_v1.2.1"
 
 GLSLANG_VALIDATOR_NAME = "glslangValidator"
+SPIRV_OPT_NAME = "spirv-opt"
+SPIRV_VAL_NAME = "spirv-val"
+SPIRV_DIS_NAME = "spirv-dis"
+SWIFT_SHADER_NAME = "swift_shader_icd"
+
+BUILT_IN_BINARY_RECIPES_PATH_PREFIX = "//binaries"
 
 DEFAULT_BINARIES = [
     Binary(
@@ -59,17 +65,17 @@ class BinaryManager:
     """
 
     _default_binaries: List[Binary]
-    _resolved_binaries: Dict[Binary, Path]
+    _resolved_paths: Dict[Binary, Path]
     _binary_artifacts: List[Tuple[ArchiveSet, str]]
 
     def __init__(
         self,
         default_binaries: List[Binary],
         platform: str,
-        built_in_binaries_artifact_path_prefix: str = "//binaries",
+        built_in_binaries_artifact_path_prefix: Optional[str] = None,
     ):
         self._default_binaries = default_binaries
-        self._resolved_binaries = {}
+        self._resolved_paths = {}
         self._platform = platform
         self._binary_artifacts = []
 
@@ -79,7 +85,7 @@ class BinaryManager:
             )
 
     def get_binary_path(self, binary: Binary) -> Path:
-        result = self._resolved_binaries.get(binary)
+        result = self._resolved_paths.get(binary)
         if result:
             return result
         for (archive_set, artifact_path) in self._binary_artifacts:
@@ -95,7 +101,7 @@ class BinaryManager:
                 result = artifacts.artifact_get_inner_file_path(
                     artifact_binary.path, artifact_path
                 )
-                self._resolved_binaries[binary] = result
+                self._resolved_paths[binary] = result
         if not result:
             raise AssertionError(f"Could not find binary:\n {binary}")
         return result
@@ -117,11 +123,11 @@ class BinaryManager:
         custom_binaries: Optional[List[Binary]] = None,
         device_binaries: Optional[List[Binary]] = None,
         test_binaries: Optional[List[Binary]] = None,
-    ) -> Path:
+    ) -> Tuple[Path, str]:
         binary = self.get_binary_by_name(
             name, custom_binaries, device_binaries, test_binaries
         )
-        return self.get_binary_path(binary)
+        return self.get_binary_path(binary), binary.version
 
     def get_binary_by_name(
         self,
@@ -159,6 +165,17 @@ def get_platform_from_platform_suffix(platform_suffix: str) -> str:
     raise AssertionError(f"Could not guess platform of {platform_suffix}")
 
 
+def add_common_tags_from_platform_suffix(tags: List[str], platform_suffix: str) -> None:
+    platform = get_platform_from_platform_suffix(platform_suffix)
+    tags.append(platform)
+    if "Release" in platform_suffix:
+        tags.append("Release")
+    if "Debug" in platform_suffix:
+        tags.append("Debug")
+    if "x64" in platform_suffix:
+        tags.append("x64")
+
+
 def _get_built_in_binary_recipe_from_build_github_repo(
     project_name: str,
     version_hash: str,
@@ -170,17 +187,18 @@ def _get_built_in_binary_recipe_from_build_github_repo(
     result: List[artifacts.RecipeWrap] = []
 
     for platform_suffix in platform_suffixes:
-        platform = get_platform_from_platform_suffix(platform_suffix)
+        tags: List[str] = []
+        add_common_tags_from_platform_suffix(tags, platform_suffix)
         binaries = [
             Binary(
-                name=tool.name,
-                platform=platform,
+                name=binary.name,
+                tags=tags,
                 path=(
-                    (tool.subpath + ".exe") if platform == "Windows" else tool.subpath
+                    (binary.subpath + ".exe") if "Windows" in tags else binary.subpath
                 ),
                 version=version_hash,
             )
-            for tool in tools
+            for binary in tools
         ]
 
         result.append(
@@ -264,19 +282,19 @@ def get_graphics_fuzz_121() -> List[artifacts.RecipeWrap]:
                             # glslangValidator
                             Binary(
                                 name="glslangValidator",
-                                platform="Linux",
+                                tags=["Linux", "x64", "Release"],
                                 path="graphicsfuzz/bin/Linux/glslangValidator",
                                 version="40c16ec0b3ad03fc170f1369a58e7bbe662d82cd",
                             ),
                             Binary(
                                 name="glslangValidator",
-                                platform="Windows",
+                                tags=["Windows", "x64", "Release"],
                                 path="graphicsfuzz/bin/Windows/glslangValidator.exe",
                                 version="40c16ec0b3ad03fc170f1369a58e7bbe662d82cd",
                             ),
                             Binary(
                                 name="glslangValidator",
-                                platform="Mac",
+                                tags=["Mac", "x64", "Release"],
                                 path="graphicsfuzz/bin/Mac/glslangValidator",
                                 version="40c16ec0b3ad03fc170f1369a58e7bbe662d82cd",
                             ),
@@ -284,19 +302,19 @@ def get_graphics_fuzz_121() -> List[artifacts.RecipeWrap]:
                             # spirv-opt
                             Binary(
                                 name="spirv-opt",
-                                platform="Linux",
+                                tags=["Linux", "x64", "Release"],
                                 path="graphicsfuzz/bin/Linux/spirv-opt",
                                 version="a2ef7be242bcacaa9127a3ce011602ec54b2c9ed",
                             ),
                             Binary(
                                 name="spirv-opt",
-                                platform="Windows",
+                                tags=["Windows", "x64", "Release"],
                                 path="graphicsfuzz/bin/Windows/spirv-opt.exe",
                                 version="a2ef7be242bcacaa9127a3ce011602ec54b2c9ed",
                             ),
                             Binary(
                                 name="spirv-opt",
-                                platform="Mac",
+                                tags=["Mac", "x64", "Release"],
                                 path="graphicsfuzz/bin/Mac/spirv-opt",
                                 version="a2ef7be242bcacaa9127a3ce011602ec54b2c9ed",
                             ),
@@ -304,19 +322,19 @@ def get_graphics_fuzz_121() -> List[artifacts.RecipeWrap]:
                             # spirv-dis
                             Binary(
                                 name="spirv-dis",
-                                platform="Linux",
+                                tags=["Linux", "x64", "Release"],
                                 path="graphicsfuzz/bin/Linux/spirv-dis",
                                 version="a2ef7be242bcacaa9127a3ce011602ec54b2c9ed",
                             ),
                             Binary(
                                 name="spirv-dis",
-                                platform="Windows",
+                                tags=["Windows", "x64", "Release"],
                                 path="graphicsfuzz/bin/Windows/spirv-dis.exe",
                                 version="a2ef7be242bcacaa9127a3ce011602ec54b2c9ed",
                             ),
                             Binary(
                                 name="spirv-dis",
-                                platform="Mac",
+                                tags=["Mac", "x64", "Release"],
                                 path="graphicsfuzz/bin/Mac/spirv-dis",
                                 version="a2ef7be242bcacaa9127a3ce011602ec54b2c9ed",
                             ),
@@ -324,19 +342,19 @@ def get_graphics_fuzz_121() -> List[artifacts.RecipeWrap]:
                             # spirv-as
                             Binary(
                                 name="spirv-as",
-                                platform="Linux",
+                                tags=["Linux", "x64", "Release"],
                                 path="graphicsfuzz/bin/Linux/spirv-as",
                                 version="a2ef7be242bcacaa9127a3ce011602ec54b2c9ed",
                             ),
                             Binary(
                                 name="spirv-as",
-                                platform="Windows",
+                                tags=["Windows", "x64", "Release"],
                                 path="graphicsfuzz/bin/Windows/spirv-as.exe",
                                 version="a2ef7be242bcacaa9127a3ce011602ec54b2c9ed",
                             ),
                             Binary(
                                 name="spirv-as",
-                                platform="Mac",
+                                tags=["Mac", "x64", "Release"],
                                 path="graphicsfuzz/bin/Mac/spirv-as",
                                 version="a2ef7be242bcacaa9127a3ce011602ec54b2c9ed",
                             ),
@@ -349,8 +367,7 @@ def get_graphics_fuzz_121() -> List[artifacts.RecipeWrap]:
 
 
 BUILT_IN_BINARY_RECIPES: List[artifacts.RecipeWrap] = (
-    get_graphics_fuzz_121()
-    + _get_built_in_spirv_tools_version(
+    _get_built_in_spirv_tools_version(
         version_hash="4a00a80c40484a6f6f72f48c9d34943cf8f180d4",
         build_version_hash="422f2fe0f0f32494fa687a12ba343d24863b330a",
     )
@@ -358,4 +375,5 @@ BUILT_IN_BINARY_RECIPES: List[artifacts.RecipeWrap] = (
         version_hash="9866ad9195cec8f266f16191fb4ec2ce4896e5c0",
         build_version_hash="1586e566f4949b1957e7c32454cbf27e501ed632",
     )
+    + get_graphics_fuzz_121()
 )

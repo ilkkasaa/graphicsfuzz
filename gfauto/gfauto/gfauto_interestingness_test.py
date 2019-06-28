@@ -18,7 +18,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from gfauto import fuzz, test_util, util, result_util
+from gfauto import fuzz, test_util, util, result_util, built_in_binaries
 from gfauto.gflogging import log
 
 from gfauto.util import check, check_file_exists
@@ -62,11 +62,16 @@ def main() -> None:
         ),
     )
 
+    binary_manager = built_in_binaries.BinaryManager(
+        [], util.get_platform(), built_in_binaries.BUILT_IN_BINARY_RECIPES_PATH_PREFIX
+    )
+
     output_dir = fuzz.run_shader_job(
         shader_job_json,
         output_dir=shader_job_json.with_suffix(""),
         test=test,
         device=test.device,
+        binary_manager=binary_manager,
     )
 
     log(

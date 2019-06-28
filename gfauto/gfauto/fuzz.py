@@ -21,7 +21,7 @@ import sys
 import uuid
 from pathlib import Path
 from subprocess import SubprocessError
-from typing import Iterator, Match, Optional, List, Dict
+from typing import Iterator, Match, Optional, List
 
 from gfauto import (
     host_device_util,
@@ -38,13 +38,9 @@ from gfauto import (
     recipe_spirv_asm_shader_job_to_amber_script,
     android_device,
     built_in_binaries,
-    recipe_glsl_shader_job_to_spirv_shader_job,
 )
-from gfauto.common_pb2 import Binary
 from gfauto.device_pb2 import Device
 from gfauto.test_pb2 import Test, TestGlsl
-from gfauto.tool import BinaryPaths
-
 from gfauto.util import check
 
 
@@ -70,10 +66,10 @@ def make_subtest(
 
     test = Test(glsl=TestGlsl(spirv_opt_args=spirv_opt_args))
 
-    test.binaries.append(binary_manager.get_binary_by_name(name="glslangValidator"))
-    test.binaries.append(binary_manager.get_binary_by_name(name="spirv-dis"))
+    test.binaries.extend([binary_manager.get_binary_by_name(name="glslangValidator")])
+    test.binaries.extend([binary_manager.get_binary_by_name(name="spirv-dis")])
     if spirv_opt_args:
-        test.binaries.append(binary_manager.get_binary_by_name(name="spirv-opt"))
+        test.binaries.extend([binary_manager.get_binary_by_name(name="spirv-opt")])
 
     # Write the test metadata.
     test_util.metadata_write(test, subtest_dir)
@@ -100,7 +96,25 @@ def main() -> None:
     # Filter to only include .json files that have at least one shader (.frag, .vert, .comp) file.
     references = [ref for ref in references if shader_job_util.get_related_files(ref)]
 
-    binary_manager = built_in_binaries.BinaryManager(built_in_binaries.DEFAULT_BINARIES)
+    binary_manager = built_in_binaries.BinaryManager(
+        built_in_binaries.DEFAULT_BINARIES,
+        util.get_platform(),
+        built_in_binaries_artifact_path_prefix=built_in_binaries.BUILT_IN_BINARY_RECIPES_PATH_PREFIX,
+    )
+
+    # For convenience, we add the default (i.e. newest) SwiftShader ICD (binary) to any swift_shader devices
+    # so that we don't need to specify it and update it in the device list (on disk).
+    for device in active_devices:
+        if device.HasField("swift_shader"):
+            just_swift_binaries = [
+                binary
+                for binary in device.binaries
+                if "swift" not in binary.name.lower()
+            ]
+            if len(list(just_swift_binaries)) == 0:
+                device.binaries.extend(
+                    [binary_manager.get_binary_by_name("swift_shader_icd")]
+                )
 
     while True:
         test_name = get_random_name()
@@ -695,36 +709,37 @@ def run_shader_job(
             device_binaries = list(device.binaries)
             test_binaries = list(test.binaries)
 
-            binary_paths.glslang_binary = binary_manager.get_binary_path_by_name(
+            binary_paths.glslang_binary, _ = binary_manager.get_binary_path_by_name(
                 name=built_in_binaries.GLSLANG_VALIDATOR_NAME,
                 device_binaries=device_binaries,
                 test_binaries=test_binaries,
             )
 
-            binary_paths.glslang_binary = binary_manager.get_binary_path_by_name(
-                name=built_in_binaries.GLSLANG_VALIDATOR_NAME,
+            binary_paths.spirv_val_binary, _ = binary_manager.get_binary_path_by_name(
+                name=built_in_binaries.SPIRV_VAL_NAME,
                 device_binaries=device_binaries,
                 test_binaries=test_binaries,
             )
 
-            # TODO: Find amber path?
+            spirv_opt_hash: Optional[str] = None
+            if test.glsl.spirv_opt_args:
+                binary_paths.spirv_opt_binary, spirv_opt_hash = binary_manager.get_binary_path_by_name(
+                    name=built_in_binaries.SPIRV_OPT_NAME,
+                    device_binaries=device_binaries,
+                    test_binaries=test_binaries,
+                )
+
+            if device.HasField("swift_shader"):
+                binary_paths.swift_shader_icd, _ = binary_manager.get_binary_path_by_name(
+                    name=built_in_binaries.SWIFT_SHADER_NAME,
+                    device_binaries=device_binaries,
+                    test_binaries=test_binaries,
+                )
+
+            # TODO: Find amber path. NDK or host.
 
             # TODO: If Amber is going to be used, check if Amber can use Vulkan debug layers now, and if not, pass that
             #  info down via a bool.
-
-            # TODO: find specific version of spirv-val.
-
-            binary_paths.spirv_val_binary = util.tool_on_path("spirv-val")
-
-            if device.HasField("swift_shader"):
-                # TODO: Find the right SwiftShader path here (or maybe earlier so it is only done once?) based on
-                #  version hash and known binaries, etc.
-                binary_paths.swift_shader_icd = (
-                    Path("binaries")
-                    / "swiftshader_vulkan"
-                    / util.get_platform()
-                    / "vk_swiftshader_icd.json"
-                )
 
             try:
                 amber_script_file = tool.glsl_shader_job_to_amber_script(
@@ -733,10 +748,10 @@ def run_shader_job(
                     output_dir,
                     binary_paths,
                     recipe_spirv_asm_shader_job_to_amber_script.AmberfySettings(
-                        spirv_opt_args=list(test.test_glsl.spirv_opt_args),
-                        spirv_opt_hash=binary_paths.spirv_opt_hash,
+                        spirv_opt_args=list(test.glsl.spirv_opt_args),
+                        spirv_opt_hash=spirv_opt_hash,
                     ),
-                    spirv_opt_args=list(test_glsl.spirv_opt_args),
+                    spirv_opt_args=list(test.glsl.spirv_opt_args),
                 )
             except SubprocessError:
                 util.file_write_text(output_dir / "STATUS", "TOOL_CRASH")

@@ -13,10 +13,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from pathlib import Path
 from typing import Dict
 from typing import List
 
+from gfauto import util, proto_util, android_device
 from gfauto.device_pb2 import (
     DeviceList,
     Device,
@@ -24,13 +26,11 @@ from gfauto.device_pb2 import (
     DevicePreprocess,
     DeviceHost,
 )
-from gfauto import util, proto_util, android_device
-from gfauto.gflogging import log
 
 
 def swift_shader_device() -> Device:
     # TODO: version hash, maybe a better name.
-    return Device(name="swift_shader", swift_shader=DeviceSwiftShader(version_hash=""))
+    return Device(name="swift_shader", swift_shader=DeviceSwiftShader())
 
 
 def device_preprocessor() -> Device:
@@ -51,19 +51,22 @@ def get_device_list() -> DeviceList:
     # Create device list from scratch.
     device_list = DeviceList()
 
+    # We use |extend| below (instead of |append|) because you cannot append to a list of non-scalars in protobufs.
+    # |extend| copies the elements from the list and appends them.
+
     # SwiftShader.
     device = swift_shader_device()
-    device_list.devices.append(device)
+    device_list.devices.extend([device])
     device_list.active_device_names.append(device.name)
 
     # Host preprocessor.
     device = device_preprocessor()
-    device_list.devices.append(device)
+    device_list.devices.extend([device])
     device_list.active_device_names.append(device.name)
 
     # Host device.
     device = device_host()
-    device_list.devices.append(device)
+    device_list.devices.extend([device])
     device_list.active_device_names.append(device.name)
 
     # Android devices.

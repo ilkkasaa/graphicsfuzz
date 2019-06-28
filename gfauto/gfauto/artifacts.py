@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import pathlib
-from pathlib import Path
 from typing import List, Optional, Tuple
 
 from gfauto import (
@@ -29,12 +28,12 @@ from gfauto import (
     recipe_spirv_asm_shader_job_to_amber_script,
     recipe_glsl_reference_shader_job_to_glsl_variant_shader_job,
     recipe_download_and_extract_archive_set,
+    built_in_binaries,
 )
 from gfauto.artifact_pb2 import ArtifactMetadata, ArtifactMetadataTextFile
-from gfauto.common_pb2 import Archive, ArchiveSet, Binary
+from gfauto.common_pb2 import ArchiveSet
 from gfauto.recipe_pb2 import (
     Recipe,
-    RecipeDownloadAndExtractArchiveSet,
     RecipeGlslShaderJobAddRedPixels,
     RecipeGlslShaderJobToSpirvShaderJob,
     RecipeSpirvAsmShaderJobToAmberScript,
@@ -69,7 +68,7 @@ class RecipeWrap:
 
 
 def recipes_write_built_in() -> None:
-    for recipe_wrap in BUILT_IN_BINARY_RECIPES:
+    for recipe_wrap in built_in_binaries.BUILT_IN_BINARY_RECIPES:
         if not artifact_get_metadata_file_path(recipe_wrap.path).exists():
             recipe_wrap.write()
 
@@ -310,9 +309,7 @@ def artifact_find_binary(artifact_path: str, binary_name: str) -> pathlib.Path:
 
     if metadata.data.extracted_archive_set.archive_set.binaries:
         for binary in metadata.data.extracted_archive_set.archive_set.binaries:
-            if (
-                not binary.platform or binary.platform == platform
-            ) and binary.name == binary_name:
+            if binary.name == binary_name and (platform in binary.tags):
                 return artifact_get_inner_file_path(binary.path, artifact_path)
 
     raise AssertionError(

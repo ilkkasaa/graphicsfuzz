@@ -18,12 +18,9 @@ import pathlib
 import random
 from typing import List, Optional
 
-from gfauto import util, subprocess_util, shader_job_util, artifacts
+from gfauto import util, subprocess_util, shader_job_util, artifacts, built_in_binaries
 from gfauto.artifact_pb2 import ArtifactMetadata
 from gfauto.recipe_pb2 import RecipeSpirvShaderJobToSpirvShaderJobOpt
-
-SPIRV_OPT_NAME = "spirv-opt"
-
 
 OPT_OPTIONS: List[str] = [
     "--ccp",
@@ -70,7 +67,7 @@ def run_spirv_opt_on_spirv_shader(
 ) -> pathlib.Path:
 
     if not spirv_opt_file_path:
-        spirv_opt_file_path = util.tool_on_path(SPIRV_OPT_NAME)
+        spirv_opt_file_path = util.tool_on_path(built_in_binaries.SPIRV_OPT_NAME)
 
     output_spirv_file_path = output_dir_path / input_spirv_file_path.name
 
@@ -101,7 +98,7 @@ def run_spirv_opt_on_spirv_shader_job(
 ) -> pathlib.Path:
 
     if not spirv_opt_file_path:
-        spirv_opt_file_path = util.tool_on_path(SPIRV_OPT_NAME)
+        spirv_opt_file_path = util.tool_on_path(built_in_binaries.SPIRV_OPT_NAME)
 
     shader_files = shader_job_util.get_related_files(
         input_spirv_shader_job_json_file_path,
@@ -158,10 +155,10 @@ def recipe_spirv_shader_job_to_spirv_shader_job_opt(
 
     if recipe.spirv_opt_artifact:
         spirv_opt_file_path = artifacts.artifact_find_binary(
-            recipe.spirv_opt_artifact, SPIRV_OPT_NAME
+            recipe.spirv_opt_artifact, built_in_binaries.SPIRV_OPT_NAME
         )
     else:
-        spirv_opt_file_path = util.tool_on_path(SPIRV_OPT_NAME)
+        spirv_opt_file_path = util.tool_on_path(built_in_binaries.SPIRV_OPT_NAME)
 
     run_spirv_opt_on_spirv_shader_job(
         input_shader_job_json,
