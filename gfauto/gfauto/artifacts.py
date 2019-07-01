@@ -56,17 +56,6 @@ class Artifact:
         )
 
 
-class RecipeWrap:
-    recipe: Recipe
-
-    def __init__(self, path: str, recipe: Optional[Recipe] = None):
-        self.path = path
-        self.recipe = recipe or artifact_read_recipe(path)
-
-    def write(self) -> str:
-        return artifact_write_recipe(self.recipe, self.path)
-
-
 def recipes_write_built_in() -> None:
     for recipe_wrap in built_in_binaries.BUILT_IN_BINARY_RECIPES:
         if not artifact_get_metadata_file_path(recipe_wrap.path).exists():

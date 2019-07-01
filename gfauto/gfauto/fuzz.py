@@ -38,8 +38,12 @@ from gfauto import (
     recipe_spirv_asm_shader_job_to_amber_script,
     android_device,
     built_in_binaries,
+    settings_util,
+    artifacts,
 )
 from gfauto.device_pb2 import Device
+from gfauto.gflogging import log
+from gfauto.settings_pb2 import Settings
 from gfauto.test_pb2 import Test, TestGlsl
 from gfauto.util import check
 
@@ -77,19 +81,45 @@ def make_subtest(
     return subtest_dir
 
 
+class NoSettingsFile(Exception):
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
 def main() -> None:
     # TODO: Use sys.argv[1:].
 
     # TODO: Remove.
     random.seed(77)
 
-    device_list = devices_util.read_device_list()
-    active_devices = devices_util.get_active_devices(device_list)
+    try:
+        settings = settings_util.read()
+    except FileNotFoundError as exception:
+        settings_util.write_default()
+        raise NoSettingsFile(
+            f"Could not find {settings_util.SETTINGS_FILE_PATH}. "
+            "A default settings file has been created for you. "
+            "Please review it and then run fuzz again. "
+        ) from exception
+
+    active_devices = devices_util.get_active_devices(settings.device_list)
 
     reports_dir = Path() / "reports"
     temp_dir = Path() / "temp"
     donors_dir = Path() / "donors"
     references = sorted(donors_dir.rglob("*.json"))
+
+    if donors_dir.exists():
+        try:
+            artifacts.artifact_path_get_root()
+        except FileNotFoundError:
+            log(
+                "Could not find ROOT file (in the current directory or above) to mark where binaries should be stored. "
+                "Creating a ROOT file in the current directory."
+            )
+            util.file_write_text(Path(artifacts.ARTIFACT_ROOT_FILE_NAME), "")
+
+    artifacts.recipes_write_built_in()
 
     # TODO: make GraphicsFuzz find donors recursively.
 
@@ -251,21 +281,21 @@ PATTERN_CATCHSEGV_STACK_FRAME_ADDRESS = re.compile(
 
 def get_signature_from_log_contents(log_contents: str) -> str:
 
-    if log_contents.find("Shader compilation failed") != -1:
+    if "Shader compilation failed" in log_contents:
         return "compile_error"
 
-    if log_contents.find("Failed to link shaders") != -1:
+    if "Failed to link shaders" in log_contents:
         return "link_error"
 
-    if log_contents.find("Calling vkCreateGraphicsPipelines Fail") != -1:
+    if "Calling vkCreateGraphicsPipelines Fail" in log_contents:
         return "pipeline_failure"
 
     # TODO: Check for Amber fence failure.
 
-    if log_contents.find("Resource deadlock would occur") != -1:
+    if "Resource deadlock would occur" in log_contents:
         return "Resource_deadlock_would_occur"
 
-    if log_contents.find("error: line ") != -1:
+    if "error: line " in log_contents:
         lines = log_contents.split("\n")
         for line in lines:
             spirv_opt_error_matches = re.finditer(
@@ -284,7 +314,7 @@ def get_signature_from_log_contents(log_contents: str) -> str:
                 group = group[:20]
                 return group
 
-    if log_contents.find("0 pass, 1 fail") != -1:
+    if "0 pass, 1 fail" in log_contents:
         lines = log_contents.split("\n")
         for line in lines:
             amber_error_matches = re.finditer(
@@ -301,7 +331,7 @@ def get_signature_from_log_contents(log_contents: str) -> str:
                 group = re.sub(r"[^\w]", "_", group)
                 return group
 
-    if log_contents.find("SPIR-V is not generated for failed compile or link") != -1:
+    if "SPIR-V is not generated for failed compile or link" in log_contents:
         lines = log_contents.split("\n")
         for line in lines:
             glslang_error_matches = re.finditer(
@@ -318,7 +348,7 @@ def get_signature_from_log_contents(log_contents: str) -> str:
                 group = re.sub(r"[^\w]", "_", group)
                 return group
 
-    if log_contents.find("#00 pc") != -1:
+    if "#00 pc" in log_contents:
         lines = log_contents.split("\n")
         for line in lines:
             pc_pos = line.find("#00 pc")
@@ -326,7 +356,7 @@ def get_signature_from_log_contents(log_contents: str) -> str:
                 continue
             line = line[pc_pos:]
 
-            if line.find("/amber_ndk") != -1:
+            if "/amber_ndk" in line:
                 return "amber_ndk"
 
             cpp_function_matches = re.finditer(
@@ -352,7 +382,7 @@ def get_signature_from_log_contents(log_contents: str) -> str:
             break
 
     # catchsegv "Backtrace:" with source code info.
-    if log_contents.find("Backtrace:") != -1:
+    if "Backtrace:" in log_contents:
         catchsegv_matches = re.finditer(
             PATTERN_CATCHSEGV_STACK_FRAME, log_contents
         )  # type: Iterator[Match[str]]
@@ -365,7 +395,7 @@ def get_signature_from_log_contents(log_contents: str) -> str:
             group = group[:50]
             return group
 
-    if log_contents.find("Backtrace:") != -1:
+    if "Backtrace:" in log_contents:
         result = get_signature_from_catchsegv_frame_address(log_contents)
         if result:
             return result
@@ -588,6 +618,7 @@ def handle_glsl_test(
 
     # Run on all devices.
     for device in active_devices:
+        log(f"Running test on device:\n{device.name}")
 
         result_output_dir = run_shader_job(
             test_util.get_shader_job_path(test_dir, is_variant=True),

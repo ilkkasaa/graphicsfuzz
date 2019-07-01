@@ -54,13 +54,13 @@ def get_device_list() -> DeviceList:
     # We use |extend| below (instead of |append|) because you cannot append to a list of non-scalars in protobufs.
     # |extend| copies the elements from the list and appends them.
 
-    # SwiftShader.
-    device = swift_shader_device()
+    # Host preprocessor.
+    device = device_preprocessor()
     device_list.devices.extend([device])
     device_list.active_device_names.append(device.name)
 
-    # Host preprocessor.
-    device = device_preprocessor()
+    # SwiftShader.
+    device = swift_shader_device()
     device_list.devices.extend([device])
     device_list.active_device_names.append(device.name)
 

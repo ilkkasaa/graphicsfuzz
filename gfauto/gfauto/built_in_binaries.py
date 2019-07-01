@@ -13,10 +13,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from pathlib import Path
 from typing import List, Optional, Dict, Tuple
-from gfauto import artifacts
+
+import attr
+
+from gfauto import artifacts, recipe_wrap
 from gfauto.common_pb2 import ArchiveSet, Archive, Binary
+from gfauto.gflogging import log
 from gfauto.recipe_pb2 import RecipeDownloadAndExtractArchiveSet, Recipe
 
 LATEST_GRAPHICSFUZZ_ARTIFACT = "//binaries/graphicsfuzz_v1.2.1"
@@ -28,6 +33,18 @@ SPIRV_DIS_NAME = "spirv-dis"
 SWIFT_SHADER_NAME = "swift_shader_icd"
 
 BUILT_IN_BINARY_RECIPES_PATH_PREFIX = "//binaries"
+
+PLATFORM_SUFFIXES_DEBUG = ["Linux_x64_Debug", "Windows_x64_Debug", "Mac_x64_Debug"]
+PLATFORM_SUFFIXES_RELEASE = [
+    "Linux_x64_Release",
+    "Windows_x64_Release",
+    "Mac_x64_Release",
+]
+PLATFORM_SUFFIXES_RELWITHDEBINFO = [
+    "Linux_x64_RelWithDebInfo",
+    "Windows_x64_RelWithDebInfo",
+    "Mac_x64_RelWithDebInfo",
+]
 
 DEFAULT_BINARIES = [
     Binary(
@@ -61,11 +78,11 @@ DEFAULT_BINARIES = [
 class BinaryManager:
     """
     _default_binaries: A list of Binary with name, version, configuration.
-    _resolved_binaries:
+    _resolved_binaries: Binary -> Path
     """
 
     _default_binaries: List[Binary]
-    _resolved_paths: Dict[Binary, Path]
+    _resolved_paths: Dict[bytes, Path]
     _binary_artifacts: List[Tuple[ArchiveSet, str]]
 
     def __init__(
@@ -75,7 +92,7 @@ class BinaryManager:
         built_in_binaries_artifact_path_prefix: Optional[str] = None,
     ):
         self._default_binaries = default_binaries
-        self._resolved_paths = {}
+        self._resolved_paths = dict()
         self._platform = platform
         self._binary_artifacts = []
 
@@ -85,9 +102,10 @@ class BinaryManager:
             )
 
     def get_binary_path(self, binary: Binary) -> Path:
-        result = self._resolved_paths.get(binary)
+        result = self._resolved_paths.get(binary.SerializePartialToString())
         if result:
             return result
+        log(f"Finding path of binary:\n{binary}")
         for (archive_set, artifact_path) in self._binary_artifacts:
             for artifact_binary in archive_set.binaries:  # type: Binary
                 if artifact_binary.name != binary.name:
@@ -101,16 +119,14 @@ class BinaryManager:
                 result = artifacts.artifact_get_inner_file_path(
                     artifact_binary.path, artifact_path
                 )
-                self._resolved_paths[binary] = result
-        if not result:
-            raise AssertionError(f"Could not find binary:\n {binary}")
-        return result
+                self._resolved_paths[binary.SerializePartialToString()] = result
+                return result
+        raise AssertionError(f"Could not find binary:\n {binary}")
 
-    def get_binary_by_name_from_list(
-        self, name: str, binary_list: List[Binary]
-    ) -> Binary:
+    @staticmethod
+    def get_binary_by_name_from_list(name: str, binary_list: List[Binary]) -> Binary:
         for binary in binary_list:
-            if binary.name == name and self._platform in binary.tags:
+            if binary.name == name:
                 return binary
 
         raise AssertionError(
@@ -145,16 +161,11 @@ class BinaryManager:
         return self.get_binary_by_name_from_list(name, binary_list)
 
 
+@attr.dataclass
 class ToolNameAndPath:
-    def __init__(self, name: str, subpath: str, is_executable: bool = True):
-        """
-        :param name: Tool name. E.g. "glslangValidator".
-        :param subpath: Tool subpath in the artifact, using "/" as the path separator. E.g. "bin/glslangValidator.exe".
-        :param is_executable: True if ".exe" suffix should be added to the subpath on Windows.
-        """
-        self.name = name
-        self.subpath = subpath
-        self.is_executable = is_executable
+    name: str
+    subpath: str
+    add_exe_on_windows: bool = True
 
 
 def get_platform_from_platform_suffix(platform_suffix: str) -> str:
@@ -168,12 +179,10 @@ def get_platform_from_platform_suffix(platform_suffix: str) -> str:
 def add_common_tags_from_platform_suffix(tags: List[str], platform_suffix: str) -> None:
     platform = get_platform_from_platform_suffix(platform_suffix)
     tags.append(platform)
-    if "Release" in platform_suffix:
-        tags.append("Release")
-    if "Debug" in platform_suffix:
-        tags.append("Debug")
-    if "x64" in platform_suffix:
-        tags.append("x64")
+    common_tags = ["Release", "Debug", "RelWithDebInfo", "x64"]
+    for common_tag in common_tags:
+        if common_tag in platform_suffix:
+            tags.append(common_tag)
 
 
 def _get_built_in_binary_recipe_from_build_github_repo(
@@ -182,9 +191,9 @@ def _get_built_in_binary_recipe_from_build_github_repo(
     build_version_hash: str,
     platform_suffixes: List[str],
     tools: List[ToolNameAndPath],
-) -> List[artifacts.RecipeWrap]:
+) -> List[recipe_wrap.RecipeWrap]:
 
-    result: List[artifacts.RecipeWrap] = []
+    result: List[recipe_wrap.RecipeWrap] = []
 
     for platform_suffix in platform_suffixes:
         tags: List[str] = []
@@ -194,7 +203,7 @@ def _get_built_in_binary_recipe_from_build_github_repo(
                 name=binary.name,
                 tags=tags,
                 path=(
-                    (binary.subpath + ".exe") if "Windows" in tags else binary.subpath
+                    f"{project_name}/{(binary.subpath + '.exe') if 'Windows' in tags and binary.add_exe_on_windows else binary.subpath}"
                 ),
                 version=version_hash,
             )
@@ -202,7 +211,7 @@ def _get_built_in_binary_recipe_from_build_github_repo(
         ]
 
         result.append(
-            artifacts.RecipeWrap(
+            recipe_wrap.RecipeWrap(
                 f"//binaries/{project_name}_{version_hash}_{platform_suffix}",
                 Recipe(
                     download_and_extract_archive_set=RecipeDownloadAndExtractArchiveSet(
@@ -224,18 +233,34 @@ def _get_built_in_binary_recipe_from_build_github_repo(
     return result
 
 
+def _get_built_in_swift_shader_version(
+    version_hash: str, build_version_hash: str
+) -> List[recipe_wrap.RecipeWrap]:
+    return _get_built_in_binary_recipe_from_build_github_repo(
+        project_name="swiftshader",
+        version_hash=version_hash,
+        build_version_hash=build_version_hash,
+        platform_suffixes=PLATFORM_SUFFIXES_RELEASE
+        + PLATFORM_SUFFIXES_DEBUG
+        + PLATFORM_SUFFIXES_RELWITHDEBINFO,
+        tools=[
+            ToolNameAndPath(
+                name="swift_shader_icd",
+                subpath="lib/vk_swiftshader_icd.json",
+                add_exe_on_windows=False,
+            )
+        ],
+    )
+
+
 def _get_built_in_spirv_tools_version(
     version_hash: str, build_version_hash: str
-) -> List[artifacts.RecipeWrap]:
+) -> List[recipe_wrap.RecipeWrap]:
     return _get_built_in_binary_recipe_from_build_github_repo(
         project_name="SPIRV-Tools",
         version_hash=version_hash,
         build_version_hash=build_version_hash,
-        platform_suffixes=[
-            "Linux_x64_Release",
-            "Windows_x64_Release",
-            "Mac_x64_Release",
-        ],
+        platform_suffixes=PLATFORM_SUFFIXES_RELEASE + PLATFORM_SUFFIXES_DEBUG,
         tools=[
             ToolNameAndPath(name="spirv-as", subpath="bin/spirv-as"),
             ToolNameAndPath(name="spirv-dis", subpath="bin/spirv-dis"),
@@ -247,25 +272,21 @@ def _get_built_in_spirv_tools_version(
 
 def _get_built_in_glslang_version(
     version_hash: str, build_version_hash: str
-) -> List[artifacts.RecipeWrap]:
+) -> List[recipe_wrap.RecipeWrap]:
     return _get_built_in_binary_recipe_from_build_github_repo(
         project_name="glslang",
         version_hash=version_hash,
         build_version_hash=build_version_hash,
-        platform_suffixes=[
-            "Linux_x64_Release",
-            "Windows_x64_Release",
-            "Mac_x64_Release",
-        ],
+        platform_suffixes=PLATFORM_SUFFIXES_RELEASE + PLATFORM_SUFFIXES_DEBUG,
         tools=[
             ToolNameAndPath(name="glslangValidator", subpath="bin/glslangValidator")
         ],
     )
 
 
-def get_graphics_fuzz_121() -> List[artifacts.RecipeWrap]:
+def get_graphics_fuzz_121() -> List[recipe_wrap.RecipeWrap]:
     return [
-        artifacts.RecipeWrap(
+        recipe_wrap.RecipeWrap(
             "//binaries/graphicsfuzz_v1.2.1",
             Recipe(
                 download_and_extract_archive_set=RecipeDownloadAndExtractArchiveSet(
@@ -366,7 +387,7 @@ def get_graphics_fuzz_121() -> List[artifacts.RecipeWrap]:
     ]
 
 
-BUILT_IN_BINARY_RECIPES: List[artifacts.RecipeWrap] = (
+BUILT_IN_BINARY_RECIPES: List[recipe_wrap.RecipeWrap] = (
     _get_built_in_spirv_tools_version(
         version_hash="4a00a80c40484a6f6f72f48c9d34943cf8f180d4",
         build_version_hash="422f2fe0f0f32494fa687a12ba343d24863b330a",
@@ -374,6 +395,10 @@ BUILT_IN_BINARY_RECIPES: List[artifacts.RecipeWrap] = (
     + _get_built_in_glslang_version(
         version_hash="9866ad9195cec8f266f16191fb4ec2ce4896e5c0",
         build_version_hash="1586e566f4949b1957e7c32454cbf27e501ed632",
+    )
+    + _get_built_in_swift_shader_version(
+        version_hash="a0b3a02601da8c48012a4259d335be04d00818da",
+        build_version_hash="08fb8d429272ef8eedb4d610943b9fe59d336dc6",
     )
     + get_graphics_fuzz_121()
 )

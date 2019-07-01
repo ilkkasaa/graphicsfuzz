@@ -100,9 +100,9 @@ def is_screen_off_or_locked(serial: Optional[str] = None) -> bool:
 
     stdout = str(res.stdout)
     # You will often find "mScreenState=OFF_LOCKED", but this catches OFF too, which is good.
-    if stdout.find("mScreenState=OFF") >= 0:
+    if "mScreenState=OFF" in stdout:
         return True
-    if stdout.find("mScreenState=ON_LOCKED") >= 0:
+    if "mScreenState=ON_LOCKED" in stdout:
         return True
 
     return False

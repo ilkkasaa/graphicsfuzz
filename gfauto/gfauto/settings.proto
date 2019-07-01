@@ -22,5 +22,5 @@ import "gfauto/device.proto";
 
 message Settings {
   DeviceList device_list = 1;
-  repeated Binary default_binaries = 2;
+  repeated Binary custom_binaries = 2;
 }

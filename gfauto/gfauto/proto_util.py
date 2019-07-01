@@ -13,13 +13,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from pathlib import Path
+from typing import Generic, TypeVar
 
 from google.protobuf import json_format
 from google.protobuf.message import Message
 
+from gfauto import util
 
-def json_to_message(json: str, message: Message) -> None:
+M = TypeVar("M", bound=Message)
+
+
+def json_to_message(json: str, message: M) -> M:
     json_format.Parse(json, message)
+    return message
 
 
 def message_to_json(
@@ -31,3 +38,18 @@ def message_to_json(
         preserving_proto_field_name=True,
         sort_keys=True,
     )
+
+
+def message_to_file(
+    message: Message,
+    output_file_path: Path,
+    including_default_value_fields: bool = True,
+) -> Path:
+    contents = message_to_json(message, including_default_value_fields)
+    util.file_write_text(output_file_path, contents)
+    return output_file_path
+
+
+def file_to_message(input_file_path: Path, message: M) -> M:
+    contents = util.file_read_text(input_file_path)
+    return json_to_message(contents, message)

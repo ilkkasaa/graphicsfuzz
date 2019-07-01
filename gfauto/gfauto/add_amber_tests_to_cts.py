@@ -52,9 +52,7 @@ def remove_start(string: str, start: str) -> str:
 
 
 def open_helper(file: str, mode: str) -> TextIO:  # noqa VNE002
-    check(
-        mode.find("b") == -1, AssertionError(f"|mode|(=={mode}) should not contain 'b'")
-    )
+    check("b" not in mode, AssertionError(f"|mode|(=={mode}) should not contain 'b'"))
     return cast(TextIO, open(file, mode, encoding="utf-8", errors="ignore"))
 
 

@@ -89,6 +89,6 @@ msan
 spvtools
 swiftshader
 libvk
-
+RELWITHDEBINFO
 
 
