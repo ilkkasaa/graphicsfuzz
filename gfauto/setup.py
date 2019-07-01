@@ -47,5 +47,6 @@ setup(
         "gfauto_fuzz = gfauto.fuzz:main",
         "gfauto_interestingness_test = gfauto.gfauto_interestingness_test:main",
         "gfauto_write_device_file = gfauto.devices_util:write_device_file",
+        "add_amber_tests_to_cts = gfauto.add_amber_tests_to_cts:main",
     ]},
 )

@@ -319,7 +319,7 @@ def add_amber_test(input_amber_test_file_path: str, vk_gl_cts: str) -> None:
         )
 
 
-def main(args: List[str]) -> None:
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="A script to add Amber tests to the CTS."
     )
@@ -332,7 +332,7 @@ def main(args: List[str]) -> None:
         nargs="+",
     )
 
-    parsed_args = parser.parse_args(args)
+    parsed_args = parser.parse_args(sys.argv[1:])
 
     vk_gl_cts = parsed_args.vk_gl_cts
     amber_files = parsed_args.amber_files
@@ -345,5 +345,5 @@ def main(args: List[str]) -> None:
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()
     sys.exit(0)

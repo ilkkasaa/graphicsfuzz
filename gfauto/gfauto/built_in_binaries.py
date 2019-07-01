@@ -19,7 +19,7 @@ from typing import List, Optional, Dict, Tuple
 
 import attr
 
-from gfauto import artifacts, recipe_wrap
+from gfauto import artifacts, recipe_wrap, util
 from gfauto.common_pb2 import ArchiveSet, Archive, Binary
 from gfauto.gflogging import log
 from gfauto.recipe_pb2 import RecipeDownloadAndExtractArchiveSet, Recipe
@@ -31,6 +31,8 @@ SPIRV_OPT_NAME = "spirv-opt"
 SPIRV_VAL_NAME = "spirv-val"
 SPIRV_DIS_NAME = "spirv-dis"
 SWIFT_SHADER_NAME = "swift_shader_icd"
+
+SPIRV_OPT_NO_VALIDATE_AFTER_ALL_TAG = "no-validate-after-all"
 
 BUILT_IN_BINARY_RECIPES_PATH_PREFIX = "//binaries"
 
@@ -87,11 +89,13 @@ class BinaryManager:
 
     def __init__(
         self,
-        default_binaries: List[Binary],
-        platform: str,
-        built_in_binaries_artifact_path_prefix: Optional[str] = None,
+        default_binaries: Optional[List[Binary]] = None,
+        platform: str = util.get_platform(),
+        built_in_binaries_artifact_path_prefix: Optional[
+            str
+        ] = BUILT_IN_BINARY_RECIPES_PATH_PREFIX,
     ):
-        self._default_binaries = default_binaries
+        self._default_binaries = default_binaries or []
         self._resolved_paths = dict()
         self._platform = platform
         self._binary_artifacts = []
@@ -323,19 +327,34 @@ def get_graphics_fuzz_121() -> List[recipe_wrap.RecipeWrap]:
                             # spirv-opt
                             Binary(
                                 name="spirv-opt",
-                                tags=["Linux", "x64", "Release"],
+                                tags=[
+                                    "Linux",
+                                    "x64",
+                                    "Release",
+                                    SPIRV_OPT_NO_VALIDATE_AFTER_ALL_TAG,
+                                ],
                                 path="graphicsfuzz/bin/Linux/spirv-opt",
                                 version="a2ef7be242bcacaa9127a3ce011602ec54b2c9ed",
                             ),
                             Binary(
                                 name="spirv-opt",
-                                tags=["Windows", "x64", "Release"],
+                                tags=[
+                                    "Windows",
+                                    "x64",
+                                    "Release",
+                                    SPIRV_OPT_NO_VALIDATE_AFTER_ALL_TAG,
+                                ],
                                 path="graphicsfuzz/bin/Windows/spirv-opt.exe",
                                 version="a2ef7be242bcacaa9127a3ce011602ec54b2c9ed",
                             ),
                             Binary(
                                 name="spirv-opt",
-                                tags=["Mac", "x64", "Release"],
+                                tags=[
+                                    "Mac",
+                                    "x64",
+                                    "Release",
+                                    SPIRV_OPT_NO_VALIDATE_AFTER_ALL_TAG,
+                                ],
                                 path="graphicsfuzz/bin/Mac/spirv-opt",
                                 version="a2ef7be242bcacaa9127a3ce011602ec54b2c9ed",
                             ),
@@ -379,6 +398,26 @@ def get_graphics_fuzz_121() -> List[recipe_wrap.RecipeWrap]:
                                 path="graphicsfuzz/bin/Mac/spirv-as",
                                 version="a2ef7be242bcacaa9127a3ce011602ec54b2c9ed",
                             ),
+                            #
+                            # spirv-val
+                            Binary(
+                                name="spirv-val",
+                                tags=["Linux", "x64", "Release"],
+                                path="graphicsfuzz/bin/Linux/spirv-val",
+                                version="a2ef7be242bcacaa9127a3ce011602ec54b2c9ed",
+                            ),
+                            Binary(
+                                name="spirv-val",
+                                tags=["Windows", "x64", "Release"],
+                                path="graphicsfuzz/bin/Windows/spirv-val.exe",
+                                version="a2ef7be242bcacaa9127a3ce011602ec54b2c9ed",
+                            ),
+                            Binary(
+                                name="spirv-val",
+                                tags=["Mac", "x64", "Release"],
+                                path="graphicsfuzz/bin/Mac/spirv-val",
+                                version="a2ef7be242bcacaa9127a3ce011602ec54b2c9ed",
+                            ),
                         ],
                     )
                 )
@@ -401,4 +440,8 @@ BUILT_IN_BINARY_RECIPES: List[recipe_wrap.RecipeWrap] = (
         build_version_hash="08fb8d429272ef8eedb4d610943b9fe59d336dc6",
     )
     + get_graphics_fuzz_121()
+    + _get_built_in_spirv_tools_version(
+        version_hash="1c1e749f0b51603032ed573acb5ee4cd6fee8d01",
+        build_version_hash="7663d620a7fbdccb330d2baec138d0e3e096457c",
+    )
 )

@@ -31,7 +31,7 @@ from gfauto import (
     built_in_binaries,
 )
 from gfauto.artifact_pb2 import ArtifactMetadata, ArtifactMetadataTextFile
-from gfauto.common_pb2 import ArchiveSet
+from gfauto.common_pb2 import ArchiveSet, Binary
 from gfauto.recipe_pb2 import (
     Recipe,
     RecipeGlslShaderJobAddRedPixels,
@@ -291,15 +291,19 @@ def artifact_get_inner_file_path(inner_file: str, artifact_path: str) -> pathlib
 # Type specific functions
 
 
-def artifact_find_binary(artifact_path: str, binary_name: str) -> pathlib.Path:
+def artifact_find_binary(
+    artifact_path: str, binary_name: str
+) -> Tuple[pathlib.Path, Binary]:
     metadata = artifact_read_metadata(artifact_path)
 
     platform = util.get_platform()
 
     if metadata.data.extracted_archive_set.archive_set.binaries:
-        for binary in metadata.data.extracted_archive_set.archive_set.binaries:
+        for (
+            binary
+        ) in metadata.data.extracted_archive_set.archive_set.binaries:  # type: Binary
             if binary.name == binary_name and (platform in binary.tags):
-                return artifact_get_inner_file_path(binary.path, artifact_path)
+                return artifact_get_inner_file_path(binary.path, artifact_path), binary
 
     raise AssertionError(
         f"Could not find {binary_name} in {artifact_path} for current platform: {platform}"

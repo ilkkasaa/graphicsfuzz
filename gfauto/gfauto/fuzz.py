@@ -251,7 +251,7 @@ PATTERN_C_FUNCTION = re.compile(r"\((\w+)(\+\d+\)|\()")
 # E.g. ERROR: temp/.../variant/shader.frag:549: 'variable indexing fragment shader output array' : not supported with this profile: es
 #                                     frag:123: 'variable indexing fragment shader output array'  <-- regex
 #                                                variable indexing fragment shader output array   <-- group 1
-PATTERN_GLSLANG_ERROR = re.compile(r"\w+:\d+: '([\w ]+)'")
+PATTERN_GLSLANG_ERROR = re.compile(r"\w+:\d+: '([^'\n]+)'")
 
 
 # E.g. /data/local/tmp/graphicsfuzz/test.amber: 256: probe ssbo format does not match buffer format
@@ -262,7 +262,7 @@ PATTERN_AMBER_ERROR = re.compile(r"\w: \d+: ([\w ]+)$")
 # E.g. error: line 0: Module contains unreachable blocks during merge return.  Run dead branch elimination before merge return.
 #      error: line 0: Module contains unreachable blocks during merge return.  Run dead branch elimination before merge return.
 #                     Module contains unreachable blocks during merge return.  Run dead branch elimination before merge return.
-PATTERN_SPIRV_OPT_ERROR = re.compile(r"^error: line \d+: ([\w .'\-\"]+)")
+PATTERN_SPIRV_OPT_ERROR = re.compile(r"^error: line \d+: ([^\n]+)")
 
 # E.g.
 # Backtrace:
@@ -346,6 +346,8 @@ def get_signature_from_log_contents(log_contents: str) -> str:
                 group = re.sub(r"\d+", "", group)
                 # Replace non-word characters with _.
                 group = re.sub(r"[^\w]", "_", group)
+                # Reduce length.
+                group = group[:20]
                 return group
 
     if "#00 pc" in log_contents:

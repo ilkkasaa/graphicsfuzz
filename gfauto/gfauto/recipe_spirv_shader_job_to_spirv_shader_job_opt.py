@@ -64,6 +64,7 @@ def run_spirv_opt_on_spirv_shader(
     output_dir_path: pathlib.Path,
     spirv_opt_args: List[str],
     spirv_opt_file_path: Optional[pathlib.Path] = None,
+    spirv_opt_no_validate_after_all: bool = False,
 ) -> pathlib.Path:
 
     if not spirv_opt_file_path:
@@ -78,8 +79,10 @@ def run_spirv_opt_on_spirv_shader(
         str(input_spirv_file_path),
         "-o",
         str(output_spirv_file_path),
-        "--validate-after-all",
     ]
+
+    if not spirv_opt_no_validate_after_all:
+        cmd.append("--validate-after-all")
 
     cmd += spirv_opt_args
 
@@ -95,6 +98,7 @@ def run_spirv_opt_on_spirv_shader_job(
     output_spirv_shader_job_json_file_path: pathlib.Path,
     spirv_opt_args: List[str],
     spirv_opt_file_path: Optional[pathlib.Path] = None,
+    spirv_opt_no_validate_after_all: bool = False,
 ) -> pathlib.Path:
 
     if not spirv_opt_file_path:
@@ -115,6 +119,7 @@ def run_spirv_opt_on_spirv_shader_job(
             output_spirv_shader_job_json_file_path.parent,
             spirv_opt_args,
             spirv_opt_file_path,
+            spirv_opt_no_validate_after_all,
         )
 
     return output_spirv_shader_job_json_file_path

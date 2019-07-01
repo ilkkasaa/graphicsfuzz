@@ -52,6 +52,7 @@ BINARY_NAME_KEY = "binary_name"
 class BinaryPaths:
     glslang_binary: Optional[Path] = None
     spirv_opt_binary: Optional[Path] = None
+    spirv_opt_no_validate_after_all: bool = False
     spirv_dis_binary: Optional[Path] = None
     spirv_val_binary: Optional[Path] = None
     swift_shader_icd: Optional[Path] = None
@@ -79,14 +80,22 @@ def get_binary_paths_using_artifact_system(artifact_path: str) -> BinaryPaths:
     artifacts.artifact_execute_recipe_if_needed(artifact_path)
     binary_paths = BinaryPaths()
 
-    binary_paths.glslang_binary = artifacts.artifact_find_binary(
+    binary_paths.glslang_binary, _ = artifacts.artifact_find_binary(
         artifact_path, built_in_binaries.GLSLANG_VALIDATOR_NAME
     )
-    binary_paths.spirv_opt_binary = artifacts.artifact_find_binary(
+    binary_paths.spirv_opt_binary, spirv_opt_binary_info = artifacts.artifact_find_binary(
         artifact_path, built_in_binaries.SPIRV_OPT_NAME
     )
-    binary_paths.spirv_dis_binary = artifacts.artifact_find_binary(
+    if (
+        built_in_binaries.SPIRV_OPT_NO_VALIDATE_AFTER_ALL_TAG
+        in spirv_opt_binary_info.tags
+    ):
+        binary_paths.spirv_opt_no_validate_after_all = True
+    binary_paths.spirv_dis_binary, _ = artifacts.artifact_find_binary(
         artifact_path, built_in_binaries.SPIRV_DIS_NAME
+    )
+    binary_paths.spirv_val_binary, _ = artifacts.artifact_find_binary(
+        artifact_path, built_in_binaries.SPIRV_VAL_NAME
     )
     return binary_paths
 
@@ -117,7 +126,11 @@ def spirv_opt_shader_job(
     binary_paths: BinaryPaths,
 ) -> Path:
     return recipe_spirv_shader_job_to_spirv_shader_job_opt.run_spirv_opt_on_spirv_shader_job(
-        input_json, output_json, spirv_opt_args, binary_paths.spirv_opt_binary
+        input_json,
+        output_json,
+        spirv_opt_args,
+        binary_paths.spirv_opt_binary,
+        binary_paths.spirv_opt_no_validate_after_all,
     )
 
 
