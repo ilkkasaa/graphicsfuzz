@@ -22,10 +22,14 @@ from gfauto.artifact_pb2 import ArtifactMetadata
 from gfauto.recipe_pb2 import RecipeGlslShaderJobToSpirvShaderJob
 
 
+GLSLANG_DEFAULT_TIME_LIMIT = 120
+
+
 def run_glslang_glsl_shader_to_spirv_shader(
     glsl_shader_path: pathlib.Path,
     output_dir_path: pathlib.Path,
     glslang_validator_file_path: Optional[pathlib.Path] = None,
+    time_limit: int = GLSLANG_DEFAULT_TIME_LIMIT,
 ) -> pathlib.Path:
 
     if not glslang_validator_file_path:
@@ -46,7 +50,8 @@ def run_glslang_glsl_shader_to_spirv_shader(
                 str(output_spirv_file_path),
                 str(glsl_shader_path),
             ]
-        )
+        ),
+        timeout=time_limit,
     )
 
     return output_spirv_file_path

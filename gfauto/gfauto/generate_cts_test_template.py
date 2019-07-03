@@ -18,7 +18,7 @@
 import sys
 from pathlib import Path
 
-from gfauto import tool, built_in_binaries
+from gfauto import tool
 
 
 def main() -> None:

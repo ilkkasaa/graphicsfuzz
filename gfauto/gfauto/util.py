@@ -22,6 +22,9 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, BinaryIO, Iterator, List, TextIO, cast
 
+MIN_SIGNED_INT_32 = -pow(2, 31)
+MAX_SIGNED_INT_32 = pow(2, 31) - 1
+
 # Note: Could use the built-in |file.open| and |file.write_text|, etc.
 
 
@@ -117,6 +120,16 @@ def move_dir(
     file_mkdirs_parent(dest_dir_path)
     shutil.move(source_dir_path, dest_dir_path)
     return dest_dir_path
+
+
+def make_directory_symlink(new_symlink_file_path: Path, existing_dir: Path) -> Path:
+    check(existing_dir.is_dir(), AssertionError(f"Not a directory: {existing_dir}"))
+    file_mkdirs_parent(new_symlink_file_path)
+    symlink_contents = os.path.relpath(
+        str(existing_dir), start=str(new_symlink_file_path.parent)
+    )
+    new_symlink_file_path.symlink_to(symlink_contents, target_is_directory=True)
+    return new_symlink_file_path
 
 
 def remove_start(string: str, start: str) -> str:

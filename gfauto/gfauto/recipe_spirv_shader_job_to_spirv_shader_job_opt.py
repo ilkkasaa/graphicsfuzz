@@ -22,6 +22,8 @@ from gfauto import util, subprocess_util, shader_job_util, artifacts, built_in_b
 from gfauto.artifact_pb2 import ArtifactMetadata
 from gfauto.recipe_pb2 import RecipeSpirvShaderJobToSpirvShaderJobOpt
 
+SPIRV_OPT_DEFAULT_TIME_LIMIT = 120
+
 OPT_OPTIONS: List[str] = [
     "--ccp",
     "--combine-access-chains",
@@ -65,6 +67,7 @@ def run_spirv_opt_on_spirv_shader(
     spirv_opt_args: List[str],
     spirv_opt_file_path: Optional[pathlib.Path] = None,
     spirv_opt_no_validate_after_all: bool = False,
+    time_limit: int = SPIRV_OPT_DEFAULT_TIME_LIMIT,
 ) -> pathlib.Path:
 
     if not spirv_opt_file_path:
@@ -88,7 +91,7 @@ def run_spirv_opt_on_spirv_shader(
 
     cmd = util.prepend_catchsegv_if_available(cmd)
 
-    subprocess_util.run(cmd)
+    subprocess_util.run(cmd, timeout=time_limit)
 
     return output_spirv_file_path
 

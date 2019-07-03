@@ -60,6 +60,7 @@ BEST_REDUCTION_NAME = "best"
 AMBER_RUN_TIME_LIMIT = 30
 
 STATUS_TOOL_CRASH = "TOOL_CRASH"
+STATUS_TOOL_TIMEOUT = "TOOL_TIMEOUT"
 STATUS_SUCCESS = "SUCCESS"
 
 
@@ -93,9 +94,6 @@ class NoSettingsFile(Exception):
 
 def main() -> None:
     # TODO: Use sys.argv[1:].
-
-    # TODO: Remove.
-    random.seed(778)
 
     try:
         settings = settings_util.read()
@@ -132,7 +130,7 @@ def main() -> None:
     references = [ref for ref in references if shader_job_util.get_related_files(ref)]
 
     binary_manager = built_in_binaries.BinaryManager(
-        built_in_binaries.DEFAULT_BINARIES,
+        list(settings.default_binaries) + built_in_binaries.DEFAULT_BINARIES,
         util.get_platform(),
         binary_artifacts_prefix=built_in_binaries.BUILT_IN_BINARY_RECIPES_PATH_PREFIX,
     )
@@ -152,6 +150,11 @@ def main() -> None:
                 )
 
     while True:
+        iteration_seed = random.randint(util.MIN_SIGNED_INT_32, util.MAX_SIGNED_INT_32)
+
+        log(f"Iteration seed: {iteration_seed}")
+        random.seed(iteration_seed)
+
         test_name = get_random_name()
         test_dir = temp_dir / test_name
 
@@ -283,6 +286,11 @@ PATTERN_CATCHSEGV_STACK_FRAME_ADDRESS = re.compile(
     r"Backtrace:\n(.*)\(\+([x\da-fA-F]+)+\)\["
 )
 
+# E.g.
+# glslangValidator: ../glslang/MachineIndependent/ParseHelper.cpp:2212: void glslang::TParseContext::nonOpBuiltInCheck(const glslang::TSourceLoc&, const glslang::TFunction&, glslang::TIntermAggregate&): Assertion `PureOperatorBuiltins == false' failed.
+
+PATTERN_GLSLANG_FAILURE = re.compile(r"glslangValidator:.*?: (.*)")
+
 
 def get_signature_from_log_contents(log_contents: str) -> str:
 
@@ -406,6 +414,25 @@ def get_signature_from_log_contents(log_contents: str) -> str:
         result = get_signature_from_catchsegv_frame_address(log_contents)
         if result:
             return result
+
+    if "glslangValidator:" in log_contents:
+        lines = log_contents.split("\n")
+        for line in lines:
+            glslang_failure_matches = re.finditer(
+                PATTERN_GLSLANG_FAILURE, line
+            )  # type: Iterator[Match[str]]
+            glslang_failure_match = next(
+                glslang_failure_matches, None
+            )  # type: Optional[Match[str]]
+            if glslang_failure_match:
+                group = glslang_failure_match.group(1)
+                # Remove numbers.
+                group = re.sub(r"\d+", "", group)
+                # Replace non-word characters with _.
+                group = re.sub(r"[^\w]", "_", group)
+                # Reduce length.
+                group = group[:20]
+                return group
 
     return "no_signature"
 
@@ -699,21 +726,23 @@ def handle_glsl_test(
                 reduction_name="part_1_preserve_semantics",
             )
 
-            part_2_name = "part_2_change_semantics"
-            run_reduction(
+            part_2_reduced_test = run_reduction(
                 test_dir_reduction_output=test_dir_in_reports,
                 test_dir_to_reduce=part_1_reduced_test,
                 preserve_semantics=False,
-                reduction_name=part_2_name,
+                reduction_name="part_2_change_semantics",
             )
 
             device_name = test_metadata.device.name
 
             # Create a symlink to the "best" reduction.
-            best_reduced_test = test_util.get_reduced_test_dir(
+            best_reduced_test_link = test_util.get_reduced_test_dir(
                 test_dir_in_reports, device_name, BEST_REDUCTION_NAME
             )
-            best_reduced_test.symlink_to(part_2_name, target_is_directory=True)
+            util.make_directory_symlink(
+                new_symlink_file_path=best_reduced_test_link,
+                existing_dir=part_2_reduced_test,
+            )
         except ReductionFailedError as ex:
             # Create a symlink to the failed reduction so it is easy to investigate failed reductions.
             link_to_failed_reduction_path = (
@@ -721,8 +750,9 @@ def handle_glsl_test(
                 / "failed_reductions"
                 / f"{test_dir_in_reports.name}_{ex.reduction_name}"
             )
-            link_to_failed_reduction_path.symlink_to(
-                ex.reduction_work_dir, target_is_directory=True
+            util.make_directory_symlink(
+                new_symlink_file_path=link_to_failed_reduction_path,
+                existing_dir=ex.reduction_work_dir,
             )
 
     # For each report, create a summary and reproduce the bug.
@@ -766,7 +796,7 @@ def create_summary_and_reproduce_glsl(
     reduced_source_dir = test_util.get_source_dir(reduced_test_dir)
     reduced_glsl = util.copy_dir(reduced_source_dir, summary_dir / "reduced_glsl")
 
-    variant_unreduced_glsl_result = run_shader_job(
+    run_shader_job(
         unreduced_glsl / test_util.VARIANT_DIR / test_util.SHADER_JOB,
         summary_dir / "unreduced_glsl_result" / test_util.VARIANT_DIR,
         test_metadata,
@@ -799,6 +829,10 @@ def create_summary_and_reproduce_glsl(
         )
 
         shader_extension = shader_files[0].suffix
+
+        bug_report_dir = util.copy_dir(
+            variant_reduced_glsl_result, summary_dir / "bug_report"
+        )
 
         shader_files = sorted(bug_report_dir.rglob("shader.*"))
 
@@ -841,10 +875,6 @@ def create_summary_and_reproduce_glsl(
 
         if test_metadata.glsl.spirv_opt_args:
             readme += f"`spirv-opt shader{shader_extension}.spv -o temp.spv --validate-after-all {' '.join(test_metadata.glsl.spirv_opt_args)}`\n\n"
-
-        bug_report_dir = util.copy_dir(
-            variant_reduced_glsl_result, summary_dir / "bug_report"
-        )
 
         files_to_list = glsl_files + spv_files + asm_files
         files_to_list.sort()
@@ -911,9 +941,14 @@ def run_shader_job(
                     ),
                     spirv_opt_args=list(test.glsl.spirv_opt_args),
                 )
-            except subprocess.SubprocessError:
+            except subprocess.CalledProcessError:
                 util.file_write_text(
                     result_util.get_status_path(output_dir), STATUS_TOOL_CRASH
+                )
+                return output_dir
+            except subprocess.TimeoutExpired:
+                util.file_write_text(
+                    result_util.get_status_path(output_dir), STATUS_TOOL_TIMEOUT
                 )
                 return output_dir
 
