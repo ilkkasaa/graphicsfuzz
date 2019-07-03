@@ -187,7 +187,7 @@ def run_amber_on_device(
     serial: Optional[str] = None,
 ) -> Path:
 
-    with file_open_text(output_dir / "amber_log.txt", "w") as log_file:
+    with file_open_text(result_util.get_amber_log_path(output_dir), "w") as log_file:
         try:
             gflogging.push_stream_for_logging(log_file)
 

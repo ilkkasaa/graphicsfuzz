@@ -32,27 +32,22 @@ Install and configure plugins:
   * The watcher task should already be under version control with the following settings:
     * File type: Python
     * Program: `$ProjectFileDir$/fix_all.sh`
+* Mypy: the built-in PyCharm type checking actually use Mypy behinds the scenes, but this plugin enhances it by using the latest version and strict settings used by the `./check_all.sh` script.
 
+## Symlinking other scripts
 
-## Using iPython
+GraphicsFuzz auto moves fast and so it is useful to add symlinks to other repositories that contain Python scripts that depend on GraphicsFuzz auto. This allows you to search for all references before changing a function. A `temp/` directory exists for this purpose. For example:
 
-Using an iPython shell is useful for modifying artifacts interactively.
-
-
-```python
-# Start iPython, if not running already.
-ipython
-
-# Disabling jedi can help with autocompletion of protobuf objects.
-%config IPCompleter.use_jedi=False
-
-from gfauto.artifacts import *
-
-# This is executed as a shell command.
-cd /data/artifacts
-
-a = ArtifactMetadata()
-a.data.glsl_shader_job.shader_job_file = "shader.json"
-
-artifact_write_metadata(a, '//my_glsl_shader_job')
+```sh
+cd temp
+ln -s /path/to/shader-generation shader-generation
 ```
+
+Now any scripts in the `shader-generation` repository are visible in PyCharm.
+
+You can execute scripts in this repository by opening a Terminal in PyCharm.
+
+## Terminal
+
+To reiterate, the `Terminal` tab in PyCharm is useful and will use the project's Python virtual environment. In any other terminal, you can execute the `./dev_shell.sh`, but this is fairly slow as it checks and reinstalls all dependencies. 
+

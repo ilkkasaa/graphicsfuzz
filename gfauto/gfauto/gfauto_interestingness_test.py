@@ -18,7 +18,15 @@ import argparse
 import sys
 from pathlib import Path
 
-from gfauto import fuzz, test_util, util, result_util, built_in_binaries
+from gfauto import (
+    fuzz,
+    test_util,
+    util,
+    result_util,
+    built_in_binaries,
+    fuzz_glsl_test,
+    signature_util,
+)
 from gfauto.gflogging import log
 
 from gfauto.util import check, check_file_exists
@@ -66,7 +74,7 @@ def main() -> None:
         [], util.get_platform(), built_in_binaries.BUILT_IN_BINARY_RECIPES_PATH_PREFIX
     )
 
-    output_dir = fuzz.run_shader_job(
+    output_dir = fuzz_glsl_test.run_shader_job(
         shader_job_json,
         output_dir=shader_job_json.with_suffix(""),
         test=test,
@@ -84,7 +92,7 @@ def main() -> None:
         sys.exit(1)
 
     log_contents = util.file_read_text(result_util.get_log_path(output_dir))
-    signature = fuzz.get_signature_from_log_contents(log_contents)
+    signature = signature_util.get_signature_from_log_contents(log_contents)
 
     log(f"Expected signature: {test.crash_signature}")
     log(f"Actual   signature: {signature}")

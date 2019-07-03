@@ -30,3 +30,7 @@ def get_status(result_output_dir: Path) -> str:
 
 def get_log_path(result_output_dir: Path) -> Path:
     return result_output_dir / "log.txt"
+
+
+def get_amber_log_path(result_dir: Path) -> Path:
+    return result_dir / "amber_log.txt"

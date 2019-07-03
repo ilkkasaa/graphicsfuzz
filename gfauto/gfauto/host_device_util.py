@@ -31,7 +31,7 @@ def run_amber(
     icd: Optional[Path] = None,
 ) -> Path:
     with util.file_open_text(
-        fuzz.result_get_amber_log_path(output_dir), "w"
+        result_util.get_amber_log_path(output_dir), "w"
     ) as log_file:
         try:
             gflogging.push_stream_for_logging(log_file)
