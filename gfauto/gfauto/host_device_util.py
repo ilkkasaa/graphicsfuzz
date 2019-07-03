@@ -114,7 +114,7 @@ def run_amber_helper(
         if result.returncode != 0:
             status = "CRASH"
         else:
-            status = "SUCCESS"
+            status = fuzz.STATUS_SUCCESS
 
     log("\nSTATUS " + status + "\n")
 

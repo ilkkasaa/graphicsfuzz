@@ -51,7 +51,7 @@ def get_device_list() -> DeviceList:
     # Create device list from scratch.
     device_list = DeviceList()
 
-    # We use |extend| below (instead of |append|) because you cannot append to a list of non-scalars in protobufs.
+    # We use |extend| below (instead of |append|) because you cannot append to a list of non-scalars in protobuf.
     # |extend| copies the elements from the list and appends them.
 
     # Host preprocessor.

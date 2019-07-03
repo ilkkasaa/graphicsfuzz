@@ -23,7 +23,7 @@ EXT_FRAG = ".frag"
 EXT_VERT = ".vert"
 EXT_COMP = ".comp"
 
-EXT_ALL = (EXT_FRAG, EXT_VERT, EXT_COMP)
+EXT_ALL = (EXT_FRAG, EXT_COMP, EXT_VERT)
 
 SUFFIX_GLSL = ""
 SUFFIX_SPIRV = ".spv"

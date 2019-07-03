@@ -75,11 +75,11 @@ def main() -> None:
     )
 
     log(
-        f"gfauto_intestingness_test: finished running {str(shader_job_json)} in {str(output_dir)}."
+        f"gfauto_interestingness_test: finished running {str(shader_job_json)} in {str(output_dir)}."
     )
 
     status = result_util.get_status(output_dir)
-    if status not in ("CRASH", "TOOL_CRASH"):
+    if status not in ("CRASH", fuzz.STATUS_TOOL_CRASH):
         log("Shader run did not crash; not interesting.")
         sys.exit(1)
 

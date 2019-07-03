@@ -250,7 +250,7 @@ def run_amber_on_device_helper(
         if result.returncode != 0:
             status = "CRASH"
         else:
-            status = "SUCCESS"
+            status = fuzz.STATUS_SUCCESS
 
         if not skip_render:
             adb_check(

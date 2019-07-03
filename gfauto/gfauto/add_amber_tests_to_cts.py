@@ -19,7 +19,7 @@ import argparse
 import os
 import shutil
 import sys
-from typing import List, TextIO, cast
+from typing import TextIO, cast
 
 # This file is self-contained so it can be provided alongside Amber test files.
 

@@ -13,13 +13,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import abc
 from pathlib import Path
 from typing import List, Optional, Dict, Tuple
 
 import attr
 
-from gfauto import artifacts, recipe_wrap, util
+from gfauto import artifacts, recipe_wrap, util, test_util
 from gfauto.common_pb2 import ArchiveSet, Archive, Binary
 from gfauto.gflogging import log
 from gfauto.recipe_pb2 import RecipeDownloadAndExtractArchiveSet, Recipe
@@ -57,17 +57,17 @@ DEFAULT_BINARIES = [
     Binary(
         name="spirv-opt",
         tags=["Release"],
-        version="a2ef7be242bcacaa9127a3ce011602ec54b2c9ed",
+        version="4a00a80c40484a6f6f72f48c9d34943cf8f180d4",
     ),
     Binary(
         name="spirv-dis",
         tags=["Release"],
-        version="a2ef7be242bcacaa9127a3ce011602ec54b2c9ed",
+        version="4a00a80c40484a6f6f72f48c9d34943cf8f180d4",
     ),
     Binary(
         name="spirv-val",
         tags=["Release"],
-        version="a2ef7be242bcacaa9127a3ce011602ec54b2c9ed",
+        version="4a00a80c40484a6f6f72f48c9d34943cf8f180d4",
     ),
     Binary(
         name="swift_shader_icd",
@@ -77,45 +77,75 @@ DEFAULT_BINARIES = [
 ]
 
 
-class BinaryManager:
+@attr.dataclass
+class BinaryPathAndInfo:
+    path: Path
+    binary: Binary
+
+
+class BinaryGetter(abc.ABC):
+    def get_binary_path_by_name(self, name: str) -> BinaryPathAndInfo:
+        pass
+
+
+class BinaryNotFound(Exception):
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
+class BinaryPathNotFound(Exception):
+    def __init__(self, binary: Binary):
+        super().__init__(f"Could not find binary path for binary: \n{binary}")
+
+
+class BinaryManager(BinaryGetter):
     """
-    _default_binaries: A list of Binary with name, version, configuration.
-    _resolved_binaries: Binary -> Path
+    _binary_list: A list of Binary with name, version, configuration. This is used to map a binary name to a Binary.
+    _resolved_paths: Binary (serialized) -> Path
     """
 
-    _default_binaries: List[Binary]
+    _binary_list: List[Binary]
     _resolved_paths: Dict[bytes, Path]
     _binary_artifacts: List[Tuple[ArchiveSet, str]]
 
     def __init__(
         self,
-        default_binaries: Optional[List[Binary]] = None,
+        binary_list: Optional[List[Binary]] = None,
         platform: str = util.get_platform(),
-        built_in_binaries_artifact_path_prefix: Optional[
-            str
-        ] = BUILT_IN_BINARY_RECIPES_PATH_PREFIX,
+        binary_artifacts_prefix: Optional[str] = BUILT_IN_BINARY_RECIPES_PATH_PREFIX,
     ):
-        self._default_binaries = default_binaries or []
+        self._binary_list = binary_list or []
         self._resolved_paths = dict()
         self._platform = platform
         self._binary_artifacts = []
 
-        if built_in_binaries_artifact_path_prefix:
-            self._binary_artifacts = artifacts.binary_artifacts_find(
-                built_in_binaries_artifact_path_prefix
+        if binary_artifacts_prefix:
+            self._binary_artifacts.extend(
+                artifacts.binary_artifacts_find(binary_artifacts_prefix)
             )
+
+    @staticmethod
+    def get_binary_list_from_test_metadata(test_json_path: Path) -> List[Binary]:
+        test_metadata = test_util.metadata_read_from_path(test_json_path)
+        result: List[Binary] = list()
+        if test_metadata.device:
+            result.extend(test_metadata.device.binaries)
+        result.extend(test_metadata.binaries)
+        return result
 
     def get_binary_path(self, binary: Binary) -> Path:
         result = self._resolved_paths.get(binary.SerializePartialToString())
         if result:
             return result
         log(f"Finding path of binary:\n{binary}")
+        binary_tags = set(binary.tags)
+        binary_tags.add(self._platform)
         for (archive_set, artifact_path) in self._binary_artifacts:
             for artifact_binary in archive_set.binaries:  # type: Binary
                 if artifact_binary.name != binary.name:
                     continue
-                binary_tags = set(binary.tags)
-                binary_tags.add(self._platform)
+                if artifact_binary.version != binary.version:
+                    continue
                 recipe_binary_tags = set(artifact_binary.tags)
                 if not binary_tags.issubset(recipe_binary_tags):
                     continue
@@ -125,44 +155,33 @@ class BinaryManager:
                 )
                 self._resolved_paths[binary.SerializePartialToString()] = result
                 return result
-        raise AssertionError(f"Could not find binary:\n {binary}")
+        raise BinaryPathNotFound(binary)
 
     @staticmethod
     def get_binary_by_name_from_list(name: str, binary_list: List[Binary]) -> Binary:
         for binary in binary_list:
             if binary.name == name:
                 return binary
-
-        raise AssertionError(
-            f"Could not find suitable binary named {name} in list {binary_list}"
+        raise BinaryNotFound(
+            f"Could not find binary named {name} in list:\n{binary_list}"
         )
 
-    def get_binary_path_by_name(
-        self,
-        name: str,
-        custom_binaries: Optional[List[Binary]] = None,
-        device_binaries: Optional[List[Binary]] = None,
-        test_binaries: Optional[List[Binary]] = None,
-    ) -> Tuple[Path, str]:
-        binary = self.get_binary_by_name(
-            name, custom_binaries, device_binaries, test_binaries
-        )
-        return self.get_binary_path(binary), binary.version
+    def get_binary_path_by_name(self, name: str) -> BinaryPathAndInfo:
+        binary = self.get_binary_by_name(name)
+        return BinaryPathAndInfo(self.get_binary_path(binary), binary)
 
-    def get_binary_by_name(
-        self,
-        name: str,
-        custom_binaries: Optional[List[Binary]] = None,
-        device_binaries: Optional[List[Binary]] = None,
-        test_binaries: Optional[List[Binary]] = None,
-    ) -> Binary:
-        binary_list = (
-            (custom_binaries or [])
-            + (device_binaries or [])
-            + (test_binaries or [])
-            + self._default_binaries
+    def get_binary_by_name(self, name: str) -> Binary:
+        return self.get_binary_by_name_from_list(name, self._binary_list)
+
+    def get_child_binary_manager(self, binary_list: List[Binary]) -> "BinaryManager":
+        result = BinaryManager(
+            binary_list + self._binary_list,
+            self._platform,
+            binary_artifacts_prefix=None,
         )
-        return self.get_binary_by_name_from_list(name, binary_list)
+        result._resolved_paths = self._resolved_paths
+        result._binary_artifacts = self._binary_artifacts
+        return result
 
 
 @attr.dataclass

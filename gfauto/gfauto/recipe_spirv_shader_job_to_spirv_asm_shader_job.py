@@ -104,7 +104,7 @@ def recipe_spirv_shader_job_to_spirv_asm_shader_job(
     )
 
     if recipe.spirv_dis_artifact:
-        spirv_dis_file_path = artifacts.artifact_find_binary(
+        spirv_dis_file_path, _ = artifacts.artifact_find_binary(
             recipe.spirv_dis_artifact, built_in_binaries.SPIRV_DIS_NAME
         )
     else:

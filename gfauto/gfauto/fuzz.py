@@ -17,10 +17,10 @@
 import random
 import re
 import shutil
+import subprocess
 import sys
 import uuid
 from pathlib import Path
-from subprocess import SubprocessError
 from typing import Iterator, Match, Optional, List
 
 from gfauto import (
@@ -43,7 +43,6 @@ from gfauto import (
 )
 from gfauto.device_pb2 import Device
 from gfauto.gflogging import log
-from gfauto.settings_pb2 import Settings
 from gfauto.test_pb2 import Test, TestGlsl
 from gfauto.util import check
 
@@ -56,7 +55,12 @@ def get_random_name() -> str:
 IMAGE_FILE_NAME = "image.png"
 BUFFER_FILE_NAME = "buffer.bin"
 
+BEST_REDUCTION_NAME = "best"
+
 AMBER_RUN_TIME_LIMIT = 30
+
+STATUS_TOOL_CRASH = "TOOL_CRASH"
+STATUS_SUCCESS = "SUCCESS"
 
 
 def make_subtest(
@@ -72,6 +76,7 @@ def make_subtest(
 
     test.binaries.extend([binary_manager.get_binary_by_name(name="glslangValidator")])
     test.binaries.extend([binary_manager.get_binary_by_name(name="spirv-dis")])
+    test.binaries.extend([binary_manager.get_binary_by_name(name="spirv-val")])
     if spirv_opt_args:
         test.binaries.extend([binary_manager.get_binary_by_name(name="spirv-opt")])
 
@@ -90,7 +95,7 @@ def main() -> None:
     # TODO: Use sys.argv[1:].
 
     # TODO: Remove.
-    random.seed(77)
+    random.seed(778)
 
     try:
         settings = settings_util.read()
@@ -129,7 +134,7 @@ def main() -> None:
     binary_manager = built_in_binaries.BinaryManager(
         built_in_binaries.DEFAULT_BINARIES,
         util.get_platform(),
-        built_in_binaries_artifact_path_prefix=built_in_binaries.BUILT_IN_BINARY_RECIPES_PATH_PREFIX,
+        binary_artifacts_prefix=built_in_binaries.BUILT_IN_BINARY_RECIPES_PATH_PREFIX,
     )
 
     # For convenience, we add the default (i.e. newest) SwiftShader ICD (binary) to any swift_shader devices
@@ -222,7 +227,7 @@ def handle_test(
     reports_dir: Path,
     active_devices: List[Device],
     binary_manager: built_in_binaries.BinaryManager,
-) -> List[Path]:
+) -> bool:
     test = test_util.metadata_read(test_dir)
     if test.HasField("glsl"):
         return handle_glsl_test(
@@ -614,9 +619,10 @@ def handle_glsl_test(
     reports_dir: Path,
     active_devices: List[Device],
     binary_manager: built_in_binaries.BinaryManager,
-) -> List[Path]:
+) -> bool:
 
     report_paths: List[Path] = []
+    issue_found = False
 
     # Run on all devices.
     for device in active_devices:
@@ -632,7 +638,7 @@ def handle_glsl_test(
 
         status = result_util.get_status(result_output_dir)
 
-        if status == "TOOL_CRASH":
+        if status == STATUS_TOOL_CRASH:
             # No need to run further on real devices if the pre-processing step failed.
             break
 
@@ -651,10 +657,11 @@ def handle_glsl_test(
 
         if status == "CRASH":
             report_subdirectory_name = "crashes"
-        elif status == "TOOL_CRASH":
+        elif status == STATUS_TOOL_CRASH:
             report_subdirectory_name = "tool_crashes"
 
         if report_subdirectory_name:
+            issue_found = True
             log_path = result_util.get_log_path(result_output_dir)
 
             log_contents = util.file_read_text(log_path)
@@ -663,20 +670,20 @@ def handle_glsl_test(
             # We include the device name in the directory name because it is possible that this test crashes on two
             # different devices but gives the same crash signature in both cases (e.g. for generic signatures
             # like "compile_error"). This would lead to two test copies having the same path.
-            test_dir_in_reports = util.copy_dir(
-                test_dir,
-                reports_dir
-                / report_subdirectory_name
-                / signature
-                / f"{test_dir.name}_{device.name}",
-            )
+            signature_dir = reports_dir / report_subdirectory_name / signature
 
-            test_metadata = test_util.metadata_read(test_dir_in_reports)
-            test_metadata.crash_signature = signature
-            test_metadata.device.CopyFrom(device)
-            test_util.metadata_write(test_metadata, test_dir_in_reports)
+            # If the signature_dir contains a NOT_INTERESTING file, then don't bother creating a report.
+            if not (signature_dir / "NOT_INTERESTING").exists():
+                test_dir_in_reports = signature_dir / f"{test_dir.name}_{device.name}"
 
-            report_paths.append(test_dir_in_reports)
+                util.copy_dir(test_dir, test_dir_in_reports)
+
+                test_metadata = test_util.metadata_read(test_dir_in_reports)
+                test_metadata.crash_signature = signature
+                test_metadata.device.CopyFrom(device)
+                test_util.metadata_write(test_metadata, test_dir_in_reports)
+
+                report_paths.append(test_dir_in_reports)
 
     # For each report, run a reduction on the target device with the device-specific crash signature.
     for test_dir_in_reports in report_paths:
@@ -704,7 +711,7 @@ def handle_glsl_test(
 
             # Create a symlink to the "best" reduction.
             best_reduced_test = test_util.get_reduced_test_dir(
-                test_dir_in_reports, device_name, "best"
+                test_dir_in_reports, device_name, BEST_REDUCTION_NAME
             )
             best_reduced_test.symlink_to(part_2_name, target_is_directory=True)
         except ReductionFailedError as ex:
@@ -718,7 +725,146 @@ def handle_glsl_test(
                 ex.reduction_work_dir, target_is_directory=True
             )
 
-    return report_paths
+    # For each report, create a summary and reproduce the bug.
+    for test_dir_in_reports in report_paths:
+        create_summary_and_reproduce(test_dir_in_reports, binary_manager)
+
+    return issue_found
+
+
+def create_summary_and_reproduce(
+    test_dir: Path,
+    binary_manager: built_in_binaries.BinaryManager,
+    device: Optional[Device] = None,
+) -> None:
+    util.mkdirs_p(test_dir / "summary")
+    test_metadata = test_util.metadata_read(test_dir)
+    if test_metadata.HasField("glsl"):
+        create_summary_and_reproduce_glsl(test_dir, binary_manager, device)
+    else:
+        raise AssertionError("Unrecognized test type")
+
+
+def create_summary_and_reproduce_glsl(
+    test_dir: Path,
+    binary_manager: built_in_binaries.BinaryManager,
+    device: Optional[Device] = None,
+) -> None:
+    test_metadata = test_util.metadata_read(test_dir)
+    if not device:
+        device = test_metadata.device
+
+    summary_dir = test_dir / "summary"
+
+    unreduced_glsl = util.copy_dir(
+        test_util.get_source_dir(test_dir), summary_dir / "unreduced_glsl"
+    )
+
+    reduced_test_dir = test_util.get_reduced_test_dir(
+        test_dir, test_metadata.device.name, BEST_REDUCTION_NAME
+    )
+    reduced_source_dir = test_util.get_source_dir(reduced_test_dir)
+    reduced_glsl = util.copy_dir(reduced_source_dir, summary_dir / "reduced_glsl")
+
+    variant_unreduced_glsl_result = run_shader_job(
+        unreduced_glsl / test_util.VARIANT_DIR / test_util.SHADER_JOB,
+        summary_dir / "unreduced_glsl_result" / test_util.VARIANT_DIR,
+        test_metadata,
+        device,
+        binary_manager,
+    )
+
+    variant_reduced_glsl_result = run_shader_job(
+        reduced_glsl / test_util.VARIANT_DIR / test_util.SHADER_JOB,
+        summary_dir / "reduced_glsl_result" / test_util.VARIANT_DIR,
+        test_metadata,
+        device,
+        binary_manager,
+    )
+
+    # Some post-processing for common error types.
+
+    status = result_util.get_status(variant_reduced_glsl_result)
+    if status == STATUS_TOOL_CRASH:
+        # Create a simple script and README.
+
+        shader_job = unreduced_glsl / test_util.VARIANT_DIR / test_util.SHADER_JOB
+
+        shader_files = shader_job_util.get_related_files(
+            shader_job, shader_job_util.EXT_ALL
+        )
+        check(
+            len(shader_files) > 0,
+            AssertionError(f"Need at least one shader for {shader_job}"),
+        )
+
+        shader_extension = shader_files[0].suffix
+
+        shader_files = sorted(bug_report_dir.rglob("shader.*"))
+
+        glsl_files = [
+            shader_file
+            for shader_file in shader_files
+            if shader_file.suffix == shader_extension
+        ]
+
+        asm_files = [
+            shader_file
+            for shader_file in shader_files
+            if shader_file.name.endswith(
+                shader_extension + shader_job_util.SUFFIX_ASM_SPIRV
+            )
+        ]
+
+        spv_files = [
+            shader_file
+            for shader_file in shader_files
+            if shader_file.name.endswith(
+                shader_extension + shader_job_util.SUFFIX_SPIRV
+            )
+        ]
+
+        readme = "\n\n"
+        readme += "Issue found using [GraphicsFuzz](https://github.com/google/graphicsfuzz).\n\n"
+        readme += "Tool versions:\n\n"
+        readme += f"* glslangValidator commit hash: {binary_manager.get_binary_by_name(built_in_binaries.GLSLANG_VALIDATOR_NAME).version}\n"
+
+        if test_metadata.glsl.spirv_opt_args:
+            readme += f"* spirv-opt commit hash: {binary_manager.get_binary_by_name(built_in_binaries.SPIRV_OPT_NAME).version}\n"
+
+        readme += "\nTo reproduce:\n\n"
+        readme += f"`glslangValidator -V shader{shader_extension} -o shader{shader_extension}.spv`\n\n"
+
+        if spv_files and not test_metadata.glsl.spirv_opt_args:
+            # There was an .spv file and no spirv-opt, so validate the SPIR-V.
+            readme += f"`spirv-val shader{shader_extension}.spv`\n\n"
+
+        if test_metadata.glsl.spirv_opt_args:
+            readme += f"`spirv-opt shader{shader_extension}.spv -o temp.spv --validate-after-all {' '.join(test_metadata.glsl.spirv_opt_args)}`\n\n"
+
+        bug_report_dir = util.copy_dir(
+            variant_reduced_glsl_result, summary_dir / "bug_report"
+        )
+
+        files_to_list = glsl_files + spv_files + asm_files
+        files_to_list.sort()
+
+        files_to_show = glsl_files + asm_files
+        files_to_show.sort()
+
+        readme += "The following shader files are included in the attached archive, some of which are also shown inline below:\n\n"
+
+        for file_to_list in files_to_list:
+            short_path = file_to_list.relative_to(bug_report_dir).as_posix()
+            readme += f"* {short_path}\n"
+
+        for file_to_show in files_to_show:
+            short_path = file_to_show.relative_to(bug_report_dir).as_posix()
+            contents = util.file_read_text(file_to_show)
+            readme += f"\n{short_path}:\n\n"
+            readme += "```\n" + contents + "\n```\n"
+
+        util.file_write_text(summary_dir / "README.md", readme)
 
 
 def result_get_amber_log_path(result_dir: Path) -> Path:
@@ -737,37 +883,9 @@ def run_shader_job(
         try:
             gflogging.push_stream_for_logging(log_file)
 
-            binary_paths = tool.BinaryPaths()
-
-            device_binaries = list(device.binaries)
-            test_binaries = list(test.binaries)
-
-            binary_paths.glslang_binary, _ = binary_manager.get_binary_path_by_name(
-                name=built_in_binaries.GLSLANG_VALIDATOR_NAME,
-                device_binaries=device_binaries,
-                test_binaries=test_binaries,
+            binary_paths = binary_manager.get_child_binary_manager(
+                list(device.binaries) + list(test.binaries)
             )
-
-            binary_paths.spirv_val_binary, _ = binary_manager.get_binary_path_by_name(
-                name=built_in_binaries.SPIRV_VAL_NAME,
-                device_binaries=device_binaries,
-                test_binaries=test_binaries,
-            )
-
-            spirv_opt_hash: Optional[str] = None
-            if test.glsl.spirv_opt_args:
-                binary_paths.spirv_opt_binary, spirv_opt_hash = binary_manager.get_binary_path_by_name(
-                    name=built_in_binaries.SPIRV_OPT_NAME,
-                    device_binaries=device_binaries,
-                    test_binaries=test_binaries,
-                )
-
-            if device.HasField("swift_shader"):
-                binary_paths.swift_shader_icd, _ = binary_manager.get_binary_path_by_name(
-                    name=built_in_binaries.SWIFT_SHADER_NAME,
-                    device_binaries=device_binaries,
-                    test_binaries=test_binaries,
-                )
 
             # TODO: Find amber path. NDK or host.
 
@@ -775,6 +893,13 @@ def run_shader_job(
             #  info down via a bool.
 
             try:
+
+                spirv_opt_hash: Optional[str] = None
+                if test.glsl.spirv_opt_args:
+                    spirv_opt_hash = binary_paths.get_binary_by_name(
+                        built_in_binaries.SPIRV_OPT_NAME
+                    ).version
+
                 amber_script_file = tool.glsl_shader_job_to_amber_script(
                     shader_job,
                     output_dir / "test.amber",
@@ -786,8 +911,10 @@ def run_shader_job(
                     ),
                     spirv_opt_args=list(test.glsl.spirv_opt_args),
                 )
-            except SubprocessError:
-                util.file_write_text(output_dir / "STATUS", "TOOL_CRASH")
+            except subprocess.SubprocessError:
+                util.file_write_text(
+                    result_util.get_status_path(output_dir), STATUS_TOOL_CRASH
+                )
                 return output_dir
 
             is_compute = bool(
@@ -800,18 +927,18 @@ def run_shader_job(
 
             if device.HasField("preprocess"):
                 # The "preprocess" device type just needs to get this far, so this is a success.
-                util.file_write_text(output_dir / "STATUS", "SUCCESS")
+                util.file_write_text(
+                    result_util.get_status_path(output_dir), STATUS_SUCCESS
+                )
                 return output_dir
 
             if device.HasField("host") or device.HasField("swift_shader"):
                 icd: Optional[Path] = None
 
                 if device.HasField("swift_shader"):
-                    check(
-                        bool(binary_paths.swift_shader_icd),
-                        AssertionError("SwiftShader path not found"),
-                    )
-                    icd = binary_paths.swift_shader_icd
+                    icd = binary_paths.get_binary_path_by_name(
+                        built_in_binaries.SWIFT_SHADER_NAME
+                    ).path
 
                 # Run the shader on the host using Amber.
                 host_device_util.run_amber(

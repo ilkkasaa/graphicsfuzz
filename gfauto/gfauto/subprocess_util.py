@@ -23,6 +23,10 @@ from .gflogging import log
 from .util import check
 
 
+LOG_COMMAND_FAILED_PREFIX = "Command failed: "
+LOG_COMMAND_TIMED_OUT_PREFIX = "Command timed out: "
+
+
 def convert_stdout_stderr(
     result: Union[
         subprocess.CalledProcessError,
@@ -136,11 +140,12 @@ def run(
     try:
         result = run_helper(cmd, check_exit_code, timeout, env)
     except subprocess.TimeoutExpired as ex:
+        log(LOG_COMMAND_TIMED_OUT_PREFIX + str(cmd))
         # no return code to log in case of timeout
         log_stdout_stderr(ex)
         raise ex
-
     except subprocess.CalledProcessError as ex:
+        log(LOG_COMMAND_FAILED_PREFIX + str(cmd))
         log_returncode(ex)
         log_stdout_stderr(ex)
         raise ex

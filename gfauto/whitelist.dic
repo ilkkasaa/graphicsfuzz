@@ -90,5 +90,13 @@ spvtools
 swiftshader
 libvk
 RELWITHDEBINFO
+vkscript
+subpath
+myuniform
+ivec
+subdata
+fbsize
+passthrough
+pushd
 
 

@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from pathlib import Path
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from google.protobuf import json_format
 from google.protobuf.message import Message
@@ -25,7 +25,7 @@ M = TypeVar("M", bound=Message)
 
 
 def json_to_message(json: str, message: M) -> M:
-    json_format.Parse(json, message)
+    json_format.Parse(json, message, ignore_unknown_fields=True)
     return message
 
 

@@ -97,7 +97,7 @@ def recipe_glsl_shader_job_to_spirv_shader_job(
     )
 
     if recipe.glslang_validator_artifact:
-        glslang_validator_file_path = artifacts.artifact_find_binary(
+        glslang_validator_file_path, _ = artifacts.artifact_find_binary(
             recipe.glslang_validator_artifact, built_in_binaries.GLSLANG_VALIDATOR_NAME
         )
     else:

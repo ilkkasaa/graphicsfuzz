@@ -53,7 +53,7 @@ def random_spirv_opt_args(max_num_args: int = 30) -> List[str]:
         arg = random.choice(OPT_OPTIONS)
         # --merge-return relies on there not being unreachable code, so we always invoke dead branch
         # elimination before --merge-return.
-        if arg == "--merge-return":
+        if arg in ("--merge-return", "--merge-blocks"):
             result.append("--eliminate-dead-branches")
         result.append(arg)
     return result
@@ -159,7 +159,7 @@ def recipe_spirv_shader_job_to_spirv_shader_job_opt(
     )
 
     if recipe.spirv_opt_artifact:
-        spirv_opt_file_path = artifacts.artifact_find_binary(
+        spirv_opt_file_path, _ = artifacts.artifact_find_binary(
             recipe.spirv_opt_artifact, built_in_binaries.SPIRV_OPT_NAME
         )
     else:
