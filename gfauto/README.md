@@ -18,6 +18,7 @@ This generates and activates a Python virtual environment (located at `.venv/`) 
 * Execute `./check_all.sh` to run various presubmit checks, linters, etc.
 * Execute `./fix_all.sh` automatically fix certain issues, such as formatting.
 
+
 ### PyCharm
 
 Use PyCharm to open the top-level `gfauto` directory.
@@ -34,6 +35,9 @@ Install and configure plugins:
     * Program: `$ProjectFileDir$/fix_all.sh`
 * Mypy: the built-in PyCharm type checking actually use Mypy behinds the scenes, but this plugin enhances it by using the latest version and strict settings used by the `./check_all.sh` script.
 
+Add `whitelist.dic` as a custom dictionary (search for "Spelling" in Actions). Do not add words via PyCharm's "Quick Fixes" feature, as the word will only be added to your personal dictionary. Instead, manually add the word to `whitelist.dic`.
+
+
 ## Symlinking other scripts
 
 GraphicsFuzz auto moves fast and so it is useful to add symlinks to other repositories that contain Python scripts that depend on GraphicsFuzz auto. This allows you to search for all references before changing a function. A `temp/` directory exists for this purpose. For example:
@@ -49,5 +53,6 @@ You can execute scripts in this repository by opening a Terminal in PyCharm.
 
 ## Terminal
 
-To reiterate, the `Terminal` tab in PyCharm is useful and will use the project's Python virtual environment. In any other terminal, you can execute the `./dev_shell.sh`, but this is fairly slow as it checks and reinstalls all dependencies. 
+To reiterate, the `Terminal` tab in PyCharm is useful and will use the project's Python virtual environment. In any other terminal, you can execute the `./dev_shell.sh` script, but this is fairly slow as it checks and reinstalls all dependencies; a quicker alternative is: `source .venv/activate`.
+
 
