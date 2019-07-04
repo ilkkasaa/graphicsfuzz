@@ -242,7 +242,7 @@ def glsl_shader_job_crash_to_amber_script_for_google_cts(
         )
         binary_paths = built_in_binaries.BinaryManager(
             built_in_binaries.BinaryManager.get_binary_list_from_test_metadata(
-                Path() / "reduced_glsl" / "test.json"
+                test_metadata_path
             )
         )
 

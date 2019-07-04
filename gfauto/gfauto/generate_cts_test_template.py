@@ -18,7 +18,7 @@
 import sys
 from pathlib import Path
 
-from gfauto import tool
+from gfauto import tool, artifacts
 
 
 def main() -> None:
@@ -29,6 +29,8 @@ def main() -> None:
     # comment_text
     # copyright_year
     # extra_commands
+
+    artifacts.recipes_write_built_in()
 
     tool.glsl_shader_job_crash_to_amber_script_for_google_cts(
         input_json=Path() / "reduced_glsl" / "variant" / "shader.json",
