@@ -89,8 +89,7 @@ class BinaryGetter(abc.ABC):
 
 
 class BinaryNotFound(Exception):
-    def __init__(self, message: str):
-        super().__init__(message)
+    pass
 
 
 class BinaryPathNotFound(Exception):
@@ -179,7 +178,9 @@ class BinaryManager(BinaryGetter):
             self._platform,
             binary_artifacts_prefix=None,
         )
+        # pylint: disable=protected-access; This is fine since |result| is a BinaryManager.
         result._resolved_paths = self._resolved_paths
+        # pylint: disable=protected-access; This is fine since |result| is a BinaryManager.
         result._binary_artifacts = self._binary_artifacts
         return result
 

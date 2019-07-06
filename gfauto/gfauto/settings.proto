@@ -23,4 +23,7 @@ import "gfauto/device.proto";
 message Settings {
   DeviceList device_list = 1;
   repeated Binary custom_binaries = 2;
+
+  // Allow at most this many duplicate crashes per device.
+  uint32 maximum_duplicate_crashes = 3;
 }

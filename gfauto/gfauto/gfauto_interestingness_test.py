@@ -86,7 +86,7 @@ def main() -> None:
     )
 
     status = result_util.get_status(output_dir)
-    if status not in ("CRASH", fuzz.STATUS_TOOL_CRASH):
+    if status not in (fuzz.STATUS_CRASH, fuzz.STATUS_TOOL_CRASH):
         log("Shader run did not crash; not interesting.")
         sys.exit(1)
 

@@ -31,7 +31,7 @@ def run_generate(
     seed: Optional[str] = None,
     other_args: Optional[List[str]] = None,
 ) -> pathlib.Path:
-
+    util.file_mkdirs_parent(output_shader_json)
     cmd = [
         str(graphicsfuzz_tool_path),
         "com.graphicsfuzz.generator.tool.Generate",

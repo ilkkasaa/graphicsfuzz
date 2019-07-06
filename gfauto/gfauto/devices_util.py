@@ -45,10 +45,10 @@ def device_host() -> Device:
     return Device(name="host", host=DeviceHost())
 
 
-def get_device_list() -> DeviceList:
+def get_device_list(device_list: DeviceList = None) -> DeviceList:
 
-    # Create device list from scratch.
-    device_list = DeviceList()
+    if not device_list:
+        device_list = DeviceList()
 
     # We use |extend| below (instead of |append|) because you cannot append to a list of non-scalars in protobuf.
     # |extend| copies the elements from the list and appends them.

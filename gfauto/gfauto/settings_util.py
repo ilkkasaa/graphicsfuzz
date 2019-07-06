@@ -21,6 +21,8 @@ from gfauto.settings_pb2 import Settings
 
 SETTINGS_FILE_PATH = Path("settings.json")
 
+DEFAULT_SETTINGS = Settings(maximum_duplicate_crashes=3)
+
 
 def read() -> Settings:
     return proto_util.file_to_message(SETTINGS_FILE_PATH, Settings())
@@ -31,5 +33,7 @@ def write(settings: Settings) -> Path:
 
 
 def write_default() -> Path:
-    settings = Settings(device_list=devices_util.get_device_list())
+    settings = Settings()
+    settings.CopyFrom(DEFAULT_SETTINGS)
+    devices_util.get_device_list(settings.device_list)
     return write(settings)

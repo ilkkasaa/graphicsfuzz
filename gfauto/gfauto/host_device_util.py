@@ -108,11 +108,11 @@ def run_amber_helper(
             env=env,
         )
     except subprocess.TimeoutExpired:
-        status = "TIMEOUT"
+        status = fuzz.STATUS_TIMEOUT
 
     if result:
         if result.returncode != 0:
-            status = "CRASH"
+            status = fuzz.STATUS_CRASH
         else:
             status = fuzz.STATUS_SUCCESS
 

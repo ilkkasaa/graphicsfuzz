@@ -35,7 +35,18 @@ from gfauto import (
 )
 from gfauto.device_pb2 import Device
 from gfauto.gflogging import log
+from gfauto.settings_pb2 import Settings
 from gfauto.test_pb2 import Test, TestGlsl
+
+# Staging directory.
+#  - source_template/ (source directory but with no test metadata yet)
+#  - test_1/, test_2/, etc.
+
+# Test directory:
+#  - source/ (source directory, with test.json and other files)
+#  - results/ (results)
+
+# Report: a test directory with a reduction for a specific device.
 
 # What we need:
 #  - A test should create a clone of itself, specialized for one specific device (e.g. device serial and crash string).
@@ -87,7 +98,9 @@ BEST_REDUCTION_NAME = "best"
 AMBER_RUN_TIME_LIMIT = 30
 
 STATUS_TOOL_CRASH = "TOOL_CRASH"
+STATUS_CRASH = "CRASH"
 STATUS_TOOL_TIMEOUT = "TOOL_TIMEOUT"
+STATUS_TIMEOUT = "TIMEOUT"
 STATUS_SUCCESS = "SUCCESS"
 
 
@@ -96,7 +109,7 @@ def get_random_name() -> str:
     return uuid.uuid4().hex
 
 
-def make_subtest(
+def make_test(
     base_source_dir: Path,
     subtest_dir: Path,
     spirv_opt_args: Optional[List[str]],
@@ -168,6 +181,7 @@ def main() -> None:  # pylint: disable=too-many-locals
 
     # For convenience, we add the default (i.e. newest) SwiftShader ICD (binary) to any swift_shader devices
     # so that we don't need to specify it and update it in the device list (on disk).
+    # Thus, when we save the test, the device will contain the version of SwiftShader we used.
     for device in active_devices:
         if device.HasField("swift_shader"):
             swift_binaries = [
@@ -186,15 +200,15 @@ def main() -> None:  # pylint: disable=too-many-locals
         log(f"Iteration seed: {iteration_seed}")
         random.seed(iteration_seed)
 
-        test_name = get_random_name()
-        test_dir = temp_dir / test_name
+        staging_name = get_random_name()
+        staging_dir = temp_dir / staging_name
 
-        base_source_dir = test_dir / "base_source"
+        template_source_dir = staging_dir / "source_template"
 
         # Copy in a randomly chosen reference.
         reference_glsl_shader_job = shader_job_util.copy(
             random.choice(references),
-            base_source_dir / test_util.REFERENCE_DIR / test_util.SHADER_JOB,
+            template_source_dir / test_util.REFERENCE_DIR / test_util.SHADER_JOB,
         )
 
         # Pick a seed.
@@ -204,56 +218,57 @@ def main() -> None:  # pylint: disable=too-many-locals
             util.tool_on_path("graphicsfuzz-tool"),
             reference_glsl_shader_job,
             donors_dir,
-            util.mkdirs_p(base_source_dir / test_util.VARIANT_DIR)
-            / test_util.SHADER_JOB,
+            template_source_dir / test_util.VARIANT_DIR / test_util.SHADER_JOB,
             str(seed),
         )
 
         subtest_dirs = [
-            make_subtest(
-                base_source_dir,
-                test_dir / f"{test_name}_no_opt_test",
+            make_test(
+                template_source_dir,
+                staging_dir / f"{staging_name}_no_opt_test",
                 spirv_opt_args=None,
                 binary_manager=binary_manager,
             ),
-            make_subtest(
-                base_source_dir,
-                test_dir / f"{test_name}_opt_O_test",
+            make_test(
+                template_source_dir,
+                staging_dir / f"{staging_name}_opt_O_test",
                 spirv_opt_args=["-O"],
                 binary_manager=binary_manager,
             ),
-            make_subtest(
-                base_source_dir,
-                test_dir / f"{test_name}_opt_Os_test",
+            make_test(
+                template_source_dir,
+                staging_dir / f"{staging_name}_opt_Os_test",
                 spirv_opt_args=["-Os"],
                 binary_manager=binary_manager,
             ),
-            make_subtest(
-                base_source_dir,
-                test_dir / f"{test_name}_opt_rand1_test",
+            make_test(
+                template_source_dir,
+                staging_dir / f"{staging_name}_opt_rand1_test",
                 spirv_opt_args=recipe_spirv_shader_job_to_spirv_shader_job_opt.random_spirv_opt_args(),
                 binary_manager=binary_manager,
             ),
-            make_subtest(
-                base_source_dir,
-                test_dir / f"{test_name}_opt_rand2_test",
+            make_test(
+                template_source_dir,
+                staging_dir / f"{staging_name}_opt_rand2_test",
                 spirv_opt_args=recipe_spirv_shader_job_to_spirv_shader_job_opt.random_spirv_opt_args(),
                 binary_manager=binary_manager,
             ),
-            make_subtest(
-                base_source_dir,
-                test_dir / f"{test_name}_opt_rand3_test",
+            make_test(
+                template_source_dir,
+                staging_dir / f"{staging_name}_opt_rand3_test",
                 spirv_opt_args=recipe_spirv_shader_job_to_spirv_shader_job_opt.random_spirv_opt_args(),
                 binary_manager=binary_manager,
             ),
         ]
 
         for subtest_dir in subtest_dirs:
-            if handle_test(subtest_dir, reports_dir, active_devices, binary_manager):
+            if handle_test(
+                subtest_dir, reports_dir, active_devices, binary_manager, settings
+            ):
                 # If we generated a report, don't bother trying other optimization combinations.
                 break
 
-        shutil.rmtree(test_dir)
+        shutil.rmtree(staging_dir)
 
 
 def handle_test(
@@ -261,11 +276,12 @@ def handle_test(
     reports_dir: Path,
     active_devices: List[Device],
     binary_manager: built_in_binaries.BinaryManager,
+    settings: Settings,
 ) -> bool:
     test = test_util.metadata_read(test_dir)
     if test.HasField("glsl"):
-        return fuzz_glsl_test.handle_glsl_test(
-            test, test_dir, reports_dir, active_devices, binary_manager
+        return fuzz_glsl_test.handle(
+            test_dir, reports_dir, active_devices, binary_manager, settings
         )
 
     raise AssertionError("Unrecognized test type")

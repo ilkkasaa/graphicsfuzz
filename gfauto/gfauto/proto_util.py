@@ -22,6 +22,7 @@ from google.protobuf.message import Message
 
 from gfauto import util
 
+# pylint: disable=invalid-name; Generic type variable names are usually one letter.
 M = TypeVar("M", bound=Message)
 
 
