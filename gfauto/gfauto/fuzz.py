@@ -161,7 +161,7 @@ def main() -> None:  # pylint: disable=too-many-locals
     references = [ref for ref in references if shader_job_util.get_related_files(ref)]
 
     binary_manager = built_in_binaries.BinaryManager(
-        list(settings.default_binaries) + built_in_binaries.DEFAULT_BINARIES,
+        list(settings.custom_binaries) + built_in_binaries.DEFAULT_BINARIES,
         util.get_platform(),
         binary_artifacts_prefix=built_in_binaries.BUILT_IN_BINARY_RECIPES_PATH_PREFIX,
     )
