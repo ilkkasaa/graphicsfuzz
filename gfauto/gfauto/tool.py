@@ -9,26 +9,29 @@
 #     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
+
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from pathlib import Path
+
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 from typing import List, Optional
 
 import attr
 
 from gfauto import (
-    shader_job_util,
-    subprocess_util,
-    util,
-    built_in_binaries,
     artifacts,
+    built_in_binaries,
+    recipe_glsl_shader_job_to_spirv_shader_job,
     recipe_spirv_asm_shader_job_to_amber_script,
     recipe_spirv_shader_job_to_spirv_asm_shader_job,
     recipe_spirv_shader_job_to_spirv_shader_job_opt,
-    recipe_glsl_shader_job_to_spirv_shader_job,
+    shader_job_util,
+    subprocess_util,
     test_util,
+    util,
 )
 from gfauto.util import check
 
@@ -240,6 +243,7 @@ def glsl_shader_job_crash_to_amber_script_for_google_cts(
             bool(test_metadata_path),
             AssertionError("Must have test_metadata_path or binary_paths"),
         )
+        assert test_metadata_path  # noqa
         binary_paths = built_in_binaries.BinaryManager(
             built_in_binaries.BinaryManager.get_binary_list_from_test_metadata(
                 test_metadata_path

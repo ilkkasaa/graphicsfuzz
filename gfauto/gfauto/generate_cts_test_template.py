@@ -18,7 +18,7 @@
 import sys
 from pathlib import Path
 
-from gfauto import tool, artifacts
+from gfauto import artifacts, tool
 
 
 def main() -> None:

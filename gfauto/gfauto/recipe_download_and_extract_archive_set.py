@@ -20,7 +20,7 @@ import stat
 import urllib.request
 from zipfile import ZipFile, ZipInfo
 
-from gfauto import util, artifacts
+from gfauto import artifacts, util
 from gfauto.artifact_pb2 import ArtifactMetadata
 from gfauto.common_pb2 import Archive
 from gfauto.gflogging import log

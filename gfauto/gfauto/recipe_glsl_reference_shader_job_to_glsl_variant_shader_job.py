@@ -18,7 +18,7 @@ import pathlib
 from pathlib import Path
 from typing import List, Optional
 
-from gfauto import artifacts, util, subprocess_util
+from gfauto import artifacts, subprocess_util, util
 from gfauto.artifact_pb2 import ArtifactMetadata, ArtifactMetadataGlslShaderJob
 from gfauto.recipe_pb2 import RecipeGlslReferenceShaderJobToGlslVariantShaderJob
 

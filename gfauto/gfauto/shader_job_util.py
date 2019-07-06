@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import pathlib
-from typing import List, Optional, Union, Tuple
+from typing import List, Optional, Tuple, Union
 
 from gfauto import util
 

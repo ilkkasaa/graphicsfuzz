@@ -17,10 +17,9 @@
 import pathlib
 from typing import Optional
 
-from gfauto import util, subprocess_util, shader_job_util, artifacts, built_in_binaries
+from gfauto import artifacts, built_in_binaries, shader_job_util, subprocess_util, util
 from gfauto.artifact_pb2 import ArtifactMetadata
 from gfauto.recipe_pb2 import RecipeGlslShaderJobToSpirvShaderJob
-
 
 GLSLANG_DEFAULT_TIME_LIMIT = 120
 

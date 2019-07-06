@@ -19,16 +19,15 @@ import sys
 from pathlib import Path
 
 from gfauto import (
+    built_in_binaries,
     fuzz,
+    fuzz_glsl_test,
+    result_util,
+    signature_util,
     test_util,
     util,
-    result_util,
-    built_in_binaries,
-    fuzz_glsl_test,
-    signature_util,
 )
 from gfauto.gflogging import log
-
 from gfauto.util import check, check_file_exists
 
 # TODO: Maybe add helper method and throw exceptions instead of calling sys.exit.

@@ -16,7 +16,7 @@
 
 from pathlib import Path
 
-from gfauto import util, proto_util
+from gfauto import proto_util, util
 from gfauto.test_pb2 import Test
 
 TEST_METADATA = "test.json"

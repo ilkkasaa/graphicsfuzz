@@ -15,13 +15,12 @@
 # limitations under the License.
 import os
 import signal
-import time
 import subprocess
-from typing import List, Optional, Union, Dict
+import time
+from typing import Dict, List, Optional, Union
 
 from .gflogging import log
 from .util import check
-
 
 LOG_COMMAND_FAILED_PREFIX = "Command failed: "
 LOG_COMMAND_TIMED_OUT_PREFIX = "Command timed out: "

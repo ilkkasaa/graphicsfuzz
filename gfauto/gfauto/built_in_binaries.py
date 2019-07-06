@@ -15,14 +15,14 @@
 # limitations under the License.
 import abc
 from pathlib import Path
-from typing import List, Optional, Dict, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import attr
 
-from gfauto import artifacts, recipe_wrap, util, test_util
-from gfauto.common_pb2 import ArchiveSet, Archive, Binary
+from gfauto import artifacts, recipe_wrap, test_util, util
+from gfauto.common_pb2 import Archive, ArchiveSet, Binary
 from gfauto.gflogging import log
-from gfauto.recipe_pb2 import RecipeDownloadAndExtractArchiveSet, Recipe
+from gfauto.recipe_pb2 import Recipe, RecipeDownloadAndExtractArchiveSet
 
 LATEST_GRAPHICSFUZZ_ARTIFACT = "//binaries/graphicsfuzz_v1.2.1"
 
@@ -51,22 +51,22 @@ PLATFORM_SUFFIXES_RELWITHDEBINFO = [
 DEFAULT_BINARIES = [
     Binary(
         name="glslangValidator",
-        tags=["Release"],
+        tags=["Debug"],
         version="40c16ec0b3ad03fc170f1369a58e7bbe662d82cd",
     ),
     Binary(
         name="spirv-opt",
-        tags=["Release"],
+        tags=["Debug"],
         version="4a00a80c40484a6f6f72f48c9d34943cf8f180d4",
     ),
     Binary(
         name="spirv-dis",
-        tags=["Release"],
+        tags=["Debug"],
         version="4a00a80c40484a6f6f72f48c9d34943cf8f180d4",
     ),
     Binary(
         name="spirv-val",
-        tags=["Release"],
+        tags=["Debug"],
         version="4a00a80c40484a6f6f72f48c9d34943cf8f180d4",
     ),
     Binary(

@@ -16,7 +16,7 @@
 
 from pathlib import Path
 
-from gfauto import proto_util, devices_util
+from gfauto import devices_util, proto_util
 from gfauto.settings_pb2 import Settings
 
 SETTINGS_FILE_PATH = Path("settings.json")

@@ -19,19 +19,19 @@ import shutil
 import sys
 import uuid
 from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional
 
 from gfauto import (
+    artifacts,
+    built_in_binaries,
     devices_util,
-    util,
-    test_util,
-    shader_job_util,
+    fuzz_glsl_test,
     recipe_glsl_reference_shader_job_to_glsl_variant_shader_job,
     recipe_spirv_shader_job_to_spirv_shader_job_opt,
-    built_in_binaries,
     settings_util,
-    artifacts,
-    fuzz_glsl_test,
+    shader_job_util,
+    test_util,
+    util,
 )
 from gfauto.device_pb2 import Device
 from gfauto.gflogging import log
@@ -120,11 +120,10 @@ def make_subtest(
 
 
 class NoSettingsFile(Exception):
-    def __init__(self, message: str):
-        super().__init__(message)
+    pass
 
 
-def main() -> None:
+def main() -> None:  # pylint: disable=too-many-locals
     # TODO: Use sys.argv[1:].
 
     try:
@@ -171,12 +170,12 @@ def main() -> None:
     # so that we don't need to specify it and update it in the device list (on disk).
     for device in active_devices:
         if device.HasField("swift_shader"):
-            just_swift_binaries = [
+            swift_binaries = [
                 binary
                 for binary in device.binaries
                 if "swift" not in binary.name.lower()
             ]
-            if len(list(just_swift_binaries)) == 0:
+            if not swift_binaries:
                 device.binaries.extend(
                     [binary_manager.get_binary_by_name("swift_shader_icd")]
                 )
@@ -268,8 +267,8 @@ def handle_test(
         return fuzz_glsl_test.handle_glsl_test(
             test, test_dir, reports_dir, active_devices, binary_manager
         )
-    else:
-        raise AssertionError("Unrecognized test type")
+
+    raise AssertionError("Unrecognized test type")
 
 
 def create_summary_and_reproduce(

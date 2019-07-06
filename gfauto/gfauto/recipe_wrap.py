@@ -15,8 +15,8 @@
 # limitations under the License.
 from typing import Optional
 
-from gfauto.recipe_pb2 import Recipe
 from gfauto import artifacts
+from gfauto.recipe_pb2 import Recipe
 
 
 class RecipeWrap:

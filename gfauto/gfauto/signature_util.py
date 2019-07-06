@@ -16,44 +16,54 @@
 
 import re
 from pathlib import Path
-from typing import Optional, Iterator, Match, Pattern
+from typing import Match, Optional, Pattern
 
-from gfauto import util, subprocess_util
+from gfauto import subprocess_util, util
 
-# E.g. /my/library.so ((anonymous namespace)::Bar::Baz(aaa::MyInstr*, void* (*)(unsigned int))+456)
-#                                                ::Baz(  <-- regex
-#                                                  Baz   <-- group 1
-PATTERN_CPP_FUNCTION = re.compile(r"::(\w+)\(")
+# .* does not match newlines
 
-# E.g. /my/library.so (myFunction+372)
-#                     (myFunction+372)  <-- regex
-#                      myFunction       <-- group 1
-# OR: /my/library.so (myFunction(...)+372)
-#                    (myFunction(
-#                     myFunction
-PATTERN_C_FUNCTION = re.compile(r"\((\w+)(\+\d+\)|\()")
+# 06-15 21:17:00.039  7517  7517 F DEBUG   :     #00 pc 00000000009d9c34  /my/library.so ((anonymous namespace)::Bar::Baz(aaa::MyInstr*, void* (*)(unsigned int))+456)
+# Another example of the function signature: /my/library.so (myFunction+372)
+# Another example of the function signature: /my/library.so (myFunction(...)+372)
 
+HEX_LIKE = r"(0x)?[0-9a-fA-F]"
+
+# Just look for anything that contains "word(" or "word+" from after the (hex-like) PC address.
+PATTERN_ANDROID_BACKTRACE_FUNCTION = re.compile(
+    r"^.*#00 pc " + HEX_LIKE + r"+ (.*(\w+)([(+]).*)"
+)
+
+ANDROID_BACKTRACE_COMMON_TEXT_TO_REMOVE = re.compile(
+    r"(/vendor/lib(64)?/(hw/)?|/data/local/(tmp/)?|/system/(lib(64)?/)?|anonymous namespace)"
+)
+
+PATTERN_ANDROID_BACKTRACE_CATCHALL = re.compile(r"^.*#00 pc " + HEX_LIKE + r"+ (.*)")
 
 # E.g. ERROR: temp/.../variant/shader.frag:549: 'variable indexing fragment shader output array' : not supported with this profile: es
-#                                     frag:123: 'variable indexing fragment shader output array'  <-- regex
 #                                                variable indexing fragment shader output array   <-- group 1
-PATTERN_GLSLANG_ERROR = re.compile(r"\w+:\d+: '([^'\n]+)'")
+PATTERN_GLSLANG_ERROR = re.compile(r"ERROR: .*?: '(.*?)'")
 
 
+# E.g.
+# glslangValidator: ../glslang/MachineIndependent/ParseHelper.cpp:2212: void glslang::TParseContext::nonOpBuiltInCheck(const glslang::TSourceLoc&, const glslang::TFunction&, glslang::TIntermAggregate&): Assertion `PureOperatorBuiltins == false' failed.
+
+PATTERN_ASSERTION_FAILURE = re.compile(r"^.*?:\d+: (.*? [Aa]ssert(ion)?)")
+
+
+# Only used if "0 pass, 1 fail" is found.
 # E.g. /data/local/tmp/graphicsfuzz/test.amber: 256: probe ssbo format does not match buffer format
-#                                             : 256: probe ssbo format does not match buffer format
 #                                                    probe ssbo format does not match buffer format
-PATTERN_AMBER_ERROR = re.compile(r"\w: \d+: ([\w ]+)$")
+PATTERN_AMBER_ERROR = re.compile(r"^.*?\w: \d+: (.*)")
 
 # E.g. error: line 0: Module contains unreachable blocks during merge return.  Run dead branch elimination before merge return.
 #      error: line 0: Module contains unreachable blocks during merge return.  Run dead branch elimination before merge return.
 #                     Module contains unreachable blocks during merge return.  Run dead branch elimination before merge return.
-PATTERN_SPIRV_OPT_ERROR: Pattern[str] = re.compile(r"^error: line \d+: ([^\n]+)")
+PATTERN_SPIRV_OPT_ERROR: Pattern[str] = re.compile(r"error: line \d+: (.*)")
 
 # E.g.
 # Backtrace:
 # /data/git/graphicsfuzz/graphicsfuzz/target/graphicsfuzz/bin/Linux/spirv-opt(_ZN8spvtools3opt21StructuredCFGAnalysis16SwitchMergeBlockEj+0x369)[0x5bd6d9]
-PATTERN_CATCHSEGV_STACK_FRAME = re.compile(r"Backtrace:\n.*/([^/(]*\([^)+]+)\+")
+PATTERN_CATCHSEGV_STACK_FRAME = re.compile(r"Backtrace:\n.*/([^/(]*\([^)+\[]+)\+")
 
 # E.g.
 # Backtrace:
@@ -64,13 +74,119 @@ PATTERN_CATCHSEGV_STACK_FRAME_ADDRESS = re.compile(
     r"Backtrace:\n(.*)\(\+([x\da-fA-F]+)+\)\["
 )
 
-# E.g.
-# glslangValidator: ../glslang/MachineIndependent/ParseHelper.cpp:2212: void glslang::TParseContext::nonOpBuiltInCheck(const glslang::TSourceLoc&, const glslang::TFunction&, glslang::TIntermAggregate&): Assertion `PureOperatorBuiltins == false' failed.
 
-PATTERN_GLSLANG_FAILURE = re.compile(r"glslangValidator:.*?: (.*)")
+def remove_hex_like(string: str) -> str:
+    temp = string
+    # Remove hex like chunks of 4 or more.
+    temp = re.sub(HEX_LIKE + r"{4,}", "", temp)
+    return temp
 
 
-def get_signature_from_log_contents(log_contents: str) -> str:
+def clean_up(string: str) -> str:
+    temp = string
+    # Remove numbers.
+    temp = re.sub(r"\d+", "", temp)
+    # Replace spaces with _.
+    temp = re.sub(r" ", "_", temp)
+    # Remove non-word, non-_ characters.
+    temp = re.sub(r"[^\w_]", "", temp)
+    # Replace multiple _ with _.
+    temp = re.sub(r"__+", "_", temp)
+    return temp
+
+
+def reduce_length(string: str) -> str:
+    return string[:50]
+
+
+def basic_match(pattern: Pattern[str], log_contents: str) -> Optional[str]:
+    match: Optional[Match[str]] = re.search(pattern, log_contents)
+    if not match:
+        return None
+    group = match.group(1)
+    group = clean_up(group)
+    group = reduce_length(group)
+    return group
+
+
+def get_signature_from_log_contents(  # pylint: disable=too-many-return-statements, too-many-branches
+    log_contents: str
+) -> str:
+
+    # noinspection PyUnusedLocal
+    match: Optional[Match[str]]
+    # noinspection PyUnusedLocal
+    group: Optional[str]
+
+    # glslang error.
+    group = basic_match(PATTERN_GLSLANG_ERROR, log_contents)
+    if group:
+        return group
+
+    # Assertion error pattern, used by glslang.
+    group = basic_match(PATTERN_ASSERTION_FAILURE, log_contents)
+    if group:
+        return group
+
+    # Spirv-opt error.
+    group = basic_match(PATTERN_SPIRV_OPT_ERROR, log_contents)
+    if group:
+        return group
+
+    # Amber error.
+    if "0 pass, 1 fail" in log_contents:
+        group = basic_match(PATTERN_AMBER_ERROR, log_contents)
+        if group:
+            return group
+
+    # Android stack traces.
+    if "#00 pc" in log_contents:
+        lines = log_contents.split("\n")
+        for line in lines:
+            pc_pos = line.find("#00 pc")
+            if pc_pos == -1:
+                continue
+            line = line[pc_pos:]
+
+            if "/amber_ndk" in line:
+                return "amber_ndk"
+
+            match = re.search(PATTERN_ANDROID_BACKTRACE_FUNCTION, log_contents)
+            if match:
+                group = match.group(1)
+                # Remove common text.
+                group = re.sub(ANDROID_BACKTRACE_COMMON_TEXT_TO_REMOVE, "", group)
+                group = clean_up(group)
+                group = reduce_length(group)
+                return group
+
+            # TODO: Maybe more.
+
+            # If we get here, we found #00 pc, but nothing else.
+            # This regex essentially matches the entire line after the hex-like PC address.
+            match = re.search(PATTERN_ANDROID_BACKTRACE_CATCHALL, log_contents)
+            if match:
+                group = match.group(1)
+                # Remove common text.
+                group = re.sub(ANDROID_BACKTRACE_COMMON_TEXT_TO_REMOVE, "", group)
+                # Remove hex-like chunks.
+                group = remove_hex_like(group)
+                group = clean_up(group)
+                group = reduce_length(group)
+                return group
+
+            break
+
+    # catchsegv "Backtrace:" with source code info.
+    group = basic_match(PATTERN_CATCHSEGV_STACK_FRAME, log_contents)
+    if group:
+        return group
+
+    # catchsegv "Backtrace:" with addresses.
+    if "Backtrace:" in log_contents:
+        result = get_signature_from_catchsegv_frame_address(log_contents)
+        if result:
+            return result
 
     if "Shader compilation failed" in log_contents:
         return "compile_error"
@@ -86,155 +202,22 @@ def get_signature_from_log_contents(log_contents: str) -> str:
     if "Resource deadlock would occur" in log_contents:
         return "Resource_deadlock_would_occur"
 
-    if "error: line " in log_contents:
-        lines = log_contents.split("\n")
-        for line in lines:
-            spirv_opt_error_matches = re.finditer(
-                PATTERN_SPIRV_OPT_ERROR, line
-            )  # type: Iterator[Match[str]]
-            spirv_opt_error_match = next(
-                spirv_opt_error_matches, None
-            )  # type: Optional[Match[str]]
-            if spirv_opt_error_match:
-                group = spirv_opt_error_match.group(1)
-                # Remove numbers.
-                group = re.sub(r"\d+", "", group)
-                # Replace non-word characters with _.
-                group = re.sub(r"[^\w]", "_", group)
-                # Reduce length.
-                group = group[:20]
-                return group
-
-    if "0 pass, 1 fail" in log_contents:
-        lines = log_contents.split("\n")
-        for line in lines:
-            amber_error_matches = re.finditer(
-                PATTERN_AMBER_ERROR, line
-            )  # type: Iterator[Match[str]]
-            amber_error_match = next(
-                amber_error_matches, None
-            )  # type: Optional[Match[str]]
-            if amber_error_match:
-                group = amber_error_match.group(1)
-                # Remove numbers.
-                group = re.sub(r"\d+", "", group)
-                # Replace non-word characters with _.
-                group = re.sub(r"[^\w]", "_", group)
-                return group
-
-    if "SPIR-V is not generated for failed compile or link" in log_contents:
-        lines = log_contents.split("\n")
-        for line in lines:
-            glslang_error_matches = re.finditer(
-                PATTERN_GLSLANG_ERROR, line
-            )  # type: Iterator[Match[str]]
-            glslang_error_match = next(
-                glslang_error_matches, None
-            )  # type: Optional[Match[str]]
-            if glslang_error_match:
-                group = glslang_error_match.group(1)
-                # Remove numbers.
-                group = re.sub(r"\d+", "", group)
-                # Replace non-word characters with _.
-                group = re.sub(r"[^\w]", "_", group)
-                # Reduce length.
-                group = group[:20]
-                return group
-
-    if "#00 pc" in log_contents:
-        lines = log_contents.split("\n")
-        for line in lines:
-            pc_pos = line.find("#00 pc")
-            if pc_pos == -1:
-                continue
-            line = line[pc_pos:]
-
-            if "/amber_ndk" in line:
-                return "amber_ndk"
-
-            cpp_function_matches = re.finditer(
-                PATTERN_CPP_FUNCTION, line
-            )  # type: Iterator[Match[str]]
-            cpp_function_match = next(
-                cpp_function_matches, None
-            )  # type: Optional[Match[str]]
-            if cpp_function_match:
-                return cpp_function_match.group(1)
-
-            c_function_matches = re.finditer(
-                PATTERN_C_FUNCTION, line
-            )  # type: Iterator[Match[str]]
-            c_function_match = next(
-                c_function_matches, None
-            )  # type: Optional[Match[str]]
-            if c_function_match:
-                return c_function_match.group(1)
-
-            # TODO: More.
-
-            break
-
-    # catchsegv "Backtrace:" with source code info.
-    if "Backtrace:" in log_contents:
-        catchsegv_matches = re.finditer(
-            PATTERN_CATCHSEGV_STACK_FRAME, log_contents
-        )  # type: Iterator[Match[str]]
-        catchsegv_match = next(catchsegv_matches, None)  # type: Optional[Match[str]]
-        if catchsegv_match:
-            group = catchsegv_match.group(1)
-            # Replace non-word characters with _.
-            group = re.sub(r"[^\w]", "_", group)
-            # Reduce length.
-            group = group[:50]
-            return group
-
-    if "Backtrace:" in log_contents:
-        result = get_signature_from_catchsegv_frame_address(log_contents)
-        if result:
-            return result
-
-    if "glslangValidator:" in log_contents:
-        lines = log_contents.split("\n")
-        for line in lines:
-            glslang_failure_matches = re.finditer(
-                PATTERN_GLSLANG_FAILURE, line
-            )  # type: Iterator[Match[str]]
-            glslang_failure_match = next(
-                glslang_failure_matches, None
-            )  # type: Optional[Match[str]]
-            if glslang_failure_match:
-                group = glslang_failure_match.group(1)
-                # Remove numbers.
-                group = re.sub(r"\d+", "", group)
-                # Replace non-word characters with _.
-                group = re.sub(r"[^\w]", "_", group)
-                # Reduce length.
-                group = group[:20]
-                return group
-
     return "no_signature"
 
 
 def get_signature_from_catchsegv_frame_address(log_contents: str) -> Optional[str]:
-    catchsegv_address_matches = re.finditer(
-        PATTERN_CATCHSEGV_STACK_FRAME_ADDRESS, log_contents
-    )  # type: Iterator[Match[str]]
-    catchsegv_address_match = next(
-        catchsegv_address_matches, None
-    )  # type: Optional[Match[str]]
-    if not catchsegv_address_match:
+    match = re.search(PATTERN_CATCHSEGV_STACK_FRAME_ADDRESS, log_contents)
+    if not match:
         return None
-    module = Path(catchsegv_address_match.group(1))
+    module = Path(match.group(1))
     if not module.exists():
         return None
-    address = catchsegv_address_match.group(2)
+    address = match.group(2)
     function_signature = get_function_signature_from_address(module, address)
     if not function_signature:
         return None
-    # Replace non-word characters with _.
-    function_signature = re.sub(r"[^\w]", "_", function_signature)
-    # Reduce length.
-    function_signature = function_signature[:50]
+    function_signature = clean_up(function_signature)
+    function_signature = reduce_length(function_signature)
     return function_signature
 
 

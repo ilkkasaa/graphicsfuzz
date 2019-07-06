@@ -19,7 +19,7 @@ import pathlib
 from copy import copy
 from typing import List, Optional
 
-from gfauto import shader_job_util, util, artifacts
+from gfauto import artifacts, shader_job_util, util
 from gfauto.artifact_pb2 import ArtifactMetadata
 from gfauto.gflogging import log
 from gfauto.recipe_pb2 import RecipeSpirvAsmShaderJobToAmberScript

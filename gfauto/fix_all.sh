@@ -23,4 +23,4 @@ if [ -z ${VIRTUAL_ENV+x} ]; then
 fi
 
 isort -rc gfauto
-black .
+black gfauto

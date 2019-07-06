@@ -22,11 +22,10 @@ from pathlib import Path
 from subprocess import CompletedProcess
 from typing import List, Optional
 
-from gfauto import gflogging, util, fuzz, result_util, subprocess_util
+from gfauto import fuzz, gflogging, result_util, subprocess_util, util
 from gfauto.device_pb2 import Device, DeviceAndroid
 from gfauto.gflogging import log
 from gfauto.util import check, file_open_text, file_write_text
-
 
 ANDROID_DEVICE_DIR = "/data/local/tmp"
 ANDROID_AMBER_NDK = "amber_ndk"

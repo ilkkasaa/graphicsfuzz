@@ -25,5 +25,5 @@ target-version = ['py36', 'py37', 'py38']
 # matched.
 # https://github.com/python/black/issues/712
 
-include = 'gfauto/[^/]*[.]py$'
+include = 'gfauto/[^/]*\w[.]py$'
 exclude = '__pycache__'

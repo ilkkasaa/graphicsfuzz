@@ -15,16 +15,15 @@
 # limitations under the License.
 
 from pathlib import Path
-from typing import Dict
-from typing import List
+from typing import Dict, List
 
-from gfauto import util, proto_util, android_device
+from gfauto import android_device, proto_util, util
 from gfauto.device_pb2 import (
-    DeviceList,
     Device,
-    DeviceSwiftShader,
-    DevicePreprocess,
     DeviceHost,
+    DeviceList,
+    DevicePreprocess,
+    DeviceSwiftShader,
 )
 
 

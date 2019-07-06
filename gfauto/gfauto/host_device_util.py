@@ -15,9 +15,9 @@
 # limitations under the License.
 import subprocess
 from pathlib import Path
-from typing import Optional, Dict
+from typing import Dict, Optional
 
-from gfauto import fuzz, util, gflogging, subprocess_util, result_util
+from gfauto import fuzz, gflogging, result_util, subprocess_util, util
 from gfauto.gflogging import log
 
 

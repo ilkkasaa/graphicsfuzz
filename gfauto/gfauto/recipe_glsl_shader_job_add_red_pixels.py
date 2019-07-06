@@ -18,8 +18,7 @@ import pathlib
 import re
 from typing import List, Optional
 
-
-from gfauto import util, shader_job_util, artifacts
+from gfauto import artifacts, shader_job_util, util
 from gfauto.artifact_pb2 import ArtifactMetadata
 from gfauto.recipe_pb2 import RecipeGlslShaderJobAddRedPixels
 
