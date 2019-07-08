@@ -23,7 +23,7 @@ from google.protobuf.message import Message
 from gfauto import util
 
 # pylint: disable=invalid-name; Generic type variable names are usually one letter.
-M = TypeVar("M", bound=Message)
+M = TypeVar("M", bound=Message)  # noqa
 
 
 def json_to_message(json: str, message: M) -> M:
@@ -47,11 +47,11 @@ def message_to_file(
     output_file_path: Path,
     including_default_value_fields: bool = True,
 ) -> Path:
-    contents = message_to_json(message, including_default_value_fields)
-    util.file_write_text(output_file_path, contents)
+    message_json = message_to_json(message, including_default_value_fields)
+    util.file_write_text(output_file_path, message_json)
     return output_file_path
 
 
 def file_to_message(input_file_path: Path, message: M) -> M:
-    contents = util.file_read_text(input_file_path)
-    return json_to_message(contents, message)
+    message_json = util.file_read_text(input_file_path)
+    return json_to_message(message_json, message)

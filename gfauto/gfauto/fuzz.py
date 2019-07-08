@@ -65,7 +65,7 @@ from gfauto.test_pb2 import Test, TestGlsl
 #     - test.json
 #     - reference/ variant/
 #       - shader.json shader.{comp,frag}
-#   - 123_no_opt/ 123_opt_O/ 123_opt_Os/ 123_opt_rand1/ etc. (proper test_dirs, as they have "source")
+#   - 123_no_opt/ 123_opt_O/ 123_opt_Os/ 123_opt_rand_1/ etc. (proper test_dirs, as they have "source")
 #     - source/ (same as base source, but with different metadata, including a crash signature, once identified)
 #     - results/
 #       - pixel/ other_phone/ laptop/ etc.

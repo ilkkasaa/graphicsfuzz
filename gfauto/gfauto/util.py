@@ -44,9 +44,9 @@ def file_open_text(file: pathlib.Path, mode: str) -> TextIO:  # noqa VNE002
     return result
 
 
-def file_read_text_or_else(file: pathlib.Path, or_else: str) -> str:
+def file_read_text_or_else(text_file: pathlib.Path, or_else: str) -> str:
     try:
-        return file_read_text(file)
+        return file_read_text(text_file)
     except IOError:
         return or_else
 

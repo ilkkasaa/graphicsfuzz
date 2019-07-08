@@ -90,7 +90,7 @@ def artifacts_find(artifact_path_prefix: str) -> List[str]:
         for file in metadata_files
         if file.name in (ARTIFACT_METADATA_FILE_NAME, ARTIFACT_RECIPE_FILE_NAME)
     )
-    artifact_paths = set(path_to_artifact_path(file.parent) for file in metadata_files)
+    artifact_paths = {path_to_artifact_path(file.parent) for file in metadata_files}
     return sorted(artifact_paths)
 
 

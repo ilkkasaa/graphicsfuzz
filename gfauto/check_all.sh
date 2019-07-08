@@ -25,4 +25,4 @@ fi
 mypy --strict gfauto
 pylint gfauto
 # Flake checks formatting via black.
-flake8 . --whitelist=whitelist.dic
+flake8 .

@@ -96,8 +96,7 @@ def run_amber_helper(
     env: Optional[Dict[str, str]] = None
 
     if icd:
-        env = dict()
-        env["VK_ICD_FILENAMES"] = str(icd)
+        env = {"VK_ICD_FILENAMES": str(icd)}
 
     try:
         result = subprocess_util.run(

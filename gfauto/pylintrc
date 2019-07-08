@@ -77,12 +77,14 @@ confidence=
 # --disable=W".
 disable=C0330,
     C0111,
-    W0511,  # Allow to-dos.
-    E1101,  # Missing member; mypy (type checking) should cover this.
-    R0913,  # Too many arguments; could re-enable this.
-    C0301,  # Line too long; we use an auto formatter.
-    R0903,  # too-few-public-methods; good, but I want to store data in classes in case I later add methods.
+    W0511,             # Allow to-dos.
+    E1101,             # Missing member; mypy (type checking) should cover this.
+    R0913,             # Too many arguments; could re-enable this.
+    C0301,             # Line too long; we use an auto formatter.
+    R0903,             # too-few-public-methods; good, but I want to store data in classes in case I later add methods.
     ungrouped-imports, # We use an imports formatter.
+    cyclic-import,     # We allow cyclic imports, but we should import modules, not functions and variables.
+    duplicate-code,    # Unfortunately, disabling this on a case-by-case basis is broken: https://github.com/PyCQA/pylint/issues/214
 
 
 

@@ -20,7 +20,7 @@ from typing import List, TextIO
 from .util import file_read_text
 
 _LOG_TO_STDOUT = True
-_LOG_TO_STREAM = []  # type: List[TextIO]
+_LOG_TO_STREAM: List[TextIO] = []
 
 
 def push_stream_for_logging(stream: TextIO) -> None:

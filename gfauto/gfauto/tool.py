@@ -235,7 +235,6 @@ def glsl_shader_job_crash_to_amber_script_for_google_cts(
     :param test_metadata_path:
     :return:
     """
-
     if not binary_paths:
         check(
             bool(test_metadata_path),

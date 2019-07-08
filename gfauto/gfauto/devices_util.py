@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from gfauto import android_device, proto_util, util
 from gfauto.device_pb2 import (
@@ -45,7 +45,7 @@ def device_host() -> Device:
     return Device(name="host", host=DeviceHost())
 
 
-def get_device_list(device_list: DeviceList = None) -> DeviceList:
+def get_device_list(device_list: Optional[DeviceList] = None) -> DeviceList:
 
     if not device_list:
         device_list = DeviceList()
@@ -87,7 +87,7 @@ def read_device_list() -> DeviceList:
 
 
 def get_active_devices(device_list: DeviceList) -> List[Device]:
-    device_map = dict()  # type: Dict[str, Device]
+    device_map: Dict[str, Device] = {}
     for device in device_list.devices:
         device_map[device.name] = device
     return [device_map[device] for device in device_list.active_device_names]

@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import abc
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -99,6 +100,8 @@ class BinaryPathNotFound(Exception):
 
 class BinaryManager(BinaryGetter):
     """
+    Implements BinaryGetter.
+
     _binary_list: A list of Binary with name, version, configuration. This is used to map a binary name to a Binary.
     _resolved_paths: Binary (serialized) -> Path
     """
@@ -110,12 +113,12 @@ class BinaryManager(BinaryGetter):
     def __init__(
         self,
         binary_list: Optional[List[Binary]] = None,
-        platform: str = util.get_platform(),
+        platform: Optional[str] = None,
         binary_artifacts_prefix: Optional[str] = BUILT_IN_BINARY_RECIPES_PATH_PREFIX,
     ):
         self._binary_list = binary_list or []
-        self._resolved_paths = dict()
-        self._platform = platform
+        self._resolved_paths = {}
+        self._platform = platform or util.get_platform()
         self._binary_artifacts = []
 
         if binary_artifacts_prefix:
@@ -126,7 +129,7 @@ class BinaryManager(BinaryGetter):
     @staticmethod
     def get_binary_list_from_test_metadata(test_json_path: Path) -> List[Binary]:
         test_metadata = test_util.metadata_read_from_path(test_json_path)
-        result: List[Binary] = list()
+        result: List[Binary] = []
         if test_metadata.device:
             result.extend(test_metadata.device.binaries)
         result.extend(test_metadata.binaries)

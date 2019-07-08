@@ -12,6 +12,11 @@ GraphicsFuzz auto (this project) provides scripts for running these tools with m
 
 ## Development setup
 
+> Optional: delete `.venv/` to remove old packages; this is important when 
+> flake8 packages have been removed from the Pipfile, as old flake8 packages will 
+> continue to be installed and used when running `./check_all.sh` until you
+> delete `.venv/`.
+
 Execute `./dev_shell.sh.template` (or, copy to `./dev_shell.sh` and modify as needed before executing).
 This generates and activates a Python virtual environment (located at `.venv/`) with all dependencies installed. 
 

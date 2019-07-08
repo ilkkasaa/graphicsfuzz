@@ -67,8 +67,8 @@ PATTERN_CATCHSEGV_STACK_FRAME = re.compile(r"Backtrace:\n.*/([^/(]*\([^)+\[]+)\+
 
 # E.g.
 # Backtrace:
-# /data/git/graphicsfuzz/gfauto/temp/june20/binaries/swiftshader_vulkan/Linux/libvk_swiftshader.so(+0x1d537d)[0x7f51ebd1237d]
-# /data/git/graphicsfuzz/gfauto/temp/june20/binaries/swiftshader_vulkan/Linux/libvk_swiftshader.so  0x1d537d
+# /data/git/graphicsfuzz/gfauto/temp/june_20/binaries/swiftshader_vulkan/Linux/libvk_swiftshader.so(+0x1d537d)[0x7f51ebd1237d]
+# /data/git/graphicsfuzz/gfauto/temp/june_20/binaries/swiftshader_vulkan/Linux/libvk_swiftshader.so  0x1d537d
 # ^ group 1                                                                                          ^ group 2
 PATTERN_CATCHSEGV_STACK_FRAME_ADDRESS = re.compile(
     r"Backtrace:\n(.*)\(\+([x\da-fA-F]+)+\)\["
@@ -230,7 +230,7 @@ def get_function_signature_from_address(module: Path, address: str) -> Optional[
         )
         if result.returncode != 0:
             return None
-        stdout = result.stdout  # type: str
+        stdout: str = result.stdout
         lines = stdout.splitlines()
         if not lines:
             return None

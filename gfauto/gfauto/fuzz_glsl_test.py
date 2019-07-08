@@ -59,11 +59,13 @@ def run(
     log(f"Running test on device:\n{device.name}")
 
     result_output_dir = run_shader_job(
-        test_util.get_shader_job_path(test_dir, is_variant=True),
-        test_util.get_results_directory(test_dir, device.name, is_variant=True),
-        test,
-        device,
-        binary_manager,
+        shader_job=test_util.get_shader_job_path(test_dir, is_variant=True),
+        output_dir=test_util.get_results_directory(
+            test_dir, device.name, is_variant=True
+        ),
+        test=test,
+        device=device,
+        binary_manager=binary_manager,
     )
 
     return result_util.get_status(result_output_dir)
@@ -126,7 +128,7 @@ def maybe_add_report(
     return test_dir_in_reports
 
 
-def run_reduction(test_dir: Path, reports_dir: Path):
+def run_reduction_on_report(test_dir: Path, reports_dir: Path) -> None:
     test = test_util.metadata_read(test_dir)
 
     try:
@@ -195,7 +197,7 @@ def handle(
 
     # For each report, run a reduction on the target device with the device-specific crash signature.
     for test_dir_in_reports in report_paths:
-        run_reduction(test_dir_in_reports, reports_dir)
+        run_reduction_on_report(test_dir_in_reports, reports_dir)
 
     # For each report, create a summary and reproduce the bug.
     for test_dir_in_reports in report_paths:
@@ -448,82 +450,100 @@ def create_summary_and_reproduce_glsl(
 
     status = result_util.get_status(variant_reduced_glsl_result)
     if status == fuzz.STATUS_TOOL_CRASH:
-        # Create a simple script and README.
-
-        shader_job = unreduced_glsl / test_util.VARIANT_DIR / test_util.SHADER_JOB
-
-        shader_files = shader_job_util.get_related_files(
-            shader_job, shader_job_util.EXT_ALL
-        )
-        check(
-            len(shader_files) > 0,
-            AssertionError(f"Need at least one shader for {shader_job}"),
+        tool_crash_summary_bug_report_dir(
+            reduced_source_dir,
+            variant_reduced_glsl_result,
+            summary_dir,
+            binary_manager,
+            test_metadata,
         )
 
-        shader_extension = shader_files[0].suffix
 
-        bug_report_dir = util.copy_dir(
-            variant_reduced_glsl_result, summary_dir / "bug_report"
+def tool_crash_summary_bug_report_dir(  # pylint: disable=too-many-locals;
+    reduced_glsl_source_dir: Path,
+    variant_reduced_glsl_result_dir: Path,
+    summary_dir: Path,
+    binary_manager: built_in_binaries.BinaryManager,
+    test_metadata: Test,
+) -> Path:
+    # Create a simple script and README.
+
+    shader_job = reduced_glsl_source_dir / test_util.VARIANT_DIR / test_util.SHADER_JOB
+
+    shader_files = shader_job_util.get_related_files(
+        shader_job, shader_job_util.EXT_ALL
+    )
+    check(
+        len(shader_files) > 0,
+        AssertionError(f"Need at least one shader for {shader_job}"),
+    )
+
+    shader_extension = shader_files[0].suffix
+
+    bug_report_dir = util.copy_dir(
+        variant_reduced_glsl_result_dir, summary_dir / "bug_report"
+    )
+
+    shader_files = sorted(bug_report_dir.rglob("shader.*"))
+
+    glsl_files = [
+        shader_file
+        for shader_file in shader_files
+        if shader_file.suffix == shader_extension
+    ]
+
+    asm_files = [
+        shader_file
+        for shader_file in shader_files
+        if shader_file.name.endswith(
+            shader_extension + shader_job_util.SUFFIX_ASM_SPIRV
         )
+    ]
 
-        shader_files = sorted(bug_report_dir.rglob("shader.*"))
+    spv_files = [
+        shader_file
+        for shader_file in shader_files
+        if shader_file.name.endswith(shader_extension + shader_job_util.SUFFIX_SPIRV)
+    ]
 
-        glsl_files = [
-            shader_file
-            for shader_file in shader_files
-            if shader_file.suffix == shader_extension
-        ]
+    readme = "\n\n"
+    readme += (
+        "Issue found using [GraphicsFuzz](https://github.com/google/graphicsfuzz).\n\n"
+    )
+    readme += "Tool versions:\n\n"
+    readme += f"* glslangValidator commit hash: {binary_manager.get_binary_by_name(built_in_binaries.GLSLANG_VALIDATOR_NAME).version}\n"
 
-        asm_files = [
-            shader_file
-            for shader_file in shader_files
-            if shader_file.name.endswith(
-                shader_extension + shader_job_util.SUFFIX_ASM_SPIRV
-            )
-        ]
+    if test_metadata.glsl.spirv_opt_args:
+        readme += f"* spirv-opt commit hash: {binary_manager.get_binary_by_name(built_in_binaries.SPIRV_OPT_NAME).version}\n"
 
-        spv_files = [
-            shader_file
-            for shader_file in shader_files
-            if shader_file.name.endswith(
-                shader_extension + shader_job_util.SUFFIX_SPIRV
-            )
-        ]
+    readme += "\nTo reproduce:\n\n"
+    readme += f"`glslangValidator -V shader{shader_extension} -o shader{shader_extension}.spv`\n\n"
 
-        readme = "\n\n"
-        readme += "Issue found using [GraphicsFuzz](https://github.com/google/graphicsfuzz).\n\n"
-        readme += "Tool versions:\n\n"
-        readme += f"* glslangValidator commit hash: {binary_manager.get_binary_by_name(built_in_binaries.GLSLANG_VALIDATOR_NAME).version}\n"
+    if spv_files and not test_metadata.glsl.spirv_opt_args:
+        # There was an .spv file and no spirv-opt, so validate the SPIR-V.
+        readme += f"`spirv-val shader{shader_extension}.spv`\n\n"
 
-        if test_metadata.glsl.spirv_opt_args:
-            readme += f"* spirv-opt commit hash: {binary_manager.get_binary_by_name(built_in_binaries.SPIRV_OPT_NAME).version}\n"
+    if test_metadata.glsl.spirv_opt_args:
+        readme += f"`spirv-opt shader{shader_extension}.spv -o temp.spv --validate-after-all {' '.join(test_metadata.glsl.spirv_opt_args)}`\n\n"
 
-        readme += "\nTo reproduce:\n\n"
-        readme += f"`glslangValidator -V shader{shader_extension} -o shader{shader_extension}.spv`\n\n"
+    files_to_list = glsl_files + spv_files + asm_files
+    files_to_list.sort()
 
-        if spv_files and not test_metadata.glsl.spirv_opt_args:
-            # There was an .spv file and no spirv-opt, so validate the SPIR-V.
-            readme += f"`spirv-val shader{shader_extension}.spv`\n\n"
+    files_to_show = glsl_files + asm_files
+    files_to_show.sort()
 
-        if test_metadata.glsl.spirv_opt_args:
-            readme += f"`spirv-opt shader{shader_extension}.spv -o temp.spv --validate-after-all {' '.join(test_metadata.glsl.spirv_opt_args)}`\n\n"
+    readme += "The following shader files are included in the attached archive, some of which are also shown inline below:\n\n"
 
-        files_to_list = glsl_files + spv_files + asm_files
-        files_to_list.sort()
+    for file_to_list in files_to_list:
+        short_path = file_to_list.relative_to(bug_report_dir).as_posix()
+        readme += f"* {short_path}\n"
 
-        files_to_show = glsl_files + asm_files
-        files_to_show.sort()
+    for file_to_show in files_to_show:
+        short_path = file_to_show.relative_to(bug_report_dir).as_posix()
+        file_contents = util.file_read_text(file_to_show)
+        readme += f"\n{short_path}:\n\n"
+        readme += f"```\n{file_contents}\n```\n"
 
-        readme += "The following shader files are included in the attached archive, some of which are also shown inline below:\n\n"
+    util.file_write_text(summary_dir / "README.md", readme)
 
-        for file_to_list in files_to_list:
-            short_path = file_to_list.relative_to(bug_report_dir).as_posix()
-            readme += f"* {short_path}\n"
-
-        for file_to_show in files_to_show:
-            short_path = file_to_show.relative_to(bug_report_dir).as_posix()
-            contents = util.file_read_text(file_to_show)
-            readme += f"\n{short_path}:\n\n"
-            readme += "```\n" + contents + "\n```\n"
-
-        util.file_write_text(summary_dir / "README.md", readme)
+    return bug_report_dir

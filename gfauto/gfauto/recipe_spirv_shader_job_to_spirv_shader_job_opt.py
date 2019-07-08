@@ -49,7 +49,7 @@ OPT_OPTIONS: List[str] = [
 
 
 def random_spirv_opt_args(max_num_args: int = 30) -> List[str]:
-    result: List[str] = list()
+    result: List[str] = []
     num_args = random.randint(1, max_num_args)
     for _ in range(0, num_args):
         arg = random.choice(OPT_OPTIONS)

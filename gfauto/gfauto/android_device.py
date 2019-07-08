@@ -90,9 +90,7 @@ def stay_awake_warning(serial: Optional[str] = None) -> None:
 
 
 def is_screen_off_or_locked(serial: Optional[str] = None) -> bool:
-    """
-    :return: True: the screen is off or locked. False: unknown.
-    """
+    """:return: True: the screen is off or locked. False: unknown."""
     res = adb_can_fail(serial, ["shell", "dumpsys nfc"])
     if res.returncode != 0:
         return False
@@ -108,13 +106,13 @@ def is_screen_off_or_locked(serial: Optional[str] = None) -> bool:
 
 
 def get_all_android_devices() -> List[Device]:
-    result = []  # type: List[Device]
+    result: List[Device] = []
 
     log("Getting the list of connected Android devices via adb")
 
     adb_devices = adb_check(None, ["devices", "-l"], verbose=True)
-    stdout = adb_devices.stdout  # type: str
-    lines = stdout.splitlines()
+    stdout: str = adb_devices.stdout
+    lines: List[str] = stdout.splitlines()
     # Remove empty lines.
     lines = [l for l in lines if l]
     check(
@@ -131,9 +129,9 @@ def get_all_android_devices() -> List[Device]:
             )
         # Set a simple model name, but then try to find the actual model name.
         device_model = "android_device"
-        for j in range(2, len(fields)):
-            if fields[j].startswith("model:"):
-                device_model = util.remove_start(fields[j], "model:")
+        for field_index in range(2, len(fields)):
+            if fields[field_index].startswith("model:"):
+                device_model = util.remove_start(fields[field_index], "model:")
                 break
 
         device = Device(
@@ -212,6 +210,7 @@ def run_amber_on_device_helper(
     skip_render: bool = False,
     serial: Optional[str] = None,
 ) -> Path:
+
     prepare_device(wait_for_screen=True, serial=serial)
 
     adb_check(
