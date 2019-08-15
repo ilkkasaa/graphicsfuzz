@@ -24,7 +24,7 @@ import pathlib
 from copy import copy
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 import attr
 
 from gfauto import shader_job_util, util
@@ -78,71 +78,187 @@ def get_text_as_comment(text: str) -> str:
     return "\n".join(lines)
 
 
-def uniform_json_to_amber_script(uniform_json_contents: str) -> str:
-    def amberscript_uniform_buffer_decl(uniform_json):
-        '''
-        Returns the string representing AmberScript version of uniform declarations.
-        Skips the special '$compute' key, if present.
+def amberscript_comp_buff_decl(comp_json: str) -> str:
+    """
+    Returns a string containing AmberScript commands for declaring the initial in/out buffer for a
+    compute shader test. Only the "$compute" key is read.
 
-        {
-          "myuniform": {
-            "func": "glUniform1f",
-            "args": [ 42.0 ],
-            "binding": 3
-          },
-          "$compute": { ... will be ignored ... }
+      {
+        "myuniform": {
+          "func": "glUniform1f",
+          "args": [ 42.0 ],
+          "binding": 3
+        },
+
+        "$compute": {
+          "num_groups": [12, 13, 14];
+          "buffer": {
+            "binding": 123,
+            "fields":
+            [
+              { "type": "int", "data": [ 0 ] },
+              { "type": "int", "data": [ 1, 2 ] },
+            ]
+          }
         }
 
-        becomes:
+      }
 
-        # myuniform
-        BUFFER myuniform DATA_TYPE float DATA
-          42.0
-        END
+    becomes:
 
-        '''
+      BUFFER gfz_ssbo DATA_TYPE int DATA
+        0 1 2
+      END
+    """
 
-        UNIFORM_TYPE = {
-            'glUniform1i': 'int32',
-            'glUniform2i': 'vec2<int32>',
-            'glUniform3i': 'vec3<int32>',
-            'glUniform4i': 'vec4<int32>',
-            'glUniform1f': 'float',
-            'glUniform2f': 'vec2<float>',
-            'glUniform3f': 'vec3<float>',
-            'glUniform4f': 'vec4<float>',
-            'glUniformMatrix2fv': 'mat2x2<float>',
-            'glUniformMatrix2x3fv': 'mat2x3<float>',
-            'glUniformMatrix2x4fv': 'mat2x4<float>',
-            'glUniformMatrix3x2fv': 'mat3x2<float>',
-            'glUniformMatrix3fv': 'mat3x3<float>',
-            'glUniformMatrix3x4fv': 'mat3x4<float>',
-            'glUniformMatrix4x2fv': 'mat4x2<float>',
-            'glUniformMatrix4x3fv': 'mat4x3<float>',
-            'glUniformMatrix4fv': 'mat4x4<float>',
-        }
+    ssbo_types = {
+        "int": "int32",
+        "ivec2": "vec2<int32>",
+        "ivec3": "vec3<int32>",
+        "ivec4": "vec4<int32>",
+        "uint": "uint32",
+        "float": "float",
+        "vec2": "vec2<float>",
+        "vec3": "vec3<float>",
+        "vec4": "vec4<float>",
+    }
 
-        result = ''
-        with open(uniform_json, 'r') as f:
-            j = json.load(f)
-        for name, entry in j.items():
+    comp = json.loads(comp_json)
 
-            if name == '$compute':
-                continue
+    check(
+        "$compute" in comp.keys(),
+        AssertionError("Cannot find '$compute' key in JSON file"),
+    )
 
-            func = entry['func']
-            if func not in UNIFORM_TYPE.keys():
-                raise ValueError('Error: unknown uniform type for function: ' + func)
-            uniform_type = UNIFORM_TYPE[func]
+    compute_info = comp["$compute"]
 
-            result += '# ' + name + '\n'
-            result += 'BUFFER ' + name + ' DATA_TYPE ' + uniform_type + ' DATA\n'
-            for arg in entry['args']:
-                result += ' {}'.format(arg)
-            result += '\n'
-            result += 'END\n'
+    check(
+        len(compute_info["buffer"]["fields"]) > 0,
+        AssertionError("Compute shader test with empty SSBO"),
+    )
 
-        return result
+    field_types_set = set([field["type"] for field in comp["buffer"]["fields"]])
+
+    check(len(field_types_set) == 1, AssertionError("All field types must be the same"))
+
+    ssbo_type = compute_info["buffer"]["fields"][0]["type"]
+    if ssbo_type not in ssbo_types.keys():
+        raise ValueError(f"Unsupported SSBO datum type: {ssbo_type}")
+    ssbo_type_amber = ssbo_types[ssbo_type]
+
+    result = f"BUFFER {{}} DATA_TYPE {ssbo_type_amber} DATA\n"
+    for field_info in compute_info["buffer"]["fields"]:
+        for datum in field_info["data"]:
+            result += f" {str(datum)}"
+    result += "\n"
+    result += "END\n\n"
+
+    return result
+
+
+def amberscript_uniform_buffer_bind(uniform_json: str, prefix: str = "") -> str:
+    """
+    Returns AmberScript commands for uniform binding.
+    Skips the special '$compute' key, if present.
+
+    {
+      "myuniform": {
+        "func": "glUniform1f",
+        "args": [ 42.0 ],
+        "binding": 3
+      },
+      "$compute": { ... will be ignored ... }
+    }
+
+    becomes:
+
+    BIND BUFFER {prefix}myuniform AS uniform DESCRIPTOR_SET 0 BINDING 3
+    """
+
+    result = ""
+    uniforms = json.loads(uniform_json)
+    for name, entry in uniforms.items():
+        if name == "$compute":
+            continue
+        result += f"BIND BUFFER {prefix}{name} AS uniform DESCRIPTOR_SET 0 BINDING {entry['binding']}\n"
+    return result
+
+
+def amberscript_uniform_buffer_decl(
+    uniform_json_contents: str, prefix: str = ""
+) -> str:
+    """
+    Returns the string representing AmberScript version of uniform declarations.
+    Skips the special '$compute' key, if present.
+
+    {
+      "myuniform": {
+        "func": "glUniform1f",
+        "args": [ 42.0 ],
+        "binding": 3
+      },
+      "$compute": { ... will be ignored ... }
+    }
+
+    becomes:
+
+    # uniforms for {prefix}
+
+    # myuniform
+    BUFFER {prefix}myuniform DATA_TYPE float DATA
+      42.0
+    END
+
+    :param uniform_json_contents:
+    :param prefix: E.g. "reference_" or "variant_" or "". The buffer names will include this prefix to avoid name
+    clashes.
+    """
+
+    uniform_types: Dict[str, str] = {
+        "glUniform1i": "int32",
+        "glUniform2i": "vec2<int32>",
+        "glUniform3i": "vec3<int32>",
+        "glUniform4i": "vec4<int32>",
+        "glUniform1f": "float",
+        "glUniform2f": "vec2<float>",
+        "glUniform3f": "vec3<float>",
+        "glUniform4f": "vec4<float>",
+        "glUniformMatrix2fv": "mat2x2<float>",
+        "glUniformMatrix2x3fv": "mat2x3<float>",
+        "glUniformMatrix2x4fv": "mat2x4<float>",
+        "glUniformMatrix3x2fv": "mat3x2<float>",
+        "glUniformMatrix3fv": "mat3x3<float>",
+        "glUniformMatrix3x4fv": "mat3x4<float>",
+        "glUniformMatrix4x2fv": "mat4x2<float>",
+        "glUniformMatrix4x3fv": "mat4x3<float>",
+        "glUniformMatrix4fv": "mat4x4<float>",
+    }
+
+    result = "# uniforms"
+    if prefix:
+        result += f" for {prefix}"
+    result += "\n\n"
+
+    uniforms = json.loads(uniform_json_contents)
+    for name, entry in uniforms.items():
+
+        if name == "$compute":
+            continue
+
+        func = entry["func"]
+        if func not in uniform_types.keys():
+            raise ValueError("Error: unknown uniform type for function: " + func)
+        uniform_type = uniform_types[func]
+
+        result += f"# {name}\n"
+        result += f"BUFFER {prefix}{name} DATA_TYPE {uniform_type} DATA\n"
+        for arg in entry["args"]:
+            result += f" {arg}"
+        result += "\n"
+        result += "END\n"
+
+    return result
+
 
 def uniform_json_to_vk_script(uniform_json_contents: str) -> str:
     """
@@ -430,6 +546,7 @@ def amberscriptify_comp(
 
     return result
 
+
 class ShaderType(Enum):
     FRAGMENT = "fragment"
     VERTEX = "vertex"
@@ -456,9 +573,9 @@ class ComputeShaderJob(ShaderJob):
 
     compute_shader: Shader
 
-    # Defines the initial
-    # Template argument is the name of buffer.
-    # E.g. BUFFER {name} DATA_TYPE vec4<float> DATA 0.0 0.0 END
+    # String containing AmberScript command(s) for defining a buffer containing the initial data for the input/output buffer that will be used by
+    # the compute shader. This string is a template (use with .format()) where the template argument is the name of buffer.
+    # E.g. BUFFER {} DATA_TYPE vec4<float> DATA 0.0 0.0 END
     initial_buffer_definition_template: str
 
     # Same as above, but defines an empty buffer with the same size and type as the initial buffer.
@@ -470,6 +587,7 @@ class ComputeShaderJob(ShaderJob):
 class GraphicsShaderJob(ShaderJob):
     vertex_shader: Optional[Shader]
     fragment_shader: Shader
+
 
 @attr.dataclass
 class ShaderJobFile:
@@ -497,46 +615,59 @@ class ShaderJobFile:
             # Guaranteed
             assert comp_asm_contents  # noqa
 
-            return ShaderJob(self.name_prefix, self.
+            return ComputeShaderJob(
+                self.name_prefix,
+                amberscript_uniform_buffer_decl(json_contents, self.name_prefix),
+                amberscript_uniform_buffer_bind(json_contents, self.name_prefix),
+                Shader(
+                    ShaderType.COMPUTE,
+                    comp_asm_contents,
+                    glsl_comp_contents,
+                    self.processing_info,
+                ),
+                amberscript_comp_buff_decl(json_contents),
+            )
 
         else:
-            # Get GLSL contents
-            glsl_vert_contents = None
-            glsl_frag_contents = None
-            if input_glsl_source_json_path:
-                glsl_vert_contents = shader_job_util.get_shader_contents(
-                    input_glsl_source_json_path, shader_job_util.EXT_VERT
-                )
-                glsl_frag_contents = shader_job_util.get_shader_contents(
-                    input_glsl_source_json_path, shader_job_util.EXT_FRAG
-                )
+            # # Get GLSL contents
+            # glsl_vert_contents = None
+            # glsl_frag_contents = None
+            # if input_glsl_source_json_path:
+            #     glsl_vert_contents = shader_job_util.get_shader_contents(
+            #         input_glsl_source_json_path, shader_job_util.EXT_VERT
+            #     )
+            #     glsl_frag_contents = shader_job_util.get_shader_contents(
+            #         input_glsl_source_json_path, shader_job_util.EXT_FRAG
+            #     )
+            #
+            # # Get spirv asm contents
+            # vert_contents = shader_job_util.get_shader_contents(
+            #     input_asm_spirv_job_json_path,
+            #     shader_job_util.EXT_VERT,
+            #     shader_job_util.SUFFIX_ASM_SPIRV,
+            # )
+            #
+            # frag_contents = shader_job_util.get_shader_contents(
+            #     input_asm_spirv_job_json_path,
+            #     shader_job_util.EXT_FRAG,
+            #     shader_job_util.SUFFIX_ASM_SPIRV,
+            #     must_exist=True,
+            # )
+            #
+            # # Guaranteed.
+            # assert frag_contents  # noqa
+            #
+            # result = amberscriptify_image(
+            #     vert_contents,
+            #     frag_contents,
+            #     json_contents,
+            #     amberfy_settings,
+            #     glsl_vert_contents,
+            #     glsl_frag_contents,
+            #     add_red_pixel_probe,
+            # )
+            pass
 
-            # Get spirv asm contents
-            vert_contents = shader_job_util.get_shader_contents(
-                input_asm_spirv_job_json_path,
-                shader_job_util.EXT_VERT,
-                shader_job_util.SUFFIX_ASM_SPIRV,
-            )
-
-            frag_contents = shader_job_util.get_shader_contents(
-                input_asm_spirv_job_json_path,
-                shader_job_util.EXT_FRAG,
-                shader_job_util.SUFFIX_ASM_SPIRV,
-                must_exist=True,
-            )
-
-            # Guaranteed.
-            assert frag_contents  # noqa
-
-            result = amberscriptify_image(
-                vert_contents,
-                frag_contents,
-                json_contents,
-                amberfy_settings,
-                glsl_vert_contents,
-                glsl_frag_contents,
-                add_red_pixel_probe,
-            )
 
 @attr.dataclass
 class ShaderJobBasedAmberTest:
@@ -550,10 +681,7 @@ class ShaderJobFileBasedAmberTest:
     variant_asm_spirv_job: ShaderJobFile
 
     def to_shader_job_based(self):
-
-
-
-
+        pass
 
 
 def spirv_asm_shader_job_to_amber_script(
@@ -567,8 +695,6 @@ def spirv_asm_shader_job_to_amber_script(
         f"with reference {str(shader_job_amber_test.reference_asm_spirv_job)} "
         f"to {str(output_amber_script_file_path)}"
     )
-
-
 
 
 def run_spirv_asm_shader_job_to_amber_script(  # pylint: disable=too-many-locals
