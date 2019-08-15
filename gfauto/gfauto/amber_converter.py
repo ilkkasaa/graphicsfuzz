@@ -150,7 +150,7 @@ def amberscript_comp_buff_decl(comp_json: str, make_empty_buffer: bool = False) 
         AssertionError("Compute shader test with empty SSBO"),
     )
 
-    field_types_set = set([field["type"] for field in comp["buffer"]["fields"]])
+    field_types_set = set([field["type"] for field in compute_info["buffer"]["fields"]])
 
     check(len(field_types_set) == 1, AssertionError("All field types must be the same"))
 
@@ -775,6 +775,7 @@ def get_amber_script_shader_def(shader: Shader, name: str) -> str:
     return result
 
 
+# noinspection DuplicatedCode
 def graphics_shader_job_amber_test_to_amber_script(
     shader_job_amber_test: ShaderJobBasedAmberTest, amberfy_settings: AmberfySettings
 ) -> str:
@@ -832,6 +833,7 @@ def graphics_shader_job_amber_test_to_amber_script(
     return result
 
 
+# noinspection DuplicatedCode
 def compute_shader_job_amber_test_to_amber_script(
     shader_job_amber_test: ShaderJobBasedAmberTest, amberfy_settings: AmberfySettings
 ) -> str:
@@ -892,9 +894,13 @@ def spirv_asm_shader_job_to_amber_script(
 ) -> Path:
 
     log(
-        f"Amberfy: {str(shader_job_file_amber_test.variant_asm_spirv_job)} "
-        f"with reference {str(shader_job_file_amber_test.reference_asm_spirv_job)} "
-        f"to {str(output_amber_script_file_path)}"
+        f"Amberfy: {str(shader_job_file_amber_test.variant_asm_spirv_job.asm_spirv_shader_job_json)} "
+        + (
+            f"with reference {str(shader_job_file_amber_test.reference_asm_spirv_job.asm_spirv_shader_job_json)} "
+            if shader_job_file_amber_test.reference_asm_spirv_job
+            else ""
+        )
+        + f"to {str(output_amber_script_file_path)}"
     )
 
     shader_job_amber_test = shader_job_file_amber_test.to_shader_job_based()
