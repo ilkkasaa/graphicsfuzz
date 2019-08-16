@@ -1,0 +1,41 @@
+{
+  "injectionSwitch": {
+    "func": "glUniform2f",
+    "args": [
+      0.0,
+      1.0
+    ],
+    "binding": 0
+  },
+  "resolution": {
+    "func": "glUniform2f",
+    "args": [
+      256.0,
+      256.0
+    ],
+    "binding": 1
+  },
+  "GLF_dead0injectionSwitch": {
+    "func": "glUniform2f",
+    "args": [
+      0.6847979,
+      0.069170594
+    ],
+    "binding": 2
+  },
+  "GLF_dead7time": {
+    "func": "glUniform1f",
+    "args": [
+      0.42721105
+    ],
+    "binding": 3
+  },
+  "GLF_dead11resolution": {
+    "func": "glUniform2f",
+    "args": [
+      0.0521971,
+      0.1192534
+    ],
+    "binding": 4
+  }
+}

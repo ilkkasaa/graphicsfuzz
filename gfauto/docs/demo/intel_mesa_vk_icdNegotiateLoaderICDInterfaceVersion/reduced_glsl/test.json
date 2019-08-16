@@ -1,0 +1,37 @@
+{
+  "binaries": [
+    {
+      "name": "glslangValidator",
+      "path": "",
+      "tags": [
+        "Debug"
+      ],
+      "version": "f04f1f93a70f4608ffa9903b20bfb95f20a063f5"
+    },
+    {
+      "name": "spirv-dis",
+      "path": "",
+      "tags": [
+        "Debug"
+      ],
+      "version": "9559cdbdf011c487f67f89e2d694bd4a18d5c1e0"
+    },
+    {
+      "name": "spirv-val",
+      "path": "",
+      "tags": [
+        "Debug"
+      ],
+      "version": "9559cdbdf011c487f67f89e2d694bd4a18d5c1e0"
+    }
+  ],
+  "crash_signature": "vk_icdNegotiateLoaderICDInterfaceVersion",
+  "device": {
+    "binaries": [],
+    "host": {},
+    "name": "host"
+  },
+  "glsl": {
+    "spirv_opt_args": []
+  }
+}

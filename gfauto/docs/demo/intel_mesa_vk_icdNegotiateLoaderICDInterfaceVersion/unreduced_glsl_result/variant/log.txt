@@ -1,0 +1,695 @@
+Exec:['/usr/bin/catchsegv', '/data/temp/gfauto_work/binaries/glslang_f04f1f93a70f4608ffa9903b20bfb95f20a063f5_Linux_x64_Debug/glslang/bin/glslangValidator', '-V', '-o', 'reports/crashes/vk_icdNegotiateLoaderICDInterfaceVersion/037e07ff733f415fb30957f6d25bcbb5_no_opt_test_host/summary/unreduced_glsl_result/variant/1_spirv/shader.frag.spv', 'reports/crashes/vk_icdNegotiateLoaderICDInterfaceVersion/037e07ff733f415fb30957f6d25bcbb5_no_opt_test_host/summary/unreduced_glsl_result/variant/0_glsl/shader.frag']
+RETURNCODE: 0
+Exec:['/usr/bin/catchsegv', '/data/temp/gfauto_work/binaries/SPIRV-Tools_9559cdbdf011c487f67f89e2d694bd4a18d5c1e0_Linux_x64_Debug/SPIRV-Tools/bin/spirv-dis', 'reports/crashes/vk_icdNegotiateLoaderICDInterfaceVersion/037e07ff733f415fb30957f6d25bcbb5_no_opt_test_host/summary/unreduced_glsl_result/variant/1_spirv/shader.frag.spv', '-o', 'reports/crashes/vk_icdNegotiateLoaderICDInterfaceVersion/037e07ff733f415fb30957f6d25bcbb5_no_opt_test_host/summary/unreduced_glsl_result/variant/1_spirv_asm/shader.frag.asm', '--raw-id']
+RETURNCODE: 0
+Exec:['/usr/bin/catchsegv', '/data/temp/gfauto_work/binaries/SPIRV-Tools_9559cdbdf011c487f67f89e2d694bd4a18d5c1e0_Linux_x64_Debug/SPIRV-Tools/bin/spirv-val', 'reports/crashes/vk_icdNegotiateLoaderICDInterfaceVersion/037e07ff733f415fb30957f6d25bcbb5_no_opt_test_host/summary/unreduced_glsl_result/variant/1_spirv/shader.frag.spv']
+RETURNCODE: 0
+Amberfy: reports/crashes/vk_icdNegotiateLoaderICDInterfaceVersion/037e07ff733f415fb30957f6d25bcbb5_no_opt_test_host/summary/unreduced_glsl_result/variant/1_spirv_asm/shader.json to reports/crashes/vk_icdNegotiateLoaderICDInterfaceVersion/037e07ff733f415fb30957f6d25bcbb5_no_opt_test_host/summary/unreduced_glsl_result/variant/test.amber
+Exec (verbose):['/usr/bin/catchsegv', '/data/bin/amber', 'reports/crashes/vk_icdNegotiateLoaderICDInterfaceVersion/037e07ff733f415fb30957f6d25bcbb5_no_opt_test_host/summary/unreduced_glsl_result/variant/test.amber', '--log-graphics-calls-time', '--disable-spirv-val', '-d', '-i', 'reports/crashes/vk_icdNegotiateLoaderICDInterfaceVersion/037e07ff733f415fb30957f6d25bcbb5_no_opt_test_host/summary/unreduced_glsl_result/variant/image.png']
+RETURNCODE: 139
+STDOUT:
+Loading Vulkan Pointers
+vkGetPhysicalDeviceProperties
+time vkGetPhysicalDeviceProperties                   6006 ns
+vkGetPhysicalDeviceMemoryProperties
+time vkGetPhysicalDeviceMemoryProperties              287 ns
+vkCreateCommandPool
+time vkCreateCommandPool                              813 ns
+vkCreateShaderModule
+time vkCreateShaderModule                            3754 ns
+vkCreateShaderModule
+time vkCreateShaderModule                          154993 ns
+vkGetPhysicalDeviceFormatProperties
+time vkGetPhysicalDeviceFormatProperties             1328 ns
+vkAllocateCommandBuffers
+time vkAllocateCommandBuffers                       41877 ns
+vkCreateFence
+time vkCreateFence                                   2508 ns
+vkCreateRenderPass
+time vkCreateRenderPass                               568 ns
+vkCreateImage
+time vkCreateImage                                   3547 ns
+vkGetImageMemoryRequirements
+time vkGetImageMemoryRequirements                     250 ns
+vkAllocateMemory
+time vkAllocateMemory                                4303 ns
+vkBindImageMemory
+time vkBindImageMemory                                161 ns
+vkCreateImageView
+time vkCreateImageView                               3348 ns
+vkCreateBuffer
+time vkCreateBuffer                                   281 ns
+vkGetBufferMemoryRequirements
+time vkGetBufferMemoryRequirements                    232 ns
+vkAllocateMemory
+time vkAllocateMemory                                3443 ns
+vkBindBufferMemory
+time vkBindBufferMemory                               136 ns
+vkMapMemory
+time vkMapMemory                                     4358 ns
+vkCreateFramebuffer
+time vkCreateFramebuffer                              258 ns
+vkBeginCommandBuffer
+time vkBeginCommandBuffer                            5626 ns
+vkCmdPipelineBarrier
+time vkCmdPipelineBarrier                          241319 ns
+vkCmdCopyBufferToImage
+time vkCmdCopyBufferToImage                        657881 ns
+vkCmdPipelineBarrier
+time vkCmdPipelineBarrier                             585 ns
+vkCmdPipelineBarrier
+time vkCmdPipelineBarrier                             434 ns
+vkCmdBeginRenderPass
+time vkCmdBeginRenderPass                            2943 ns
+vkCmdClearAttachments
+time vkCmdClearAttachments                         427756 ns
+vkCmdEndRenderPass
+time vkCmdEndRenderPass                               413 ns
+vkCmdPipelineBarrier
+time vkCmdPipelineBarrier                            7388 ns
+vkCmdCopyImageToBuffer
+time vkCmdCopyImageToBuffer                        640742 ns
+vkCmdPipelineBarrier
+time vkCmdPipelineBarrier                             552 ns
+vkEndCommandBuffer
+time vkEndCommandBuffer                               277 ns
+vkResetFences
+time vkResetFences                                   3290 ns
+vkQueueSubmit
+time vkQueueSubmit                                 103985 ns
+vkWaitForFences
+time vkWaitForFences                               863803 ns
+vkResetCommandBuffer
+time vkResetCommandBuffer                             946 ns
+vkBeginCommandBuffer
+time vkBeginCommandBuffer                             725 ns
+vkCreateBuffer
+time vkCreateBuffer                                   430 ns
+vkGetBufferMemoryRequirements
+time vkGetBufferMemoryRequirements                    239 ns
+vkAllocateMemory
+time vkAllocateMemory                               43351 ns
+vkBindBufferMemory
+time vkBindBufferMemory                               156 ns
+vkMapMemory
+time vkMapMemory                                     5574 ns
+vkCreateBuffer
+time vkCreateBuffer                                   489 ns
+vkGetBufferMemoryRequirements
+time vkGetBufferMemoryRequirements                    114 ns
+vkAllocateMemory
+time vkAllocateMemory                                3973 ns
+vkBindBufferMemory
+time vkBindBufferMemory                                74 ns
+vkMapMemory
+time vkMapMemory                                     3849 ns
+vkCreateBuffer
+time vkCreateBuffer                                   236 ns
+vkGetBufferMemoryRequirements
+time vkGetBufferMemoryRequirements                     85 ns
+vkAllocateMemory
+time vkAllocateMemory                                3695 ns
+vkBindBufferMemory
+time vkBindBufferMemory                                71 ns
+vkMapMemory
+time vkMapMemory                                     3583 ns
+vkCreateBuffer
+time vkCreateBuffer                                   186 ns
+vkGetBufferMemoryRequirements
+time vkGetBufferMemoryRequirements                     63 ns
+vkAllocateMemory
+time vkAllocateMemory                                3480 ns
+vkBindBufferMemory
+time vkBindBufferMemory                                76 ns
+vkMapMemory
+time vkMapMemory                                     3121 ns
+vkCreateBuffer
+time vkCreateBuffer                                   196 ns
+vkGetBufferMemoryRequirements
+time vkGetBufferMemoryRequirements                     46 ns
+vkAllocateMemory
+time vkAllocateMemory                                3424 ns
+vkBindBufferMemory
+time vkBindBufferMemory                                73 ns
+vkMapMemory
+time vkMapMemory                                     3079 ns
+vkCreateBuffer
+time vkCreateBuffer                                   169 ns
+vkGetBufferMemoryRequirements
+time vkGetBufferMemoryRequirements                     72 ns
+vkAllocateMemory
+time vkAllocateMemory                                3052 ns
+vkBindBufferMemory
+time vkBindBufferMemory                                69 ns
+vkMapMemory
+time vkMapMemory                                     3610 ns
+vkCreateBuffer
+time vkCreateBuffer                                   310 ns
+vkGetBufferMemoryRequirements
+time vkGetBufferMemoryRequirements                     48 ns
+vkAllocateMemory
+time vkAllocateMemory                                3463 ns
+vkBindBufferMemory
+time vkBindBufferMemory                                79 ns
+vkMapMemory
+time vkMapMemory                                     3164 ns
+vkCreateBuffer
+time vkCreateBuffer                                   165 ns
+vkGetBufferMemoryRequirements
+time vkGetBufferMemoryRequirements                     96 ns
+vkAllocateMemory
+time vkAllocateMemory                                3951 ns
+vkBindBufferMemory
+time vkBindBufferMemory                                82 ns
+vkMapMemory
+time vkMapMemory                                     3339 ns
+vkEndCommandBuffer
+time vkEndCommandBuffer                               326 ns
+vkResetFences
+time vkResetFences                                   2211 ns
+vkQueueSubmit
+time vkQueueSubmit                                  12353 ns
+vkWaitForFences
+time vkWaitForFences                               100054 ns
+vkResetCommandBuffer
+time vkResetCommandBuffer                             585 ns
+vkBeginCommandBuffer
+time vkBeginCommandBuffer                             653 ns
+vkCmdPipelineBarrier
+time vkCmdPipelineBarrier                             453 ns
+vkCmdPipelineBarrier
+time vkCmdPipelineBarrier                             366 ns
+vkCmdPipelineBarrier
+time vkCmdPipelineBarrier                             259 ns
+vkCmdPipelineBarrier
+time vkCmdPipelineBarrier                             196 ns
+vkCmdPipelineBarrier
+time vkCmdPipelineBarrier                             217 ns
+vkCmdPipelineBarrier
+time vkCmdPipelineBarrier                             193 ns
+vkCmdPipelineBarrier
+time vkCmdPipelineBarrier                             202 ns
+vkCmdPipelineBarrier
+time vkCmdPipelineBarrier                             203 ns
+vkEndCommandBuffer
+time vkEndCommandBuffer                               365 ns
+vkResetFences
+time vkResetFences                                   2533 ns
+vkQueueSubmit
+time vkQueueSubmit                                  10733 ns
+vkWaitForFences
+time vkWaitForFences                               116580 ns
+vkResetCommandBuffer
+time vkResetCommandBuffer                             581 ns
+vkCreateDescriptorSetLayout
+time vkCreateDescriptorSetLayout                     1056 ns
+vkCreateDescriptorPool
+time vkCreateDescriptorPool                           515 ns
+vkAllocateDescriptorSets
+time vkAllocateDescriptorSets                         763 ns
+vkCreatePipelineLayout
+time vkCreatePipelineLayout                          3073 ns
+vkCreateGraphicsPipelines
+*** Segmentation fault
+Register dump:
+
+ RAX: 00007ffbe8a2cf80   RBX: 000055888e8e05b0   RCX: 000055888ebea540
+ RDX: 00007ffbe8a2b000   RSI: 00000000000000c0   RDI: 00000000000000f0
+ RBP: 0000000000000090   R8 : 0000000000000003   R9 : 000055888f1f7988
+ R10: 000055888e54b010   R11: 0000000000000100   R12: 000055888f307050
+ R13: 000055888e8e05b0   R14: 000055888e9b2d90   R15: 000055888f245ec0
+ RSP: 00007ffda53d0000
+
+ RIP: 00007ffbeec4ab32   EFLAGS: 00010206
+
+ CS: 0033   FS: 0000   GS: 0000
+
+ Trap: 0000000e   Error: 00000006   OldMask: 00000000   CR2: a53cfff8
+
+ FPUCW: 0000037f   FPUSW: 00000000   TAG: 00007ffb
+ RIP: efcaf4f0   RDP: 00000000
+
+ ST(0) 0000 0000000000000000   ST(1) 0000 0000000000000000
+ ST(2) 0000 0000000000000000   ST(3) 0000 0000000000000000
+ ST(4) 0000 0000000000000000   ST(5) ffff 8000000000000000
+ ST(6) ffff 8000000000000000   ST(7) c000 c000000000000000
+ mxcsr: 1fbb
+ XMM0:  00000000000000000000000000000000 XMM1:  00000000000000000000000000000000
+ XMM2:  00000000000000000000000000000000 XMM3:  00000000000000000000000000000000
+ XMM4:  00000000000000000000000000000000 XMM5:  00000000000000000000000000000000
+ XMM6:  00000000000000000000000000000000 XMM7:  00000000000000000000000000000000
+ XMM8:  00000000000000000000000000000000 XMM9:  00000000000000000000000000000000
+ XMM10: 00000000000000000000000000000000 XMM11: 00000000000000000000000000000000
+ XMM12: 00000000000000000000000000000000 XMM13: 00000000000000000000000000000000
+ XMM14: 00000000000000000000000000000000 XMM15: 00000000000000000000000000000000
+
+Backtrace:
+/lib/x86_64-linux-gnu/libc.so.6(__libc_malloc+0x2)[0x7ffbeec4ab32]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x26b51d)[0x7ffbe898c51d]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x26b5e9)[0x7ffbe898c5e9]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1baa54)[0x7ffbe88dba54]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c058d)[0x7ffbe88e158d]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+/usr/lib/x86_64-linux-gnu/libvulkan_intel.so(+0x1c0558)[0x7ffbe88e1558]
+
+Memory map:
+
+55888c839000-55888cf40000 r--p 00000000 fe:01 5112295 /data/bin/amber
+55888cf40000-55888d519000 r-xp 00707000 fe:01 5112295 /data/bin/amber
+55888d519000-55888d872000 r--p 00ce0000 fe:01 5112295 /data/bin/amber
+55888d872000-55888d8b6000 r--p 01038000 fe:01 5112295 /data/bin/amber
+55888d8b6000-55888d8b8000 rw-p 0107c000 fe:01 5112295 /data/bin/amber
+55888d8b8000-55888d8c5000 rw-p 00000000 00:00 0
+55888e54b000-558890223000 rw-p 00000000 00:00 0 [heap]
+7ffbe842f000-7ffbe846f000 rw-s 00000000 00:17 381257 /i915 (deleted)
+7ffbe846f000-7ffbe84af000 rw-s 20000000 00:05 381249 /memfd:block pool (deleted)
+7ffbe84af000-7ffbe84ef000 rw-s 20000000 00:05 381248 /memfd:block pool (deleted)
+7ffbe84ef000-7ffbe851e000 r-xp 00000000 fe:01 4194331 /lib/x86_64-linux-gnu/libexpat.so.1.6.8
+7ffbe851e000-7ffbe871e000 ---p 0002f000 fe:01 4194331 /lib/x86_64-linux-gnu/libexpat.so.1.6.8
+7ffbe871e000-7ffbe8720000 r--p 0002f000 fe:01 4194331 /lib/x86_64-linux-gnu/libexpat.so.1.6.8
+7ffbe8720000-7ffbe8721000 rw-p 00031000 fe:01 4194331 /lib/x86_64-linux-gnu/libexpat.so.1.6.8
+7ffbe8721000-7ffbe875f000 r--p 00000000 fe:01 7078650 /usr/lib/x86_64-linux-gnu/libvulkan_intel.so
+7ffbe875f000-7ffbe898f000 r-xp 0003e000 fe:01 7078650 /usr/lib/x86_64-linux-gnu/libvulkan_intel.so
+7ffbe898f000-7ffbe8a0f000 r--p 0026e000 fe:01 7078650 /usr/lib/x86_64-linux-gnu/libvulkan_intel.so
+7ffbe8a0f000-7ffbe8a4f000 r--p 002ed000 fe:01 7078650 /usr/lib/x86_64-linux-gnu/libvulkan_intel.so
+7ffbe8a4f000-7ffbe8a50000 rw-p 0032d000 fe:01 7078650 /usr/lib/x86_64-linux-gnu/libvulkan_intel.so
+7ffbe8a50000-7ffbe8a53000 rw-p 00000000 00:00 0
+7ffbe8a53000-7ffbe8a68000 r-xp 00000000 fe:01 4194371 /lib/x86_64-linux-gnu/libbsd.so.0.9.1
+7ffbe8a68000-7ffbe8c67000 ---p 00015000 fe:01 4194371 /lib/x86_64-linux-gnu/libbsd.so.0.9.1
+7ffbe8c67000-7ffbe8c68000 r--p 00014000 fe:01 4194371 /lib/x86_64-linux-gnu/libbsd.so.0.9.1
+7ffbe8c68000-7ffbe8c69000 rw-p 00015000 fe:01 4194371 /lib/x86_64-linux-gnu/libbsd.so.0.9.1
+7ffbe8c69000-7ffbe8c6a000 rw-p 00000000 00:00 0
+7ffbe8c6a000-7ffbe8c90000 r-xp 00000000 fe:01 4194551 /lib/x86_64-linux-gnu/libncurses.so.6.1
+7ffbe8c90000-7ffbe8e8f000 ---p 00026000 fe:01 4194551 /lib/x86_64-linux-gnu/libncurses.so.6.1
+7ffbe8e8f000-7ffbe8e90000 r--p 00025000 fe:01 4194551 /lib/x86_64-linux-gnu/libncurses.so.6.1
+7ffbe8e90000-7ffbe8e91000 rw-p 00026000 fe:01 4194551 /lib/x86_64-linux-gnu/libncurses.so.6.1
+7ffbe8e91000-7ffbe8e96000 r-xp 00000000 fe:01 7081942 /usr/lib/x86_64-linux-gnu/libXdmcp.so.6.0.0
+7ffbe8e96000-7ffbe9095000 ---p 00005000 fe:01 7081942 /usr/lib/x86_64-linux-gnu/libXdmcp.so.6.0.0
+7ffbe9095000-7ffbe9096000 r--p 00004000 fe:01 7081942 /usr/lib/x86_64-linux-gnu/libXdmcp.so.6.0.0
+7ffbe9096000-7ffbe9097000 rw-p 00005000 fe:01 7081942 /usr/lib/x86_64-linux-gnu/libXdmcp.so.6.0.0
+7ffbe9097000-7ffbe909a000 r-xp 00000000 fe:01 7081910 /usr/lib/x86_64-linux-gnu/libXau.so.6.0.0
+7ffbe909a000-7ffbe9299000 ---p 00003000 fe:01 7081910 /usr/lib/x86_64-linux-gnu/libXau.so.6.0.0
+7ffbe9299000-7ffbe929a000 r--p 00002000 fe:01 7081910 /usr/lib/x86_64-linux-gnu/libXau.so.6.0.0
+7ffbe929a000-7ffbe929b000 rw-p 00003000 fe:01 7081910 /usr/lib/x86_64-linux-gnu/libXau.so.6.0.0
+7ffbe929b000-7ffbe92c3000 r-xp 00000000 fe:01 4194905 /lib/x86_64-linux-gnu/libtinfo.so.6.1
+7ffbe92c3000-7ffbe94c3000 ---p 00028000 fe:01 4194905 /lib/x86_64-linux-gnu/libtinfo.so.6.1
+7ffbe94c3000-7ffbe94c7000 r--p 00028000 fe:01 4194905 /lib/x86_64-linux-gnu/libtinfo.so.6.1
+7ffbe94c7000-7ffbe94c8000 rw-p 0002c000 fe:01 4194905 /lib/x86_64-linux-gnu/libtinfo.so.6.1
+7ffbe94c8000-7ffbe94fa000 r-xp 00000000 fe:01 7079470 /usr/lib/x86_64-linux-gnu/libedit.so.2.0.58
+7ffbe94fa000-7ffbe96f9000 ---p 00032000 fe:01 7079470 /usr/lib/x86_64-linux-gnu/libedit.so.2.0.58
+7ffbe96f9000-7ffbe96fb000 r--p 00031000 fe:01 7079470 /usr/lib/x86_64-linux-gnu/libedit.so.2.0.58
+7ffbe96fb000-7ffbe96fc000 rw-p 00033000 fe:01 7079470 /usr/lib/x86_64-linux-gnu/libedit.so.2.0.58
+7ffbe96fc000-7ffbe9700000 rw-p 00000000 00:00 0
+7ffbe9700000-7ffbe9707000 r-xp 00000000 fe:01 7090939 /usr/lib/x86_64-linux-gnu/libffi.so.6.0.4
+7ffbe9707000-7ffbe9907000 ---p 00007000 fe:01 7090939 /usr/lib/x86_64-linux-gnu/libffi.so.6.0.4
+7ffbe9907000-7ffbe9908000 r--p 00007000 fe:01 7090939 /usr/lib/x86_64-linux-gnu/libffi.so.6.0.4
+7ffbe9908000-7ffbe9909000 rw-p 00008000 fe:01 7090939 /usr/lib/x86_64-linux-gnu/libffi.so.6.0.4
+7ffbe9909000-7ffbe9916000 r-xp 00000000 fe:01 7082891 /usr/lib/x86_64-linux-gnu/libwayland-client.so.0.3.0
+7ffbe9916000-7ffbe9b15000 ---p 0000d000 fe:01 7082891 /usr/lib/x86_64-linux-gnu/libwayland-client.so.0.3.0
+7ffbe9b15000-7ffbe9b17000 r--p 0000c000 fe:01 7082891 /usr/lib/x86_64-linux-gnu/libwayland-client.so.0.3.0
+7ffbe9b17000-7ffbe9b18000 rw-p 0000e000 fe:01 7082891 /usr/lib/x86_64-linux-gnu/libwayland-client.so.0.3.0
+7ffbe9b18000-7ffbe9b19000 r-xp 00000000 fe:01 7088050 /usr/lib/x86_64-linux-gnu/libxshmfence.so.1.0.0
+7ffbe9b19000-7ffbe9d18000 ---p 00001000 fe:01 7088050 /usr/lib/x86_64-linux-gnu/libxshmfence.so.1.0.0
+7ffbe9d18000-7ffbe9d19000 r--p 00000000 fe:01 7088050 /usr/lib/x86_64-linux-gnu/libxshmfence.so.1.0.0
+7ffbe9d19000-7ffbe9d1a000 rw-p 00001000 fe:01 7088050 /usr/lib/x86_64-linux-gnu/libxshmfence.so.1.0.0
+7ffbe9d1a000-7ffbe9d26000 r--p 00000000 fe:01 7078391 /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0
+7ffbe9d26000-7ffbe9d39000 r-xp 0000c000 fe:01 7078391 /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0
+7ffbe9d39000-7ffbe9d42000 r--p 0001f000 fe:01 7078391 /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0
+7ffbe9d42000-7ffbe9d43000 r--p 00027000 fe:01 7078391 /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0
+7ffbe9d43000-7ffbe9d44000 rw-p 00028000 fe:01 7078391 /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0
+7ffbe9d44000-7ffbe9e7c000 r-xp 00000000 fe:01 7082587 /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+7ffbe9e7c000-7ffbea07c000 ---p 00138000 fe:01 7082587 /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+7ffbea07c000-7ffbea07d000 r--p 00138000 fe:01 7082587 /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+7ffbea07d000-7ffbea082000 rw-p 00139000 fe:01 7082587 /usr/lib/x86_64-linux-gnu/libX11.so.6.3.0
+7ffbea082000-7ffbea083000 r-xp 00000000 fe:01 7083481 /usr/lib/x86_64-linux-gnu/libX11-xcb.so.1.0.0
+7ffbea083000-7ffbea282000 ---p 00001000 fe:01 7083481 /usr/lib/x86_64-linux-gnu/libX11-xcb.so.1.0.0
+7ffbea282000-7ffbea283000 r--p 00000000 fe:01 7083481 /usr/lib/x86_64-linux-gnu/libX11-xcb.so.1.0.0
+7ffbea283000-7ffbea284000 rw-p 00001000 fe:01 7083481 /usr/lib/x86_64-linux-gnu/libX11-xcb.so.1.0.0
+7ffbea284000-7ffbea294000 r-xp 00000000 fe:01 7081596 /usr/lib/x86_64-linux-gnu/libdrm.so.2.4.0
+7ffbea294000-7ffbea493000 ---p 00010000 fe:01 7081596 /usr/lib/x86_64-linux-gnu/libdrm.so.2.4.0
+7ffbea493000-7ffbea494000 r--p 0000f000 fe:01 7081596 /usr/lib/x86_64-linux-gnu/libdrm.so.2.4.0
+7ffbea494000-7ffbea495000 rw-p 00010000 fe:01 7081596 /usr/lib/x86_64-linux-gnu/libdrm.so.2.4.0
+7ffbea495000-7ffbea49d000 r-xp 00000000 fe:01 7081594 /usr/lib/x86_64-linux-gnu/libdrm_amdgpu.so.1.0.0
+7ffbea49d000-7ffbea69c000 ---p 00008000 fe:01 7081594 /usr/lib/x86_64-linux-gnu/libdrm_amdgpu.so.1.0.0
+7ffbea69c000-7ffbea69d000 r--p 00007000 fe:01 7081594 /usr/lib/x86_64-linux-gnu/libdrm_amdgpu.so.1.0.0
+7ffbea69d000-7ffbea69e000 rw-p 00008000 fe:01 7081594 /usr/lib/x86_64-linux-gnu/libdrm_amdgpu.so.1.0.0
+7ffbea69e000-7ffbea6b8000 r-xp 00000000 fe:01 7090686 /usr/lib/x86_64-linux-gnu/libelf-0.176.so
+7ffbea6b8000-7ffbea8b7000 ---p 0001a000 fe:01 7090686 /usr/lib/x86_64-linux-gnu/libelf-0.176.so
+7ffbea8b7000-7ffbea8b8000 r--p 00019000 fe:01 7090686 /usr/lib/x86_64-linux-gnu/libelf-0.176.so
+7ffbea8b8000-7ffbea8b9000 rw-p 0001a000 fe:01 7090686 /usr/lib/x86_64-linux-gnu/libelf-0.176.so
+7ffbea8b9000-7ffbee0ac000 r-xp 00000000 fe:01 7078608 /usr/lib/x86_64-linux-gnu/libLLVM-6.0.so.1
+7ffbee0ac000-7ffbee432000 r--p 037f2000 fe:01 7078608 /usr/lib/x86_64-linux-gnu/libLLVM-6.0.so.1
+7ffbee432000-7ffbee46d000 rw-p 03b78000 fe:01 7078608 /usr/lib/x86_64-linux-gnu/libLLVM-6.0.so.1
+7ffbee46d000-7ffbee4cd000 rw-p 00000000 00:00 0
+7ffbee4cd000-7ffbee4e9000 r-xp 00000000 fe:01 4194348 /lib/x86_64-linux-gnu/libz.so.1.2.11
+7ffbee4e9000-7ffbee6e9000 ---p 0001c000 fe:01 4194348 /lib/x86_64-linux-gnu/libz.so.1.2.11
+7ffbee6e9000-7ffbee6ea000 r--p 0001c000 fe:01 4194348 /lib/x86_64-linux-gnu/libz.so.1.2.11
+7ffbee6ea000-7ffbee6eb000 rw-p 0001d000 fe:01 4194348 /lib/x86_64-linux-gnu/libz.so.1.2.11
+7ffbee6eb000-7ffbee715000 r--p 00000000 fe:01 7082784 /usr/lib/x86_64-linux-gnu/libvulkan_radeon.so
+7ffbee715000-7ffbee85b000 r-xp 0002a000 fe:01 7082784 /usr/lib/x86_64-linux-gnu/libvulkan_radeon.so
+7ffbee85b000-7ffbee8d9000 r--p 00170000 fe:01 7082784 /usr/lib/x86_64-linux-gnu/libvulkan_radeon.so
+7ffbee8d9000-7ffbee903000 r--p 001ed000 fe:01 7082784 /usr/lib/x86_64-linux-gnu/libvulkan_radeon.so
+7ffbee903000-7ffbee904000 rw-p 00217000 fe:01 7082784 /usr/lib/x86_64-linux-gnu/libvulkan_radeon.so
+7ffbee904000-7ffbee9c3000 rw-p 00000000 00:00 0
+7ffbee9c3000-7ffbee9c6000 r-xp 00000000 fe:01 4195807 /lib/x86_64-linux-gnu/libdl-2.28.so
+7ffbee9c6000-7ffbeebc5000 ---p 00003000 fe:01 4195807 /lib/x86_64-linux-gnu/libdl-2.28.so
+7ffbeebc5000-7ffbeebc6000 r--p 00002000 fe:01 4195807 /lib/x86_64-linux-gnu/libdl-2.28.so
+7ffbeebc6000-7ffbeebc7000 rw-p 00003000 fe:01 4195807 /lib/x86_64-linux-gnu/libdl-2.28.so
+7ffbeebc7000-7ffbeed7c000 r-xp 00000000 fe:01 4195804 /lib/x86_64-linux-gnu/libc-2.28.so
+7ffbeed7c000-7ffbeef7c000 ---p 001b5000 fe:01 4195804 /lib/x86_64-linux-gnu/libc-2.28.so
+7ffbeef7c000-7ffbeef80000 r--p 001b5000 fe:01 4195804 /lib/x86_64-linux-gnu/libc-2.28.so
+7ffbeef80000-7ffbeef82000 rw-p 001b9000 fe:01 4195804 /lib/x86_64-linux-gnu/libc-2.28.so
+7ffbeef82000-7ffbeef86000 rw-p 00000000 00:00 0
+7ffbeef86000-7ffbef105000 r-xp 00000000 fe:01 4195808 /lib/x86_64-linux-gnu/libm-2.28.so
+7ffbef105000-7ffbef304000 ---p 0017f000 fe:01 4195808 /lib/x86_64-linux-gnu/libm-2.28.so
+7ffbef304000-7ffbef305000 r--p 0017e000 fe:01 4195808 /lib/x86_64-linux-gnu/libm-2.28.so
+7ffbef305000-7ffbef306000 rw-p 0017f000 fe:01 4195808 /lib/x86_64-linux-gnu/libm-2.28.so
+7ffbef306000-7ffbef320000 r-xp 00000000 fe:01 4195819 /lib/x86_64-linux-gnu/libpthread-2.28.so
+7ffbef320000-7ffbef51f000 ---p 0001a000 fe:01 4195819 /lib/x86_64-linux-gnu/libpthread-2.28.so
+7ffbef51f000-7ffbef520000 r--p 00019000 fe:01 4195819 /lib/x86_64-linux-gnu/libpthread-2.28.so
+7ffbef520000-7ffbef521000 rw-p 0001a000 fe:01 4195819 /lib/x86_64-linux-gnu/libpthread-2.28.so
+7ffbef521000-7ffbef525000 rw-p 00000000 00:00 0
+7ffbef525000-7ffbef52c000 r-xp 00000000 fe:01 4195821 /lib/x86_64-linux-gnu/librt-2.28.so
+7ffbef52c000-7ffbef72b000 ---p 00007000 fe:01 4195821 /lib/x86_64-linux-gnu/librt-2.28.so
+7ffbef72b000-7ffbef72c000 r--p 00006000 fe:01 4195821 /lib/x86_64-linux-gnu/librt-2.28.so
+7ffbef72c000-7ffbef72d000 rw-p 00007000 fe:01 4195821 /lib/x86_64-linux-gnu/librt-2.28.so
+7ffbef72d000-7ffbef784000 r-xp 00000000 fe:01 5005063 /data/vulkan/linuxsdk/1.1.85.0/x86_64/lib/libvulkan.so.1.1.85
+7ffbef784000-7ffbef983000 ---p 00057000 fe:01 5005063 /data/vulkan/linuxsdk/1.1.85.0/x86_64/lib/libvulkan.so.1.1.85
+7ffbef983000-7ffbef986000 r--p 00056000 fe:01 5005063 /data/vulkan/linuxsdk/1.1.85.0/x86_64/lib/libvulkan.so.1.1.85
+7ffbef986000-7ffbef987000 rw-p 00059000 fe:01 5005063 /data/vulkan/linuxsdk/1.1.85.0/x86_64/lib/libvulkan.so.1.1.85
+7ffbef987000-7ffbef98b000 r-xp 00000000 fe:01 4195802 /lib/x86_64-linux-gnu/libSegFault.so
+7ffbef98b000-7ffbefb8a000 ---p 00004000 fe:01 4195802 /lib/x86_64-linux-gnu/libSegFault.so
+7ffbefb8a000-7ffbefb8b000 r--p 00003000 fe:01 4195802 /lib/x86_64-linux-gnu/libSegFault.so
+7ffbefb8b000-7ffbefb8c000 rw-p 00004000 fe:01 4195802 /lib/x86_64-linux-gnu/libSegFault.so
+7ffbefb8c000-7ffbefbb2000 r-xp 00000000 fe:01 4195799 /lib/x86_64-linux-gnu/ld-2.28.so
+7ffbefbb3000-7ffbefbb4000 rw-s 00000000 00:17 381265 /i915 (deleted)
+7ffbefbb4000-7ffbefbb5000 rw-s 00000000 00:17 381264 /i915 (deleted)
+7ffbefbb5000-7ffbefbb6000 rw-s 00000000 00:17 381263 /i915 (deleted)
+7ffbefbb6000-7ffbefbb9000 r--p 00000000 fe:01 7078479 /usr/lib/x86_64-linux-gnu/libxcb-sync.so.1.0.0
+7ffbefbb9000-7ffbefbbc000 r-xp 00003000 fe:01 7078479 /usr/lib/x86_64-linux-gnu/libxcb-sync.so.1.0.0
+7ffbefbbc000-7ffbefbbd000 r--p 00006000 fe:01 7078479 /usr/lib/x86_64-linux-gnu/libxcb-sync.so.1.0.0
+7ffbefbbd000-7ffbefbbe000 ---p 00007000 fe:01 7078479 /usr/lib/x86_64-linux-gnu/libxcb-sync.so.1.0.0
+7ffbefbbe000-7ffbefbbf000 r--p 00007000 fe:01 7078479 /usr/lib/x86_64-linux-gnu/libxcb-sync.so.1.0.0
+7ffbefbbf000-7ffbefbc0000 rw-p 00008000 fe:01 7078479 /usr/lib/x86_64-linux-gnu/libxcb-sync.so.1.0.0
+7ffbefbc0000-7ffbefbc1000 r--p 00000000 fe:01 7078409 /usr/lib/x86_64-linux-gnu/libxcb-present.so.0.0.0
+7ffbefbc1000-7ffbefbc2000 r-xp 00001000 fe:01 7078409 /usr/lib/x86_64-linux-gnu/libxcb-present.so.0.0.0
+7ffbefbc2000-7ffbefbc3000 r--p 00002000 fe:01 7078409 /usr/lib/x86_64-linux-gnu/libxcb-present.so.0.0.0
+7ffbefbc3000-7ffbefbc4000 r--p 00002000 fe:01 7078409 /usr/lib/x86_64-linux-gnu/libxcb-present.so.0.0.0
+7ffbefbc4000-7ffbefbc5000 rw-p 00003000 fe:01 7078409 /usr/lib/x86_64-linux-gnu/libxcb-present.so.0.0.0
+7ffbefbc5000-7ffbefbc8000 r--p 00000000 fe:01 7078423 /usr/lib/x86_64-linux-gnu/libxcb-xfixes.so.0.0.0
+7ffbefbc8000-7ffbefbcb000 r-xp 00003000 fe:01 7078423 /usr/lib/x86_64-linux-gnu/libxcb-xfixes.so.0.0.0
+7ffbefbcb000-7ffbefbcc000 r--p 00006000 fe:01 7078423 /usr/lib/x86_64-linux-gnu/libxcb-xfixes.so.0.0.0
+7ffbefbcc000-7ffbefbcd000 ---p 00007000 fe:01 7078423 /usr/lib/x86_64-linux-gnu/libxcb-xfixes.so.0.0.0
+7ffbefbcd000-7ffbefbce000 r--p 00007000 fe:01 7078423 /usr/lib/x86_64-linux-gnu/libxcb-xfixes.so.0.0.0
+7ffbefbce000-7ffbefbcf000 rw-p 00008000 fe:01 7078423 /usr/lib/x86_64-linux-gnu/libxcb-xfixes.so.0.0.0
+7ffbefbcf000-7ffbefbd1000 r--p 00000000 fe:01 7078404 /usr/lib/x86_64-linux-gnu/libxcb-dri3.so.0.0.0
+7ffbefbd1000-7ffbefbd2000 r-xp 00002000 fe:01 7078404 /usr/lib/x86_64-linux-gnu/libxcb-dri3.so.0.0.0
+7ffbefbd2000-7ffbefbd3000 r--p 00003000 fe:01 7078404 /usr/lib/x86_64-linux-gnu/libxcb-dri3.so.0.0.0
+7ffbefbd3000-7ffbefbd4000 r--p 00003000 fe:01 7078404 /usr/lib/x86_64-linux-gnu/libxcb-dri3.so.0.0.0
+7ffbefbd4000-7ffbefbd5000 rw-p 00004000 fe:01 7078404 /usr/lib/x86_64-linux-gnu/libxcb-dri3.so.0.0.0
+7ffbefbd5000-7ffbefbd9000 rw-p 00000000 00:00 0
+7ffbefbd9000-7ffbefbdc000 r--p 00000000 fe:01 4194577 /lib/x86_64-linux-gnu/libgcc_s.so.1
+7ffbefbdc000-7ffbefbed000 r-xp 00003000 fe:01 4194577 /lib/x86_64-linux-gnu/libgcc_s.so.1
+7ffbefbed000-7ffbefbf0000 r--p 00014000 fe:01 4194577 /lib/x86_64-linux-gnu/libgcc_s.so.1
+7ffbefbf0000-7ffbefbf1000 ---p 00017000 fe:01 4194577 /lib/x86_64-linux-gnu/libgcc_s.so.1
+7ffbefbf1000-7ffbefbf2000 r--p 00017000 fe:01 4194577 /lib/x86_64-linux-gnu/libgcc_s.so.1
+7ffbefbf2000-7ffbefbf3000 rw-p 00018000 fe:01 4194577 /lib/x86_64-linux-gnu/libgcc_s.so.1
+7ffbefbf3000-7ffbefbf5000 rw-p 00000000 00:00 0
+7ffbefbf5000-7ffbefc7e000 r--p 00000000 fe:01 7079248 /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25
+7ffbefc7e000-7ffbefd2a000 r-xp 00089000 fe:01 7079248 /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25
+7ffbefd2a000-7ffbefd68000 r--p 00135000 fe:01 7079248 /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25
+7ffbefd68000-7ffbefd69000 ---p 00173000 fe:01 7079248 /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25
+7ffbefd69000-7ffbefd73000 r--p 00173000 fe:01 7079248 /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25
+7ffbefd73000-7ffbefd75000 rw-p 0017d000 fe:01 7079248 /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25
+7ffbefd75000-7ffbefd78000 rw-p 00000000 00:00 0
+7ffbefd78000-7ffbefd79000 rw-s 00000000 00:17 381262 /i915 (deleted)
+7ffbefd79000-7ffbefd7a000 rw-s 00000000 00:17 381261 /i915 (deleted)
+7ffbefd7a000-7ffbefd7b000 rw-s 00000000 00:17 381260 /i915 (deleted)
+7ffbefd7b000-7ffbefd7c000 rw-s 00000000 00:17 381259 /i915 (deleted)
+7ffbefd7c000-7ffbefd7d000 rw-s 00000000 00:17 381258 /i915 (deleted)
+7ffbefd7d000-7ffbefd9d000 rw-s 1fff0000 00:05 381250 /memfd:block pool (deleted)
+7ffbefd9d000-7ffbefd9f000 rw-s 00000000 00:17 381255 /i915 (deleted)
+7ffbefd9f000-7ffbefda0000 rw-s 00000000 00:17 381253 /i915 (deleted)
+7ffbefda0000-7ffbefdb0000 rw-s 20000000 00:05 381250 /memfd:block pool (deleted)
+7ffbefdb0000-7ffbefdb2000 rw-p 00000000 00:00 0
+7ffbefdb2000-7ffbefdb3000 r--p 00026000 fe:01 4195799 /lib/x86_64-linux-gnu/ld-2.28.so
+7ffbefdb3000-7ffbefdb4000 rw-p 00027000 fe:01 4195799 /lib/x86_64-linux-gnu/ld-2.28.so
+7ffbefdb4000-7ffbefdb5000 rw-p 00000000 00:00 0
+7ffda53d0000-7ffda5bd0000 rw-p 00000000 00:00 0 [stack]
+7ffda5bf9000-7ffda5bfc000 r--p 00000000 00:00 0 [vvar]
+7ffda5bfc000-7ffda5bfe000 r-xp 00000000 00:00 0 [vdso]
+
+
+STDERR:
+
+
+
+STATUS CRASH
+

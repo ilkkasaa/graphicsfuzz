@@ -1,0 +1,81 @@
+#!amber
+
+SET ENGINE_DATA fence_timeout_ms 60000
+
+
+SHADER vertex variant_vertex_shader PASSTHROUGH
+
+SHADER fragment variant_fragment_shader SPIRV-ASM
+               OpCapability Shader
+          %1 = OpExtInstImport "GLSL.std.450"
+END
+
+
+SHADER vertex reference_vertex_shader PASSTHROUGH
+
+SHADER fragment reference_fragment_shader SPIRV-ASM
+               OpCapability Shader
+          %1 = OpExtInstImport "GLSL.std.450"
+END
+
+
+# uniforms for variant
+
+# injectionSwitch
+BUFFER variant_injectionSwitch DATA_TYPE vec2<float> DATA
+ 0.0 1.0
+END
+# resolution
+BUFFER variant_resolution DATA_TYPE vec2<float> DATA
+ 256.0 256.0
+END
+
+
+# uniforms for reference
+
+# injectionSwitch
+BUFFER reference_injectionSwitch DATA_TYPE vec2<float> DATA
+ 0.0 1.0
+END
+# resolution
+BUFFER reference_resolution DATA_TYPE vec2<float> DATA
+ 256.0 256.0
+END
+
+
+BUFFER framebuffer_variant FORMAT B8G8R8A8_UNORM
+BUFFER framebuffer_reference FORMAT B8G8R8A8_UNORM
+
+PIPELINE graphics variant_pipeline
+  ATTACH variant_vertex_shader
+  ATTACH variant_fragment_shader
+  FRAMEBUFFER_SIZE 256 256
+  BIND BUFFER framebuffer_variant AS color LOCATION 0
+  BIND BUFFER variant_injectionSwitch AS uniform DESCRIPTOR_SET 0 BINDING 0
+  BIND BUFFER variant_resolution AS uniform DESCRIPTOR_SET 0 BINDING 1
+END
+CLEAR_COLOR variant_pipeline 0 0 0 255
+
+PIPELINE graphics reference_pipeline
+  ATTACH reference_vertex_shader
+  ATTACH reference_fragment_shader
+  FRAMEBUFFER_SIZE 256 256
+  BIND BUFFER framebuffer_reference AS color LOCATION 0
+  BIND BUFFER reference_injectionSwitch AS uniform DESCRIPTOR_SET 0 BINDING 0
+  BIND BUFFER reference_resolution AS uniform DESCRIPTOR_SET 0 BINDING 1
+END
+CLEAR_COLOR reference_pipeline 0 0 0 255
+
+
+CLEAR variant_pipeline
+RUN variant_pipeline DRAW_RECT POS 0 0 SIZE 256 256
+
+CLEAR reference_pipeline
+RUN reference_pipeline DRAW_RECT POS 0 0 SIZE 256 256
+
+# Equal
+EXPECT framebuffer_variant EQ_BUFFER framebuffer_reference
+# Similar
+EXPECT framebuffer_variant RMSE_BUFFER framebuffer_reference TOLERANCE 7
+
+# Dump all framebuffers as PNG files from Amber command line (only one buffer is currently supported).
