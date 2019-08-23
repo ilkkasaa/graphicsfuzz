@@ -90,10 +90,6 @@ public class Generate {
         .help("Path of folder of donor shaders.")
         .type(File.class);
 
-    parser.addArgument("glsl-version")
-        .help("Version of GLSL to target.")
-        .type(String.class);
-
     parser.addArgument("output")
         .help("Output shader job file file (.json.")
         .type(File.class);
@@ -107,7 +103,7 @@ public class Generate {
   public static void addGeneratorCommonArguments(ArgumentParser parser) {
     parser.addArgument("--seed")
         .help("Seed to initialize random number generator with.")
-        .type(Integer.class);
+        .type(String.class);
 
     parser.addArgument("--small")
         .help("Try to generate small shaders.")
@@ -321,9 +317,12 @@ public class Generate {
       GlslParserException {
     final Namespace ns = parse(args);
 
-    Integer seed = ns.get("seed");
-    if (seed == null) {
+    String tempSeed = ns.getString("seed");
+    int seed = 0;
+    if (tempSeed == null) {
       seed = new Random().nextInt();
+    } else {
+      seed = (int) Long.parseUnsignedLong(tempSeed);
     }
 
     generateVariant(
