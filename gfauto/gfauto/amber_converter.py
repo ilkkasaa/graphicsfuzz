@@ -146,10 +146,12 @@ def amberscript_comp_buff_def(comp_json: str, make_empty_buffer: bool = False) -
 
     compute_info = comp["$compute"]
 
-    check(
-        len(compute_info["buffer"]["fields"]) > 0,
-        AssertionError("Compute shader test with empty SSBO"),
-    )
+    # Explicitly use len(X) == 0 because we want to validate that X is indeed a sequence.
+    if len(compute_info["buffer"]["fields"]) == 0:  # pylint: disable=len-as-condition;
+        # Assume zero-length "fields" key means "no buffer".
+        # Thus, there is nothing to initialize.
+        # An empty string is a valid template.
+        return ""
 
     field_types_set = {field["type"] for field in compute_info["buffer"]["fields"]}
 
