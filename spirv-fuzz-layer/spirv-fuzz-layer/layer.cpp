@@ -81,26 +81,44 @@ VkResult SpirvFuzzLayer::PreCallQueuePresentKHR(VkQueue queue, const VkPresentIn
     return VK_SUCCESS;
 }
 
+int counter = 0;
+
 VkResult SpirvFuzzLayer::PreCallCreateShaderModule(VkDevice device, const VkShaderModuleCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkShaderModule* pShaderModule)
 {
-	printf("codeSize: %i", (int) pCreateInfo->codeSize);
-	PreCallApiFunction("vkCreateShaderModule");
+    PreCallApiFunction("vkCreateShaderModule");
 
-	char* str = (char*) pCreateInfo->pCode;
+    char* str = (char*)pCreateInfo->pCode;
 
-	std::ofstream outFile;
-	outFile.open("shaderFile.spv", std::ios::out | std::ios::trunc | std::ios::binary);
+    std::ofstream outFile;
+    outFile.open("shaderFile.spv", std::ios::out | std::ios::trunc | std::ios::binary);
 
-	//for (int idx = 0; idx < pCreateInfo->codeSize; idx++)
-	{
-		outFile.write((const char*)pCreateInfo->pCode, pCreateInfo->codeSize * 2);
-	}
+    outFile.write((const char*)pCreateInfo->pCode, pCreateInfo->codeSize);
 
-	outFile.close();
-	
-	printf("Code: %s", str);
-	return VK_SUCCESS; 
+    outFile.close();
+
+    std::ifstream inFile;
+
+    inFile.open("shaderFileFuzzed.spv", std::ios::in | std::ios::binary | std::ios::ate);
+
+    uint32_t shaderSize = (uint32_t) inFile.tellg();
+    inFile.seekg(0, std::ios::beg);
+    char* inputShader = new char[shaderSize];
+    inFile.read(inputShader, shaderSize);
+
+    inFile.close();
+
+    if (counter > 0)
+    {
+        VkShaderModuleCreateInfo* tmpCreateInfo = (VkShaderModuleCreateInfo*)pCreateInfo;
+
+        tmpCreateInfo->codeSize = shaderSize;
+
+        tmpCreateInfo->pCode = (uint32_t*)inputShader;
+    }
+
+    counter++;
+
+    return VK_SUCCESS; 
 };
-
 
 SpirvFuzzLayer spirv_fuzz_layer;
