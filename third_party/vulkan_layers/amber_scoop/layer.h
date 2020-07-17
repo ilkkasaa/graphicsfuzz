@@ -63,6 +63,8 @@ namespace graphicsfuzz_amber_scoop {
         PFN_vkCmdDrawIndexed vkCmdDrawIndexed;
         PFN_vkCreateImage vkCreateImage;
         PFN_vkDestroyImage vkDestroyImage;
+        PFN_vkCreateImageView vkCreateImageView;
+        PFN_vkDestroyImageView vkDestroyImageView;
         PFN_vkCreateSampler vkCreateSampler;
         PFN_vkDestroySampler vkDestroySampler;
         PFN_vkCreatePipelineLayout vkCreatePipelineLayout;
@@ -147,6 +149,8 @@ namespace graphicsfuzz_amber_scoop {
     void vkCmdDrawIndexed(PFN_vkCmdDrawIndexed next, VkCommandBuffer commandBuffer, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance);
     VkResult vkCreateImage(PFN_vkCreateImage next, VkDevice device, VkImageCreateInfo const* pCreateInfo, AllocationCallbacks pAllocator, VkImage* pImage);
     void vkDestroyImage(PFN_vkDestroyImage next, VkDevice device, VkImage image, AllocationCallbacks pAllocator);
+    VkResult vkCreateImageView(PFN_vkCreateImageView next, VkDevice device, VkImageViewCreateInfo const* pCreateInfo, AllocationCallbacks pAllocator, VkImageView* pView);
+    void vkDestroyImageView(PFN_vkDestroyImageView next, VkDevice device, VkImageView imageView, AllocationCallbacks pAllocator);
     VkResult vkCreateSampler(PFN_vkCreateSampler next, VkDevice device, VkSamplerCreateInfo const* pCreateInfo, AllocationCallbacks pAllocator, VkSampler* pSampler);
     void vkDestroySampler(PFN_vkDestroySampler next, VkDevice device, VkSampler sampler, AllocationCallbacks pAllocator);
     VkResult vkCreatePipelineLayout(PFN_vkCreatePipelineLayout next, VkDevice device, VkPipelineLayoutCreateInfo const* pCreateInfo, AllocationCallbacks pAllocator, VkPipelineLayout* pPipelineLayout);

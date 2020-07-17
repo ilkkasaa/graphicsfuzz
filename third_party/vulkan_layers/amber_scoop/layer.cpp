@@ -101,6 +101,14 @@ namespace graphicsfuzz_amber_scoop {
             PFN_vkDestroyImage fn = GetGlobalContext().GetVkDeviceData(device)->functions->vkDestroyImage;
             return graphicsfuzz_amber_scoop::vkDestroyImage(fn, device, image, pAllocator);
         }
+        VKAPI_ATTR uint32_t VKAPI_CALL vkCreateImageView(VkDevice device, VkImageViewCreateInfo const* pCreateInfo, AllocationCallbacks pAllocator, VkImageView* pView) {
+            PFN_vkCreateImageView fn = GetGlobalContext().GetVkDeviceData(device)->functions->vkCreateImageView;
+            return graphicsfuzz_amber_scoop::vkCreateImageView(fn, device, pCreateInfo, pAllocator, pView);
+        }
+        VKAPI_ATTR void VKAPI_CALL vkDestroyImageView(VkDevice device, VkImageView imageView, AllocationCallbacks pAllocator) {
+            PFN_vkDestroyImageView fn = GetGlobalContext().GetVkDeviceData(device)->functions->vkDestroyImageView;
+            return graphicsfuzz_amber_scoop::vkDestroyImageView(fn, device, imageView, pAllocator);
+        }
         VKAPI_ATTR uint32_t VKAPI_CALL vkCreateSampler(VkDevice device, VkSamplerCreateInfo const* pCreateInfo, AllocationCallbacks pAllocator, VkSampler* pSampler) {
             PFN_vkCreateSampler fn = GetGlobalContext().GetVkDeviceData(device)->functions->vkCreateSampler;
             return graphicsfuzz_amber_scoop::vkCreateSampler(fn, device, pCreateInfo, pAllocator, pSampler);
@@ -447,6 +455,8 @@ namespace graphicsfuzz_amber_scoop {
             GET_PROC(vkCmdDrawIndexed);
             GET_PROC(vkCreateImage);
             GET_PROC(vkDestroyImage);
+            GET_PROC(vkCreateImageView);
+            GET_PROC(vkDestroyImageView);
             GET_PROC(vkCreateSampler);
             GET_PROC(vkDestroySampler);
             GET_PROC(vkCreatePipelineLayout);
@@ -531,6 +541,8 @@ namespace graphicsfuzz_amber_scoop {
             INTERCEPT(vkCmdDrawIndexed);
             INTERCEPT(vkCreateImage);
             INTERCEPT(vkDestroyImage);
+            INTERCEPT(vkCreateImageView);
+            INTERCEPT(vkDestroyImageView);
             INTERCEPT(vkCreateSampler);
             INTERCEPT(vkDestroySampler);
             INTERCEPT(vkCreatePipelineLayout);
@@ -769,6 +781,8 @@ namespace graphicsfuzz_amber_scoop {
             INTERCEPT(vkCmdDrawIndexed);
             INTERCEPT(vkCreateImage);
             INTERCEPT(vkDestroyImage);
+            INTERCEPT(vkCreateImageView);
+            INTERCEPT(vkDestroyImageView);
             INTERCEPT(vkCreateSampler);
             INTERCEPT(vkDestroySampler);
             INTERCEPT(vkCreatePipelineLayout);

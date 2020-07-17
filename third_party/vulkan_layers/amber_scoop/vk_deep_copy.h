@@ -53,6 +53,10 @@ VkGraphicsPipelineCreateInfo DeepCopy(
 
 void DeepDelete(const VkGraphicsPipelineCreateInfo &create_info);
 
+VkImageCreateInfo DeepCopy(const VkImageCreateInfo *create_info);
+
+void DeepDelete(const VkImageCreateInfo &create_info);
+
 VkPipelineLayoutCreateInfo DeepCopy(
     const VkPipelineLayoutCreateInfo &create_info);
 
@@ -63,7 +67,8 @@ VkPipelineShaderStageCreateInfo DeepCopy(
 
 void DeepDelete(const VkPipelineShaderStageCreateInfo &create_info);
 
-VkRenderPassBeginInfo DeepCopy(VkRenderPassBeginInfo const *p_render_pass_begin_info);
+VkRenderPassBeginInfo DeepCopy(
+    VkRenderPassBeginInfo const *p_render_pass_begin_info);
 
 void DeepDelete(const VkRenderPassBeginInfo p_render_pass_begin_info);
 

@@ -31,6 +31,7 @@
 #include "amber_scoop/vk_deep_copy.h"
 #include "amber_scoop/vulkan_formats.h"
 #include "common/spirv_util.h"
+#include "image_to_buffer.h"
 #include "spirv-tools/libspirv.hpp"
 
 namespace graphicsfuzz_amber_scoop {
@@ -143,6 +144,8 @@ int32_t capture_draw_call_number = -1;
 int32_t current_draw_call_number = 0;
 
 std::unordered_map<VkBuffer, VkBufferCreateInfo> buffers;
+std::unordered_map<VkImage, VkImageCreateInfo> images_;
+std::unordered_map<VkImageView, VkImageViewCreateInfo> image_views_;
 std::unordered_map<VkSampler, VkSamplerCreateInfo> samplers_;
 std::unordered_map<VkDescriptorSet, DescriptorSetData> descriptor_sets_;
 std::unordered_map<VkDescriptorSetLayout, VkDescriptorSetLayoutCreateInfo>
@@ -516,8 +519,17 @@ VkResult vkCreateImage(PFN_vkCreateImage next, VkDevice device,
                        VkImageCreateInfo const *pCreateInfo,
                        AllocationCallbacks pAllocator, VkImage *pImage) {
   DEBUG_LAYER(vkCreateImage)
-  auto result = next(device, pCreateInfo, pAllocator, pImage);
-  // TODO
+
+  auto create_info = DeepCopy(pCreateInfo);
+  if (create_info.usage &
+      (VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)) {
+    create_info.usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+  }
+
+  auto result = next(device, &create_info, pAllocator, pImage);
+  if (result == VK_SUCCESS) {
+    images_.insert({*pImage, create_info});
+  }
   return result;
 }
 
@@ -525,7 +537,29 @@ void vkDestroyImage(PFN_vkDestroyImage next, VkDevice device, VkImage image,
                     AllocationCallbacks pAllocator) {
   DEBUG_LAYER(vkDestroyImage)
   next(device, image, pAllocator);
-  // TODO
+  if (images_.count(image)) {
+    auto &create_info = images_.at(image);
+    DeepDelete(create_info);
+    images_.erase(image);
+  }
+}
+
+VkResult vkCreateImageView(PFN_vkCreateImageView next, VkDevice device,
+                           VkImageViewCreateInfo const *pCreateInfo,
+                           AllocationCallbacks pAllocator, VkImageView *pView) {
+  DEBUG_LAYER(vkCreateImageView)
+  auto result = next(device, pCreateInfo, pAllocator, pView);
+  if (result == VK_SUCCESS) {
+    image_views_.insert({*pView, *pCreateInfo});
+  }
+  return result;
+}
+
+void vkDestroyImageView(PFN_vkDestroyImageView next, VkDevice device,
+                        VkImageView imageView, AllocationCallbacks pAllocator) {
+  DEBUG_LAYER(vkDestroyImageView)
+  next(device, imageView, pAllocator);
+  image_views_.erase(imageView);
 }
 
 VkResult vkCreatePipelineLayout(PFN_vkCreatePipelineLayout next,
@@ -1123,6 +1157,12 @@ void HandleDrawCall(const DrawCallStateTracker &draw_call_state_tracker,
 
   if (!vertex_buffer_found) return;
 
+  auto command_pool =
+      GetGlobalContext()
+          .GetVkCommandBufferData(draw_call_state_tracker.commandBuffer)
+          ->command_pool;
+  auto queue_family_index = commandPoolToQueueFamilyIndex.at(command_pool);
+
   auto pipeline_layout =
       graphics_pipelines_.at(draw_call_state_tracker.graphics_pipeline_).layout;
 
@@ -1183,11 +1223,6 @@ void HandleDrawCall(const DrawCallStateTracker &draw_call_state_tracker,
       const auto &descriptor_buffer =
           buffer_binding.descriptor_buffer_info_.buffer;
 
-      auto commandPool =
-          GetGlobalContext()
-              .GetVkCommandBufferData(draw_call_state_tracker.commandBuffer)
-              ->command_pool;
-      auto queueFamilyIndex = commandPoolToQueueFamilyIndex.at(commandPool);
       BufferCopy descriptor_buffer_copy = BufferCopy();
 
       // Create list of pipeline barriers for the descriptor buffer
@@ -1206,7 +1241,7 @@ void HandleDrawCall(const DrawCallStateTracker &draw_call_state_tracker,
       }
 
       descriptor_buffer_copy.CopyBuffer(
-          draw_call_state_tracker.queue, queueFamilyIndex,
+          draw_call_state_tracker.queue, queue_family_index,
           descriptor_buffer_barriers, descriptor_buffer, bufferCreateInfo.size);
       VkDeviceSize byte_count =
           buffer_binding.descriptor_buffer_info_.range == VK_WHOLE_SIZE
@@ -1215,14 +1250,15 @@ void HandleDrawCall(const DrawCallStateTracker &draw_call_state_tracker,
       bufferDeclarationStringStream << "BUFFER " << buffer_name
                                     << " DATA_TYPE uint8 ";
       auto *data_ptr = descriptor_buffer_copy.copied_data_ +
-          buffer_binding.descriptor_buffer_info_.offset +
-          buffer_binding.dynamic_offset_;
+                       buffer_binding.descriptor_buffer_info_.offset +
+                       buffer_binding.dynamic_offset_;
 
 #ifdef DUMP_BUFFERS_TO_FILE
       std::string buffer_file_name = base_file_name;
       buffer_file_name.append("_").append(buffer_name).append(".bin");
       BufferToFile buffer_to_file(buffer_file_name);
-      bufferDeclarationStringStream << "SIZE " << byte_count << "FILE BINARY " << buffer_file_name;
+      bufferDeclarationStringStream << "SIZE " << byte_count << "FILE BINARY "
+                                    << buffer_file_name;
 
       buffer_to_file.WriteBytes(data_ptr, byte_count);
 #else
@@ -1245,7 +1281,7 @@ void HandleDrawCall(const DrawCallStateTracker &draw_call_state_tracker,
     for (const auto &binding_and_image :
          descriptor_set.image_and_sampler_bindings_) {
       uint32_t binding_number = binding_and_image.first;
-      const auto &image_info = binding_and_image.second;
+      const auto &descriptor_image_info = binding_and_image.second;
 
       const auto &layout_binding =
           descriptor_set.descriptor_set_layout_bindings_.at(binding_number);
@@ -1258,10 +1294,32 @@ void HandleDrawCall(const DrawCallStateTracker &draw_call_state_tracker,
         case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
         case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER: {
           strstr << "img_" << descriptor_set_number << "_" << binding_number;
-          std::string imageName = strstr.str();
+          std::string image_name = strstr.str();
+
+          const auto &image_view_info =
+              image_views_.at(descriptor_image_info.imageView);
+          const auto &image_info = images_.at(image_view_info.image);
+
+          ImageToBuffer image_to_buffer{};
+          image_to_buffer.CopyImageToBuffer(draw_call_state_tracker.queue,
+                                            queue_family_index, image_info,
+                                            image_view_info);
+
+          std::string file_name = (base_file_name + "_").append(image_name);
+          BufferToFile buffer_to_file = BufferToFile(file_name);
+          buffer_to_file.WriteBytes(image_to_buffer.copied_data_,
+                                    image_to_buffer.data_size);
+          image_to_buffer.FreeResources();
+
+          vkf::VulkanFormat format =
+              vkf::VkFormatToVulkanFormat(image_info.format);
+
+          bufferDeclarationStringStream
+              << "BUFFER tmp_" << image_name << " DATA_TYPE " << format.name_
+              << " SIZE " << image_to_buffer.data_size << " FILE BINARY " << file_name << std::endl;
 
           descriptorSetBindingStringStream
-              << "  BIND BUFFER " << imageName << " AS "
+              << "  BIND BUFFER " << image_name << " AS "
               << GetDescriptorTypeString(descriptor_type);
 
           if (descriptor_type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) {
@@ -1270,7 +1328,7 @@ void HandleDrawCall(const DrawCallStateTracker &draw_call_state_tracker,
                         << binding_number;
             std::string samplerName = sampler_str.str();
 
-            auto sampler_info = samplers_.at(image_info.sampler);
+            auto sampler_info = samplers_.at(descriptor_image_info.sampler);
             descriptorSetBindingStringStream << " SAMPLER " << samplerName;
             bufferDeclarationStringStream
                 << "SAMPLER " << samplerName << " MAG_FILTER "
@@ -1300,13 +1358,21 @@ void HandleDrawCall(const DrawCallStateTracker &draw_call_state_tracker,
           // TODO: implement BASE_MIP_LEVEL
           // https://github.com/google/amber/blob/master/docs/amber_script.md#pipeline-buffers
 
-          bufferDeclarationStringStream << "BUFFER " << imageName
+          /*bufferDeclarationStringStream << "BUFFER " << image_name
                                         << " FORMAT R8G8B8A8_UNORM"
-                                        << " FILE texture.png" << std::endl;
+                                        << " FILE texture.png" << std::endl;*/
+          bufferDeclarationStringStream
+              << "IMAGE " << image_name << " DATA_TYPE " << format.name_
+              << " DIM_2D "
+              << " WIDTH " << image_info.extent.width << " HEIGHT "
+              << image_info.extent.height << " FILL 0" << std::endl;
+          bufferDeclarationStringStream << "COPY tmp_" << image_name << " TO "
+                                        << image_name << std::endl;
+
           break;
         }
         case VK_DESCRIPTOR_TYPE_SAMPLER: {
-          auto sampler_info = samplers_.at(image_info.sampler);
+          auto sampler_info = samplers_.at(descriptor_image_info.sampler);
           strstr << "sampler_" << descriptor_set_number << "_"
                  << binding_number;
           std::string samplerName = strstr.str();

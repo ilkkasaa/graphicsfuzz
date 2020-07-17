@@ -19,6 +19,10 @@ find_package(Vulkan REQUIRED)
 set(AMBER_SCOOP_LAYER_SOURCES
         buffer_copy.cpp
         buffer_copy.h
+        buffer_to_file.cpp
+        buffer_to_file.h
+        image_to_buffer.cpp
+        image_to_buffer.h
         layer.cpp
         layer.h
         layer_impl.cpp
@@ -27,8 +31,7 @@ set(AMBER_SCOOP_LAYER_SOURCES
         vk_deep_copy.h
         vulkan_commands.h
         vulkan_formats.cpp
-        vulkan_formats.h
-        buffer_to_file.cpp buffer_to_file.h)
+        vulkan_formats.h)
 
 add_library(VkLayer_graphicsfuzz_amber_scoop SHARED ${AMBER_SCOOP_LAYER_SOURCES})
 

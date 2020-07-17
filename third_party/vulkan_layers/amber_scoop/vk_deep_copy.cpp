@@ -156,6 +156,18 @@ void DeepDelete(const VkGraphicsPipelineCreateInfo &create_info) {
   delete create_info.pDepthStencilState;
 }
 
+VkImageCreateInfo DeepCopy(const VkImageCreateInfo *create_info) {
+  VkImageCreateInfo result = *create_info;
+  auto queue_family_indices = CopyArray(create_info->pQueueFamilyIndices,
+                                        create_info->queueFamilyIndexCount);
+  result.pQueueFamilyIndices = queue_family_indices;
+  return result;
+}
+
+void DeepDelete(const VkImageCreateInfo &create_info) {
+  delete[] create_info.pQueueFamilyIndices;
+}
+
 VkPipelineLayoutCreateInfo DeepCopy(
     const VkPipelineLayoutCreateInfo &create_info) {
   VkPipelineLayoutCreateInfo result = create_info;
@@ -167,8 +179,8 @@ VkPipelineLayoutCreateInfo DeepCopy(
 }
 
 void DeepDelete(const VkPipelineLayoutCreateInfo &create_info) {
-    delete [] create_info.pSetLayouts;
-    delete [] create_info.pPushConstantRanges;
+  delete[] create_info.pSetLayouts;
+  delete[] create_info.pPushConstantRanges;
 }
 
 VkPipelineShaderStageCreateInfo DeepCopy(
@@ -189,8 +201,8 @@ VkPipelineShaderStageCreateInfo DeepCopy(
 
 void DeepDelete(const VkPipelineShaderStageCreateInfo &create_info) {
   if (create_info.pSpecializationInfo) {
-    delete [] create_info.pSpecializationInfo->pMapEntries;
-    delete [] (char *)create_info.pSpecializationInfo->pData;
+    delete[] create_info.pSpecializationInfo->pMapEntries;
+    delete[](char *) create_info.pSpecializationInfo->pData;
   }
 }
 
@@ -210,25 +222,26 @@ VkRenderPassCreateInfo DeepCopy(const VkRenderPassCreateInfo &create_info) {
 }
 
 void DeepDelete(const VkRenderPassCreateInfo &create_info) {
-  delete [] create_info.pAttachments;
+  delete[] create_info.pAttachments;
 
   for (uint32_t i = 0; i < create_info.subpassCount; i++) {
     DeepDelete(create_info.pSubpasses[i]);
   }
-  delete [] create_info.pDependencies;
-  delete [] create_info.pSubpasses;
+  delete[] create_info.pDependencies;
+  delete[] create_info.pSubpasses;
 }
 
-VkRenderPassBeginInfo DeepCopy(VkRenderPassBeginInfo const *p_render_pass_begin_info) {
+VkRenderPassBeginInfo DeepCopy(
+    VkRenderPassBeginInfo const *p_render_pass_begin_info) {
   VkRenderPassBeginInfo result = {};
   result = *p_render_pass_begin_info;
   result.pClearValues = CopyArray(p_render_pass_begin_info->pClearValues,
-                                   p_render_pass_begin_info->clearValueCount);
+                                  p_render_pass_begin_info->clearValueCount);
   return result;
 }
 
 void DeepDelete(VkRenderPassBeginInfo const p_render_pass_begin_info) {
-  delete [] p_render_pass_begin_info.pClearValues;
+  delete[] p_render_pass_begin_info.pClearValues;
 }
 
 VkShaderModuleCreateInfo DeepCopy(const VkShaderModuleCreateInfo &create_info) {
@@ -240,14 +253,16 @@ VkShaderModuleCreateInfo DeepCopy(const VkShaderModuleCreateInfo &create_info) {
 }
 
 void DeepDelete(const VkShaderModuleCreateInfo &create_info) {
-  delete [] create_info.pCode;
+  delete[] create_info.pCode;
 }
 
 VkSubpassDescription DeepCopy(const VkSubpassDescription &subpass_description) {
   auto result = subpass_description;
-  result.pInputAttachments = CopyArray(subpass_description.pInputAttachments,
+  result.pInputAttachments =
+      CopyArray(subpass_description.pInputAttachments,
                 subpass_description.inputAttachmentCount);
-  result.pColorAttachments = CopyArray(subpass_description.pColorAttachments,
+  result.pColorAttachments =
+      CopyArray(subpass_description.pColorAttachments,
                 subpass_description.colorAttachmentCount);
   if (subpass_description.pResolveAttachments) {
     result.pResolveAttachments =
@@ -267,11 +282,11 @@ VkSubpassDescription DeepCopy(const VkSubpassDescription &subpass_description) {
 }
 
 void DeepDelete(const VkSubpassDescription &subpass_description) {
-  delete [] subpass_description.pInputAttachments;
-  delete [] subpass_description.pColorAttachments;
-  delete [] subpass_description.pResolveAttachments;
-  delete [] subpass_description.pDepthStencilAttachment;
-  delete [] subpass_description.pPreserveAttachments;
+  delete[] subpass_description.pInputAttachments;
+  delete[] subpass_description.pColorAttachments;
+  delete[] subpass_description.pResolveAttachments;
+  delete[] subpass_description.pDepthStencilAttachment;
+  delete[] subpass_description.pPreserveAttachments;
 }
 
 }  // namespace graphicsfuzz_amber_scoop
